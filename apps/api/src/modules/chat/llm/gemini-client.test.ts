@@ -131,6 +131,30 @@ describe('createGeminiClient', () => {
     ]);
   });
 
+  it('keeps function call ids and echoes them on function responses', async () => {
+    const { generate, requests } = fakeGenerate([
+      response({ functionCall: { id: 'call-7', name: 'recommend_builds', args: { budget: 1 } } }),
+    ]);
+    const llm = createGeminiClient({ apiKey: 'k', model: 'm', generateContentStream: generate });
+    const history: LlmMessage[] = [
+      { role: 'model', parts: [{ functionCall: { id: 'call-6', name: 'search_products', args: {} } }] },
+      {
+        role: 'user',
+        parts: [{ functionResponse: { id: 'call-6', name: 'search_products', response: {} } }],
+      },
+    ];
+    expect(await collect(llm.stream({ system: '', history, tools: [TOOL] }))).toEqual([
+      { type: 'functionCall', id: 'call-7', name: 'recommend_builds', args: { budget: 1 } },
+    ]);
+    expect(requests[0]?.contents).toEqual([
+      { role: 'model', parts: [{ functionCall: { id: 'call-6', name: 'search_products', args: {} } }] },
+      {
+        role: 'user',
+        parts: [{ functionResponse: { id: 'call-6', name: 'search_products', response: {} } }],
+      },
+    ]);
+  });
+
   it('maps HTTP 429 to RATE_LIMIT', async () => {
     const { generate } = fakeGenerate([], new ApiError({ message: 'RESOURCE_EXHAUSTED', status: 429 }));
     const { logger } = silentLogger();

@@ -5,6 +5,7 @@ import {
   type ChatEvent,
   formatVnd,
   formatVndShort,
+  MAX_BUDGET,
   MIN_BUDGET,
   PURPOSES,
   type Purpose,
@@ -63,6 +64,32 @@ export function mergeRecommendArgs(intent: ParsedIntent, args: Record<string, un
   return merged;
 }
 
+/**
+ * Intent after a modify_build the model ran: previous budget + budgetDelta and previous preferences + changes.
+ * The NLU's own guesses (e.g. a toggled GPU brand) are not used because the model, not the parser, chose the edit.
+ */
+export function mergeModifyArgs(
+  parsed: ParsedIntent,
+  previous: ParsedIntent | undefined,
+  args: Record<string, unknown>,
+): ParsedIntent {
+  const delta =
+    typeof args.budgetDelta === 'number' && Number.isFinite(args.budgetDelta) ? args.budgetDelta : 0;
+  const changes = preferencesSchema.safeParse(
+    typeof args.preferenceChanges === 'object' && args.preferenceChanges !== null
+      ? args.preferenceChanges
+      : {},
+  );
+  const merged: ParsedIntent = {
+    preferences: { ...(previous?.preferences ?? {}), ...(changes.success ? changes.data : {}) },
+  };
+  if (previous?.budget !== undefined) {
+    merged.budget = Math.min(MAX_BUDGET, Math.max(MIN_BUDGET, Math.round(previous.budget + delta)));
+  }
+  if (parsed.purpose) merged.purpose = parsed.purpose;
+  return merged;
+}
+
 function recommendArgs(intent: ParsedIntent & { budget: number; purpose: Purpose }): Record<string, unknown> {
   const { resolution } = intent.preferences;
   return {
@@ -76,25 +103,34 @@ function recommendArgs(intent: ParsedIntent & { budget: number; purpose: Purpose
 const categoryLabel = (key: string) => CATEGORY_LABELS[key as CategoryKey] ?? key;
 const percent = (share: number) => `${Math.round(share * 100)}%`;
 
-function headline(intent: ParsedIntent, count: number, budget: number, purpose: Purpose): string {
-  const what = `${count} cấu hình ${PURPOSE_PHRASE[purpose]}`;
+const purposeSuffix = (intent: ParsedIntent) => (intent.purpose ? ` ${PURPOSE_PHRASE[intent.purpose]}` : '');
+
+function headline(intent: ParsedIntent, count: number, adjusted: boolean): string {
+  const { budget } = intent;
+  const what = `${count} cấu hình${purposeSuffix(intent)}`;
+  const within = budget !== undefined ? ` trong ngân sách ${formatVnd(budget)}` : '';
+  if (adjusted) return `Em đã điều chỉnh theo yêu cầu, đây là ${what}${within}:`;
   switch (intent.wantsChange) {
     case 'cheaper':
-      return `Em đã hạ ngân sách xuống ${formatVnd(budget)}, đây là ${what} mới:`;
+      return budget !== undefined
+        ? `Em đã hạ ngân sách xuống ${formatVnd(budget)}, đây là ${what} mới:`
+        : `Em đã điều chỉnh cho rẻ hơn, đây là ${what} mới:`;
     case 'stronger':
-      return `Em đã nâng ngân sách lên ${formatVnd(budget)} để mạnh hơn, đây là ${what} mới:`;
+      return budget !== undefined
+        ? `Em đã nâng ngân sách lên ${formatVnd(budget)} để mạnh hơn, đây là ${what} mới:`
+        : `Em đã điều chỉnh cho mạnh hơn, đây là ${what} mới:`;
     case 'swap-gpu-brand':
       if (intent.preferences.gpuBrand) {
-        return `Em đã đổi sang card ${intent.preferences.gpuBrand}, đây là ${what} trong ngân sách ${formatVnd(budget)}:`;
+        return `Em đã đổi sang card ${intent.preferences.gpuBrand}, đây là ${what}${within}:`;
       }
       break;
     case 'swap-cpu-brand':
       if (intent.preferences.cpuBrand) {
-        return `Em đã đổi sang CPU ${intent.preferences.cpuBrand}, đây là ${what} trong ngân sách ${formatVnd(budget)}:`;
+        return `Em đã đổi sang CPU ${intent.preferences.cpuBrand}, đây là ${what}${within}:`;
       }
       break;
   }
-  return `Em gợi ý ${what} trong ngân sách ${formatVnd(budget)}:`;
+  return `Em gợi ý ${what}${within}:`;
 }
 
 function describeBuild(build: RecommendToolOutput['builds'][number], index: number): string {
@@ -118,12 +154,15 @@ function describeBuild(build: RecommendToolOutput['builds'][number], index: numb
 }
 
 /** Templated Vietnamese explanation built only from engine output, so names and prices are always real. */
-export function explainRecommendation(output: RecommendToolOutput, intent: ParsedIntent): string {
-  const budget = intent.budget ?? 0;
-  const purpose = intent.purpose ?? 'gaming';
+export function explainRecommendation(
+  output: RecommendToolOutput,
+  intent: ParsedIntent,
+  opts: { adjusted?: boolean } = {},
+): string {
   if (output.builds.length === 0) {
+    const withBudget = intent.budget !== undefined ? `với ngân sách ${formatVnd(intent.budget)} ` : '';
     const lines = [
-      `Rất tiếc, với ngân sách ${formatVnd(budget)} em chưa tìm được cấu hình ${PURPOSE_PHRASE[purpose]} nào tương thích và còn hàng.`,
+      `Rất tiếc, ${withBudget}em chưa tìm được cấu hình${purposeSuffix(intent)} nào tương thích và còn hàng.`,
     ];
     if (output.infeasibleReason) lines.push(`Lý do: ${output.infeasibleReason}.`);
     if (output.minFeasibleBudget) {
@@ -137,7 +176,7 @@ export function explainRecommendation(output: RecommendToolOutput, intent: Parse
     return lines.join('\n');
   }
   return [
-    headline(intent, output.builds.length, budget, purpose),
+    headline(intent, output.builds.length, opts.adjusted ?? false),
     '',
     ...output.builds.map(describeBuild),
     '',
@@ -150,7 +189,11 @@ export interface FallbackInput {
   previousIntent?: ParsedIntent;
   ctx: ToolContext;
   /** A recommendation the AI path already produced this turn; explained instead of re-running the engine. */
-  prior?: { output: RecommendToolOutput; args: Record<string, unknown> };
+  prior?: {
+    output: RecommendToolOutput;
+    args: Record<string, unknown>;
+    source: 'recommend_builds' | 'modify_build';
+  };
 }
 
 export interface FallbackDeps {
@@ -186,8 +229,11 @@ export async function respondFallback(input: FallbackInput, deps: FallbackDeps):
   });
 
   if (input.prior) {
-    const intent = mergeRecommendArgs(parsed, input.prior.args);
-    return reply(explainRecommendation(input.prior.output, intent), intent);
+    const adjusted = input.prior.source === 'modify_build';
+    const intent = adjusted
+      ? mergeModifyArgs(parsed, input.previousIntent, input.prior.args)
+      : mergeRecommendArgs(parsed, input.prior.args);
+    return reply(explainRecommendation(input.prior.output, intent, { adjusted }), intent);
   }
 
   const { budget, purpose } = parsed;

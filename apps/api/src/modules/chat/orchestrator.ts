@@ -38,6 +38,8 @@ export interface RunTurnDeps {
   tools: ToolRegistry;
   emit: (e: ChatEvent) => void;
   timeoutMs?: number;
+  /** Abort when the client disconnects: cancels the in-flight model call and stops the turn (no fallback). */
+  signal?: AbortSignal;
 }
 
 export interface RunTurnResult {
@@ -49,14 +51,30 @@ export interface RunTurnResult {
   messageId: string;
   toolCalls: ToolCallRecord[];
   fallbackReason?: LlmUnavailableReason;
+  /** True when `deps.signal` aborted the turn; `assistantText` then holds only what was streamed so far. */
+  cancelled?: boolean;
 }
 
 interface TurnState {
   text: string;
   buildIds: string[];
   toolCalls: ToolCallRecord[];
-  recommendation?: { output: RecommendToolOutput; args: Record<string, unknown> };
+  recommendation?: {
+    output: RecommendToolOutput;
+    args: Record<string, unknown>;
+    source: 'recommend_builds' | 'modify_build';
+  };
   recommendArgs?: Record<string, unknown>;
+}
+
+class TurnCancelledError extends Error {
+  constructor() {
+    super('chat turn cancelled');
+  }
+}
+
+function throwIfCancelled(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) throw new TurnCancelledError();
 }
 
 const FALLBACK_CHUNK_WORDS = 4;
@@ -106,9 +124,13 @@ async function streamRound(
   request: { system: string; history: LlmMessage[]; tools: LlmToolDecl[] },
   timeoutMs: number,
   onText: (text: string) => void,
+  cancel: AbortSignal | undefined,
 ): Promise<{ text: string; calls: FunctionCallChunk[] }> {
+  throwIfCancelled(cancel);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onCancel = () => controller.abort();
+  cancel?.addEventListener('abort', onCancel, { once: true });
   let text = '';
   const calls: FunctionCallChunk[] = [];
   try {
@@ -123,14 +145,22 @@ async function streamRound(
       }
     }
   } catch (err) {
+    if (cancel?.aborted) throw new TurnCancelledError();
     throw toUnavailable(err, controller.signal);
   } finally {
     clearTimeout(timer);
+    cancel?.removeEventListener('abort', onCancel);
   }
   return { text, calls };
 }
 
-const separatorAfter = (text: string) => (text.length > 0 && !/\s$/.test(text) ? '\n\n' : '');
+/** Puts a blank line between text already streamed (possibly cut mid-sentence) and what follows. */
+function separatorAfter(text: string): string {
+  if (!text.trim() || text.endsWith('\n\n')) return '';
+  return text.endsWith('\n') ? '\n' : '\n\n';
+}
+
+const withCallId = (id: string | undefined) => (id ? { id } : {});
 
 async function runAiLoop(
   llm: LlmClient,
@@ -149,6 +179,7 @@ async function runAiLoop(
       { system: SYSTEM_PROMPT, history: messages, tools },
       timeoutMs,
       emitText,
+      deps.signal,
     );
     if (calls.length === 0) {
       if (!text.trim()) throw new LlmUnavailableError('UPSTREAM', 'empty model response');
@@ -161,7 +192,7 @@ async function runAiLoop(
     const modelParts: LlmPart[] = text ? [{ text }] : [];
     for (const c of calls) {
       modelParts.push({
-        functionCall: { name: c.name, args: c.args },
+        functionCall: { ...withCallId(c.id), name: c.name, args: c.args },
         ...(c.thoughtSignature ? { thoughtSignature: c.thoughtSignature } : {}),
       });
     }
@@ -169,6 +200,7 @@ async function runAiLoop(
 
     const responses: LlmPart[] = [];
     for (const c of calls) {
+      throwIfCancelled(deps.signal);
       const { record, result } = await executeTool(deps.tools, c.name, c.args, input.ctx, deps.emit);
       state.toolCalls.push(record);
       state.buildIds.push(...(result?.buildIds ?? []));
@@ -177,10 +209,10 @@ async function runAiLoop(
         (c.name === 'recommend_builds' || c.name === 'modify_build') &&
         isRecommendOutput(record.response)
       ) {
-        state.recommendation = { output: record.response, args: c.args };
+        state.recommendation = { output: record.response, args: c.args, source: c.name };
       }
       if (record.ok && c.name === 'recommend_builds') state.recommendArgs = c.args;
-      responses.push({ functionResponse: { name: c.name, response: record.response } });
+      responses.push({ functionResponse: { ...withCallId(c.id), name: c.name, response: record.response } });
     }
     messages.push({ role: 'user', parts: responses });
   }
@@ -199,18 +231,25 @@ export async function runTurn(input: RunTurnInput, deps: RunTurnDeps): Promise<R
     deps.emit({ type: 'token', text });
   };
 
-  let mode: ChatMode = 'AI';
+  let mode: ChatMode = deps.llm ? 'AI' : 'FALLBACK';
   let intent: ParsedIntent | undefined;
-  let fallbackReason: LlmUnavailableReason | undefined;
+  let unavailable: LlmUnavailableError | undefined;
+  let cancelled = false;
   try {
+    throwIfCancelled(deps.signal);
     if (!deps.llm) throw new LlmUnavailableError('NO_KEY');
     await runAiLoop(deps.llm, input, deps, state, emitText);
     const parsed = parseIntent(input.userText, input.previousIntent);
     intent = state.recommendArgs ? mergeRecommendArgs(parsed, state.recommendArgs) : parsed;
   } catch (err) {
-    if (!(err instanceof LlmUnavailableError)) throw err;
+    if (err instanceof TurnCancelledError) cancelled = true;
+    else if (!(err instanceof LlmUnavailableError)) throw err;
+    else if (deps.signal?.aborted) cancelled = true;
+    else unavailable = err;
+  }
+
+  if (unavailable) {
     mode = 'FALLBACK';
-    fallbackReason = err.reason;
     const reply = await respondFallback(
       {
         userText: input.userText,
@@ -234,6 +273,7 @@ export async function runTurn(input: RunTurnInput, deps: RunTurnDeps): Promise<R
     intent,
     messageId,
     toolCalls: state.toolCalls,
-    ...(fallbackReason ? { fallbackReason } : {}),
+    ...(unavailable ? { fallbackReason: unavailable.reason } : {}),
+    ...(cancelled ? { cancelled } : {}),
   };
 }

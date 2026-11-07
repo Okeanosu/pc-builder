@@ -24,15 +24,19 @@ export interface GeminiClientOptions {
   generateContentStream?: GenerateContentStream;
 }
 
+const withId = (id: string | undefined) => (id ? { id } : {});
+
 function toPart(part: LlmPart): Part {
   if ('text' in part) return { text: part.text };
   if ('functionCall' in part) {
+    const { id, name, args } = part.functionCall;
     return {
-      functionCall: { name: part.functionCall.name, args: part.functionCall.args },
+      functionCall: { ...withId(id), name, args },
       ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
     };
   }
-  return { functionResponse: { name: part.functionResponse.name, response: part.functionResponse.response } };
+  const { id, name, response } = part.functionResponse;
+  return { functionResponse: { ...withId(id), name, response } };
 }
 
 const toContent = (m: LlmMessage): Content => ({ role: m.role, parts: m.parts.map(toPart) });
@@ -113,6 +117,7 @@ export function createGeminiClient(opts: GeminiClientOptions): LlmClient {
             if (part.functionCall?.name) {
               yield {
                 type: 'functionCall',
+                ...withId(part.functionCall.id),
                 name: part.functionCall.name,
                 args: part.functionCall.args ?? {},
                 ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),

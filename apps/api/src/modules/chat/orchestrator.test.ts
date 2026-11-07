@@ -186,7 +186,11 @@ describe('runTurn — AI mode', () => {
     const llm = fakeLlm([
       [
         text('Dạ, '),
-        { ...call('recommend_builds', { budget: 25_000_000, purpose: 'gaming' }), thoughtSignature: 'sig' },
+        {
+          ...call('recommend_builds', { budget: 25_000_000, purpose: 'gaming' }),
+          id: 'fc-1',
+          thoughtSignature: 'sig',
+        },
       ],
       [text('Xong.')],
     ]);
@@ -201,16 +205,36 @@ describe('runTurn — AI mode', () => {
         parts: [
           { text: 'Dạ, ' },
           {
-            functionCall: { name: 'recommend_builds', args: { budget: 25_000_000, purpose: 'gaming' } },
+            functionCall: {
+              id: 'fc-1',
+              name: 'recommend_builds',
+              args: { budget: 25_000_000, purpose: 'gaming' },
+            },
             thoughtSignature: 'sig',
           },
         ],
       },
       {
         role: 'user',
-        parts: [{ functionResponse: { name: 'recommend_builds', response: OUTPUT } }],
+        parts: [{ functionResponse: { id: 'fc-1', name: 'recommend_builds', response: OUTPUT } }],
       },
     ]);
+  });
+
+  it('omits the call id when the model did not send one', async () => {
+    const llm = fakeLlm([
+      [call('recommend_builds', { budget: 25_000_000, purpose: 'gaming' })],
+      [text('Ok.')],
+    ]);
+    await runTurn(
+      { ...base, userText: 'chơi game 25tr' },
+      { llm, tools: registry(recommendTool()), emit: () => {} },
+    );
+    const [model, response] = (llm.calls[1]?.history ?? []).slice(-2);
+    expect(model?.parts[0]).toEqual({
+      functionCall: { name: 'recommend_builds', args: { budget: 25_000_000, purpose: 'gaming' } },
+    });
+    expect(response?.parts[0]).toEqual({ functionResponse: { name: 'recommend_builds', response: OUTPUT } });
   });
 
   it(`stops after ${MAX_TOOL_ROUNDS} tool rounds with an apology`, async () => {
@@ -327,7 +351,7 @@ describe('runTurn — fallback mode', () => {
     expect(res.mode).toBe('FALLBACK');
     expect(res.fallbackReason).toBe('RATE_LIMIT');
     expect(h.tokens()).toBe(res.assistantText);
-    expect(res.assistantText.startsWith('Dạ, em đang tìm ')).toBe(true);
+    expect(res.assistantText.startsWith('Dạ, em đang tìm \n\n')).toBe(true);
     expect(res.assistantText.split('Dạ, em đang tìm').length - 1).toBe(1);
     expect(res.assistantText).toContain('24.850.000₫');
     expect(rec.calls).toHaveLength(1);
@@ -377,6 +401,48 @@ describe('runTurn — fallback mode', () => {
     expect(res.mode).toBe('FALLBACK');
     expect(res.assistantText).toContain('24.850.000₫');
     expect(res.buildIds).toEqual(['b1', 'b2']);
+  });
+
+  function modifyTool(): FakeTool {
+    return tool('modify_build', {
+      forModel: OUTPUT as unknown as Record<string, unknown>,
+      events: [{ type: 'builds', builds: [fakeBuild('b1')] }],
+      buildIds: ['b1'],
+    });
+  }
+
+  it('explains a reused modify_build result without inventing a budget or purpose', async () => {
+    const llm = fakeLlm([
+      [call('modify_build', { buildId: 'b0', replaceCategory: 'gpu' })],
+      [new LlmUnavailableError('RATE_LIMIT')],
+    ]);
+    const res = await runTurn(
+      { ...base, userText: 'đổi card khác giúp em' },
+      { llm, tools: registry(modifyTool()), emit: () => {} },
+    );
+    expect(res.mode).toBe('FALLBACK');
+    expect(res.assistantText).toContain('Em đã điều chỉnh');
+    expect(res.assistantText).not.toMatch(/ngân sách 0₫/);
+    expect(res.assistantText).not.toMatch(/chơi game/);
+    expect(res.assistantText).not.toMatch(/đổi sang card/);
+    expect(res.assistantText).toContain('24.850.000₫');
+  });
+
+  it('applies the modify_build budgetDelta to the previous budget when explaining', async () => {
+    const llm = fakeLlm([
+      [call('modify_build', { buildId: 'b0', budgetDelta: -3_000_000 })],
+      [new LlmUnavailableError('RATE_LIMIT')],
+    ]);
+    const res = await runTurn(
+      {
+        ...base,
+        userText: 'bớt 3 triệu',
+        previousIntent: { budget: 25_000_000, purpose: 'gaming', preferences: {} },
+      },
+      { llm, tools: registry(modifyTool()), emit: () => {} },
+    );
+    expect(res.assistantText).toContain('22.000.000₫');
+    expect(res.intent).toMatchObject({ budget: 22_000_000, purpose: 'gaming' });
   });
 
   it('explains an infeasible budget and suggests minFeasibleBudget in VND', async () => {
@@ -523,5 +589,68 @@ describe('runTurn — fallback mode', () => {
     const res = await runTurn({ ...base, userText: 'xin chào' }, { tools: registry(), emit: h.emit });
     expect(res.messageId).toMatch(/^[0-9a-f-]{36}$/);
     expect(h.done()?.messageId).toBe(res.messageId);
+  });
+});
+
+describe('runTurn — cancellation', () => {
+  it('aborts the in-flight model call and stops without falling back', async () => {
+    const controller = new AbortController();
+    const llm = fakeLlm(['hang']);
+    const rec = recommendTool();
+    const h = harness();
+    const started = Date.now();
+    setTimeout(() => controller.abort(), 20);
+    const res = await runTurn(
+      { ...base, userText: '25tr chơi game' },
+      { llm, tools: registry(rec), emit: h.emit, signal: controller.signal, timeoutMs: 10_000 },
+    );
+    expect(Date.now() - started).toBeLessThan(2_000);
+    expect(res.cancelled).toBe(true);
+    expect(res.mode).toBe('AI');
+    expect(res.fallbackReason).toBeUndefined();
+    expect(rec.calls).toHaveLength(0);
+    expect(h.types()).toEqual(['done']);
+  });
+
+  it('does not call the model when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const llm = fakeLlm([[text('never')]]);
+    const res = await runTurn(
+      { ...base, userText: '25tr chơi game' },
+      { llm, tools: registry(recommendTool()), emit: () => {}, signal: controller.signal },
+    );
+    expect(llm.calls).toHaveLength(0);
+    expect(res.cancelled).toBe(true);
+  });
+
+  it('stops the tool loop when the client disconnects during a tool run', async () => {
+    const controller = new AbortController();
+    const search = tool('search_products', async () => {
+      controller.abort();
+      return { forModel: { items: [] } };
+    });
+    const llm = fakeLlm([[call('search_products', { category: 'gpu' })], [text('should not be requested')]]);
+    const res = await runTurn(
+      { ...base, userText: 'tìm card' },
+      { llm, tools: registry(search), emit: () => {}, signal: controller.signal },
+    );
+    expect(search.calls).toHaveLength(1);
+    expect(llm.calls).toHaveLength(1);
+    expect(res.cancelled).toBe(true);
+    expect(res.toolCalls).toHaveLength(1);
+  });
+
+  it('does not run the fallback once cancelled', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const rec = recommendTool();
+    const res = await runTurn(
+      { ...base, userText: '25tr chơi game' },
+      { tools: registry(rec), emit: () => {}, signal: controller.signal },
+    );
+    expect(rec.calls).toHaveLength(0);
+    expect(res.cancelled).toBe(true);
+    expect(res.assistantText).toBe('');
   });
 });
