@@ -17,7 +17,9 @@ export interface RefreshClaims {
 
 export function signRefreshToken(userId: string, secret: string): { token: string; jti: string } {
   const jti = randomUUID();
-  const token = jwt.sign({ sub: userId, jti }, secret, { expiresIn: REFRESH_TOKEN_TTL_SECONDS });
+  const token = jwt.sign({ sub: userId, jti, typ: 'refresh' }, secret, {
+    expiresIn: REFRESH_TOKEN_TTL_SECONDS,
+  });
   return { token, jti };
 }
 
@@ -25,7 +27,7 @@ export function signRefreshToken(userId: string, secret: string): { token: strin
 export function verifyRefreshToken(token: string, secret: string): RefreshClaims | null {
   try {
     const p = jwt.verify(token, secret) as jwt.JwtPayload;
-    if (typeof p.sub !== 'string' || typeof p.jti !== 'string') return null;
+    if (p.typ !== 'refresh' || typeof p.sub !== 'string' || typeof p.jti !== 'string') return null;
     return { userId: p.sub, jti: p.jti };
   } catch {
     return null;

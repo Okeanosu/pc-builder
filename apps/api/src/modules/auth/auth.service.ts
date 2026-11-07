@@ -37,8 +37,15 @@ export const toUserDTO = (u: UserRow): UserDTO => ({
 });
 
 const invalidCredentials = () => new AppError(401, 'INVALID_CREDENTIALS', 'Email hoặc mật khẩu không đúng');
-const invalidRefresh = () =>
-  new AppError(401, 'INVALID_REFRESH_TOKEN', 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+export class InvalidRefreshError extends AppError {
+  /**
+   * False when the token is genuine but its jti was already consumed: another tab most likely won a refresh
+   * race and the browser now holds the rotated cookies, which must not be wiped.
+   */
+  constructor(readonly clearCookies: boolean) {
+    super(401, 'INVALID_REFRESH_TOKEN', 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+  }
+}
 const emailTaken = () => new AppError(409, 'EMAIL_TAKEN', 'Email đã được sử dụng');
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -103,11 +110,11 @@ export function createAuthService(deps: { db: Db; redis: Redis; env: Env }) {
     /** Rotates the refresh token: the presented jti is consumed atomically, so a replayed token fails. */
     async refresh(refreshToken: string | undefined): Promise<AuthSession> {
       const claims = refreshToken ? verifyRefreshToken(refreshToken, env.JWT_REFRESH_SECRET) : null;
-      if (!claims) throw invalidRefresh();
+      if (!claims) throw new InvalidRefreshError(true);
       const consumed = await redis.del(refreshKey(claims.userId, claims.jti));
-      if (consumed !== 1) throw invalidRefresh();
+      if (consumed !== 1) throw new InvalidRefreshError(false);
       const user = await findById(claims.userId);
-      if (!user) throw invalidRefresh();
+      if (!user) throw new InvalidRefreshError(true);
       return issueSession(user);
     },
 

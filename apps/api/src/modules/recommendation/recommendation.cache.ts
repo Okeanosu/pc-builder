@@ -48,3 +48,13 @@ export function recommendationCacheKey(
   const hash = createHash('sha1').update(material).digest('hex');
   return `cache:reco:v${catalogVersion}:${hash}`;
 }
+
+/** Outcomes cut short by the search node limit say nothing definite about the request, so they are not cached. */
+export function isCacheable(result: {
+  builds: readonly unknown[];
+  stats: { capped?: boolean };
+  infeasibleReason?: string;
+}): boolean {
+  if (result.infeasibleReason === 'SEARCH_LIMIT') return false;
+  return !(result.builds.length === 0 && result.stats.capped === true);
+}

@@ -1,10 +1,12 @@
 import { type EngineProduct, type PartMap, solve } from '@pc/engine';
 import type { CategoryKey, CompatibilityResultDTO, MainboardSpecs } from '@pc/shared';
+import { eq } from 'drizzle-orm';
 import type express from 'express';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDeps } from '../../../test/helpers';
 import { createApp } from '../../app';
+import { products } from '../../db/schema';
 import { seedDatabase } from '../../db/seed';
 import { createCatalogService } from '../catalog';
 import { createCompatibilityService } from './index';
@@ -71,6 +73,20 @@ describe('POST /api/compatibility/check', () => {
       .send({ productIds: idsOf(parts), purpose: 'gaming', budget: 10_000_000 });
     expect(res.body.ok).toBe(false);
     expect(res.body.issues).toContainEqual(expect.objectContaining({ code: 'C14', severity: 'error' }));
+  });
+
+  it('treats HIDDEN products like unknown ones (404 with details.missing)', async () => {
+    const hidden = parts.gpu!.id;
+    await db.update(products).set({ status: 'HIDDEN' }).where(eq(products.id, hidden));
+    try {
+      const res = await request(app)
+        .post('/api/compatibility/check')
+        .send({ productIds: idsOf(parts) });
+      expect(res.status).toBe(404);
+      expect(res.body.error.details).toEqual({ missing: [hidden] });
+    } finally {
+      await db.update(products).set({ status: 'ACTIVE' }).where(eq(products.id, hidden));
+    }
   });
 
   it('answers 404 with the missing ids for unknown products', async () => {

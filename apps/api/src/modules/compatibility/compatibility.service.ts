@@ -11,10 +11,10 @@ export interface LoadedParts {
   rows: ProductWithRefs[];
 }
 
-/** Loads products into a one-per-category part map; 404 lists unknown ids, 422 lists doubled categories. */
+/** Loads ACTIVE products into a one-per-category part map; 404 lists unknown or hidden ids, 422 doubled categories. */
 export async function loadParts(db: Db, productIds: string[]): Promise<LoadedParts> {
   const ids = [...new Set(productIds)];
-  const rows = await findProductsByIds(db, ids.filter(isUuid));
+  const rows = (await findProductsByIds(db, ids.filter(isUuid))).filter((r) => r.product.status === 'ACTIVE');
   const found = new Set(rows.map((r) => r.product.id));
   const missing = ids.filter((id) => !found.has(id));
   if (missing.length > 0) {

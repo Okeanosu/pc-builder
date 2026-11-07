@@ -5,7 +5,7 @@ import type { AppDeps } from '../../deps';
 import { AppError } from '../../lib/errors';
 import { handler, parseBody } from '../../lib/http';
 import { requireAuth } from '../../middleware/auth';
-import { createAuthService } from './auth.service';
+import { createAuthService, InvalidRefreshError } from './auth.service';
 import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from './auth.tokens';
 
 export interface AuthRouterOptions {
@@ -65,7 +65,7 @@ export function createAuthRouter(deps: AppDeps, opts: AuthRouterOptions = {}): R
         setAuthCookies(res, session, secure);
         res.json({ accessToken: session.accessToken, user: session.user });
       } catch (err) {
-        clearAuthCookies(res, secure);
+        if (err instanceof InvalidRefreshError && err.clearCookies) clearAuthCookies(res, secure);
         throw err;
       }
     }),
@@ -91,4 +91,4 @@ export function createAuthRouter(deps: AppDeps, opts: AuthRouterOptions = {}): R
   return router;
 }
 
-export { type AuthService, createAuthService, toUserDTO } from './auth.service';
+export { type AuthService, createAuthService, InvalidRefreshError, toUserDTO } from './auth.service';

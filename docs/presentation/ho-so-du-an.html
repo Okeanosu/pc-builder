@@ -1,0 +1,708 @@
+<title>Hồ sơ PC Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: a workshop mat — sections are boards on a dot-grid, labelled like motherboard silkscreen (J1, J2…) in presentation order. */
+:root {
+  --mat: #0f1317;
+  --board: #161b21;
+  --board-2: #1c232b;
+  --line: #2a343e;
+  --ink: #e7edf2;
+  --ink-dim: #9eabb7;
+  --dot: rgba(158, 171, 183, 0.13);
+  --cyan: #22d3ee;
+  --cyan-ink: #22d3ee;
+  --lime: #a3e635;
+  --lime-ink: #a3e635;
+  --amber: #f59e0b;
+  --amber-ink: #fbbf24;
+  --red: #ef4444;
+  --red-ink: #f87171;
+  --on-cyan: #062a31;
+  --c-cpu: #60a5fa; --c-mainboard: #34d399; --c-ram: #a78bfa; --c-gpu: #f472b6;
+  --c-storage: #c084fc; --c-psu: #fb923c; --c-case: #818cf8; --c-cooler: #2dd4bf;
+  --font-ui: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --mat: #edf0f2; --board: #ffffff; --board-2: #f5f7f8; --line: #d3dae0;
+    --ink: #12161b; --ink-dim: #4c5966; --dot: rgba(76, 89, 102, 0.16);
+    --cyan-ink: #0e7490; --lime-ink: #3f6212; --amber-ink: #92400e; --red-ink: #b91c1c;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --mat: #edf0f2; --board: #ffffff; --board-2: #f5f7f8; --line: #d3dae0;
+  --ink: #12161b; --ink-dim: #4c5966; --dot: rgba(76, 89, 102, 0.16);
+  --cyan-ink: #0e7490; --lime-ink: #3f6212; --amber-ink: #92400e; --red-ink: #b91c1c;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: 24px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body {
+  margin: 0;
+  background-color: var(--mat);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 120px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(40px, 7vw, 72px); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(26px, 3.6vw, 36px); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 18px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--cyan-ink); }
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+
+/* Boards */
+section.board {
+  background: var(--board);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: clamp(20px, 4vw, 44px);
+  display: flex; flex-direction: column; gap: 22px;
+  scroll-margin-top: 24px;
+  position: relative;
+}
+.silk {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim);
+  display: flex; align-items: center; gap: 10px;
+}
+.silk b { color: var(--cyan-ink); font-weight: 700; }
+.silk::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.lede { font-size: 18px; color: var(--ink-dim); }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.grid > * { min-width: 0; }
+.tile { background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.tile p { color: var(--ink-dim); font-size: 15px; }
+.kicker { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); white-space: nowrap; }
+.tag.ok { color: var(--lime-ink); border-color: color-mix(in srgb, var(--lime) 45%, transparent); }
+.tag.wip { color: var(--amber-ink); border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.tag.hot { color: var(--cyan-ink); border-color: color-mix(in srgb, var(--cyan) 45%, transparent); }
+.led { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+
+/* Hero */
+.hero { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 980px) { .hero { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: start; } }
+.hero h1 span { color: var(--cyan-ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.facts { display: flex; flex-wrap: wrap; gap: 24px; padding-top: 6px; }
+.fact { display: flex; flex-direction: column; }
+.fact .num { font-size: 26px; font-weight: 700; color: var(--ink); }
+.fact span:last-child { font-size: 13px; color: var(--ink-dim); }
+
+/* Chat + build cards (always the dark workshop treatment, like the real Advisor) */
+.workshop {
+  --w-bg: #0f1317; --w-panel: #161b21; --w-line: #2a343e; --w-ink: #e7edf2; --w-dim: #9eabb7;
+  background-color: var(--w-bg);
+  background-image: radial-gradient(rgba(158,171,183,0.12) 1px, transparent 1.2px);
+  background-size: 18px 18px;
+  border: 1px solid var(--w-line); border-radius: var(--r-lg);
+  padding: 16px; color: var(--w-ink); display: flex; flex-direction: column; gap: 12px;
+  color-scheme: dark;
+}
+.bubble { align-self: flex-end; background: var(--cyan); color: var(--on-cyan); font-weight: 600; padding: 10px 14px; border-radius: 14px 14px 4px 14px; max-width: 90%; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--w-line); color: var(--w-dim); display: inline-flex; gap: 6px; align-items: center; }
+.chip.done { color: #a3e635; border-color: rgba(163,230,53,0.35); }
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.bcard { background: var(--w-panel); border: 1px solid var(--w-line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bcard.pick { border-color: #22d3ee; box-shadow: 0 0 0 1px #22d3ee inset; }
+.bcard .lbl { font-size: 12px; font-weight: 600; color: var(--w-dim); display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.bcard .ok { color: #a3e635; font-family: var(--font-mono); font-size: 11px; }
+.bcard .total { font-family: var(--font-mono); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bcard .rest { font-size: 12px; color: var(--w-dim); }
+.meter { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--w-dim); }
+.meter .bars { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; flex: 1; }
+.meter .bars i { height: 6px; border-radius: 2px; background: #2a343e; }
+.meter .bars i.on { background: #22d3ee; box-shadow: 0 0 6px rgba(34,211,238,0.5); }
+.alloc { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 1px; }
+.parts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; font-size: 12px; }
+.parts dt { color: var(--w-dim); }
+.parts dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.explain { font-size: 14px; color: var(--w-dim); border-left: 2px solid #2a343e; padding-left: 10px; }
+.caption { font-size: 12px; color: var(--ink-dim); font-family: var(--font-mono); }
+
+/* Flow steps */
+.flow { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); counter-reset: step; }
+.step { background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px; display: flex; flex-direction: column; gap: 6px; counter-increment: step; }
+.step::before { content: counter(step, decimal-leading-zero); font-family: var(--font-mono); font-size: 12px; color: var(--cyan-ink); font-weight: 700; }
+.step p { font-size: 14px; color: var(--ink-dim); }
+
+/* Tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-md); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-dim); font-weight: 500; background: var(--board-2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.mono, td .mono { white-space: nowrap; }
+.sev-e { color: var(--red-ink); font-family: var(--font-mono); font-size: 12px; }
+.sev-w { color: var(--amber-ink); font-family: var(--font-mono); font-size: 12px; }
+
+/* Pipeline */
+.pipe { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.pipe .stage { flex: 1 1 150px; min-width: 0; background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.pipe .stage b { font-size: 14px; }
+.pipe .stage span { font-size: 13px; color: var(--ink-dim); }
+.pipe .stage .mono { color: var(--cyan-ink); font-size: 12px; }
+
+/* Chart */
+.chart-box { background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px; overflow-x: auto; }
+.chart-box svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-dim); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+/* NLU table chips */
+.said { font-family: var(--font-mono); font-size: 13px; background: var(--board-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+
+/* Q&A */
+details { background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0 16px; }
+details + details { margin-top: 8px; }
+summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; font-family: var(--font-mono); color: var(--cyan-ink); width: 14px; flex: none; }
+details[open] summary::before { content: "−"; }
+details > p { padding-bottom: 14px; color: var(--ink-dim); }
+
+/* Status list */
+.status { display: grid; gap: 8px; }
+.status li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-sm); flex-wrap: wrap; }
+.status ul, ul.status { list-style: none; margin: 0; padding: 0; }
+
+/* Speaker notes */
+.notes { display: none; border: 1px dashed color-mix(in srgb, var(--amber) 60%, transparent); border-radius: var(--r-md); padding: 14px 16px; background: color-mix(in srgb, var(--amber) 8%, var(--board)); font-size: 15px; }
+.notes::before { content: "Ghi chú cho người thuyết trình"; display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber-ink); margin-bottom: 6px; }
+.notes ul { margin: 0; padding-left: 18px; }
+body.show-notes .notes { display: block; }
+
+/* Presenter dock */
+.dock {
+  position: fixed; z-index: 20;
+  right: calc(max(16px, env(safe-area-inset-right, 0px)));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px;
+  background: var(--board); border: 1px solid var(--line); border-radius: 999px; padding: 6px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+}
+.dock button { font: inherit; font-size: 14px; background: transparent; color: var(--ink); border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.dock button:hover { background: var(--board-2); }
+.dock button[aria-pressed="true"] { background: var(--cyan); color: var(--on-cyan); font-weight: 600; }
+.dock .pos { font-family: var(--font-mono); font-size: 13px; color: var(--ink-dim); min-width: 64px; text-align: center; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-family: var(--font-mono); font-size: 12px; text-decoration: none; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--board); }
+.toc a:hover { color: var(--cyan-ink); border-color: var(--cyan); }
+pre.mermaid { background: var(--board-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px; overflow-x: auto; margin: 0; }
+footer { color: var(--ink-dim); font-size: 13px; text-align: center; }
+</style>
+
+<div class="wrap">
+
+  <nav class="toc" aria-label="Mục lục">
+    <a href="#mo-dau">J1 Mở đầu</a><a href="#bai-toan">J2 Bài toán</a><a href="#giai-phap">J3 Giải pháp</a>
+    <a href="#ai-advisor">J4 AI Advisor</a><a href="#engine">J5 Engine</a><a href="#thuong-mai">J6 Thương mại</a>
+    <a href="#kien-truc">J7 Kiến trúc</a><a href="#quy-trinh">J8 Quy trình</a><a href="#demo">J9 Demo</a>
+    <a href="#hoi-dap">J10 Hỏi đáp</a><a href="#tien-do">J11 Tiến độ</a>
+  </nav>
+
+  <!-- J1 -->
+  <section class="board" id="mo-dau" data-slide>
+    <div class="silk"><b>J1</b> Mở đầu</div>
+    <div class="hero">
+      <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+        <div class="meta">
+          <span class="tag">ĐATN Kỹ sư · 2026.1</span>
+          <span class="tag">ĐH Bách khoa Hà Nội · SoICT</span>
+        </div>
+        <h1>PC <span>Builder</span></h1>
+        <p class="lede">Gõ một câu tiếng Việt, nhận lại cấu hình PC lắp được thật: tương thích từng chân socket, nằm trong ngân sách, chọn từ hàng đang có trong kho.</p>
+        <p style="color:var(--ink-dim);font-size:15px">Website bán linh kiện máy tính có trợ lý AI tư vấn cấu hình. Đề tài: <em>Xây dựng hệ thống TMĐT linh kiện máy tính tích hợp công cụ gợi ý cấu hình PC phù hợp nhu cầu người dùng</em>.</p>
+        <div class="facts">
+          <div class="fact"><span class="num">240</span><span>linh kiện thật, 8 nhóm</span></div>
+          <div class="fact"><span class="num">15</span><span>luật tương thích</span></div>
+          <div class="fact"><span class="num">11,5 ms</span><span>p95 giải 250 sản phẩm</span></div>
+          <div class="fact"><span class="num">200</span><span>node truy vết spec↔code</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+        <div class="workshop" aria-label="Minh họa hội thoại với AI Advisor">
+          <div class="bubble">Chơi game, tầm 25 triệu</div>
+          <div class="chips">
+            <span class="chip done">✓ Đã hiểu: chơi game, 25 triệu</span>
+            <span class="chip done">✓ Đã chọn 3 cấu hình từ 213 linh kiện còn hàng</span>
+          </div>
+          <div class="cards" id="hero-cards"></div>
+          <p class="explain">Bản Hiệu năng dồn 41% tiền vào card đồ họa vì game phụ thuộc GPU nhiều nhất. Nguồn 450W là đủ cho máy ăn khoảng 300W, phần tiền tiết kiệm được chuyển sang card mạnh hơn.</p>
+        </div>
+        <p class="caption">Kết quả thật của engine trên dữ liệu demo · gaming 25 triệu · 5 ms · 1.783 nút tìm kiếm</p>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Mở bằng một câu: "Nếu bạn có 25 triệu và muốn chơi game, bạn sẽ chọn 8 linh kiện thế nào để chắc chắn lắp được?"</li>
+      <li>Chỉ vào khung chat: hệ thống trả 3 phương án, đều tương thích, giá lấy từ kho thật chứ không do AI đoán.</li>
+      <li>Nhấn mạnh 4 con số ở dưới, đặc biệt 11,5 ms: đây là bài toán tổ hợp hàng trăm tỷ trường hợp.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J2 -->
+  <section class="board" id="bai-toan" data-slide>
+    <div class="silk"><b>J2</b> Bài toán</div>
+    <h2>Mua PC khó vì người mua phải tự làm việc của kỹ thuật viên</h2>
+    <div class="grid g3">
+      <div class="tile">
+        <span class="kicker">Rào cản kỹ thuật</span>
+        <h3>Chọn nhầm là không lắp được</h3>
+        <p>Socket CPU phải khớp mainboard, RAM DDR4 không cắm được khe DDR5, card dài hơn thùng máy, nguồn yếu hơn tải. Mỗi nhóm linh kiện có hàng chục chuẩn kết nối.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Ngân sách cảm tính</span>
+        <h3>Tiền đặt sai chỗ, máy nghẽn cổ chai</h3>
+        <p>Người mua hay chi quá tay cho CPU hoặc nguồn công suất lớn rồi hết tiền cho card đồ họa, trong khi game cần GPU nhất.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Web bán lẻ</span>
+        <h3>Chỉ bán từng món, không giúp ra quyết định</h3>
+        <p>Các website hiện nay cho chọn từng linh kiện nhưng không kiểm tra tương thích, không tối ưu theo nhu cầu, không xuất được báo giá cả bộ.</p>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Ba ý này lấy từ mục 3.5 của phiếu giao nhiệm vụ, nên trình bày đúng thứ tự.</li>
+      <li>Ví dụ dễ nhớ: CPU AM5 + mainboard LGA1700 là cắm không vào. Nguồn 450W cho card 575W là sập nguồn.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J3 -->
+  <section class="board" id="giai-phap" data-slide>
+    <div class="silk"><b>J3</b> Giải pháp</div>
+    <h2>Một cửa hàng, bốn công cụ</h2>
+    <div class="grid g4">
+      <div class="tile">
+        <span class="tag hot"><span class="led"></span>Nổi bật</span>
+        <h3>AI PC Advisor</h3>
+        <p>Chatbot tiếng Việt dùng Google Gemini (API miễn phí). Hiểu câu nói tự nhiên, hỏi lại khi thiếu thông tin, sửa cấu hình qua hội thoại.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Lõi thuật toán</span>
+        <h3>Optimization Engine</h3>
+        <p>Mô hình CSP để bảo đảm tương thích, mô hình MCKP để tối đa hiệu năng trên từng đồng. Trả 3 phương án: Hiệu năng, Cân bằng, Tiết kiệm.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Tự lắp</span>
+        <h3>PC Customizer</h3>
+        <p>Người dùng tự chọn từng món. Hệ thống báo xung đột ngay lập tức, kèm mã luật và giải thích tiếng Việt.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Thương mại D2C</span>
+        <h3>Mua cả bộ, trả VietQR</h3>
+        <p>Lọc theo thông số, giỏ hàng, đặt lắp ráp nguyên bộ, thanh toán VietQR tự xác nhận, báo giá PDF và trang quản trị.</p>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Cả 4 công cụ dùng chung một bộ luật tương thích. AI, form gợi ý và Customizer không bao giờ cho kết quả mâu thuẫn nhau.</li>
+      <li>Chuyển sang phần tiếp theo bằng câu: "Phần đáng chú ý nhất là AI, nhưng AI không phải phần quyết định linh kiện."</li>
+    </ul></aside>
+  </section>
+
+  <!-- J4 -->
+  <section class="board" id="ai-advisor" data-slide>
+    <div class="silk"><b>J4</b> AI Advisor</div>
+    <h2>AI hiểu câu hỏi, thuật toán chọn linh kiện</h2>
+    <p class="lede">Gemini không được phép tự nêu tên hay giá linh kiện. Nó chỉ được gọi công cụ. Mọi thẻ cấu hình hiển thị đều dựng từ dữ liệu kho, nên giá luôn đúng và không có linh kiện bịa.</p>
+    <div class="flow">
+      <div class="step"><h3>Người dùng gõ</h3><p>"Chơi game 2K, 30 triệu, thích case trắng"</p></div>
+      <div class="step"><h3>Gemini gọi tool</h3><p><code>recommend_builds</code> với ngân sách, mục đích, sở thích đã tách ra</p></div>
+      <div class="step"><h3>Engine giải</h3><p>Lấy hàng còn trong kho, chạy CSP + MCKP, trả 3 cấu hình</p></div>
+      <div class="step"><h3>Thẻ hiện ngay</h3><p>Server stream sự kiện <code>builds</code> qua SSE, giao diện vẽ thẻ trước</p></div>
+      <div class="step"><h3>AI giải thích</h3><p>Gemini viết lời giải thích dựa trên số liệu tool trả về</p></div>
+    </div>
+    <div class="grid g2">
+      <div class="tile">
+        <span class="kicker">5 công cụ khai báo cho Gemini</span>
+        <div class="scroll"><table>
+          <thead><tr><th>Tool</th><th>Dùng khi</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">recommend_builds</td><td>Có ngân sách và mục đích</td></tr>
+            <tr><td class="mono">modify_build</td><td>"Đổi sang card AMD", "bớt 3 triệu"</td></tr>
+            <tr><td class="mono">search_products</td><td>Hỏi về một nhóm linh kiện</td></tr>
+            <tr><td class="mono">get_product_details</td><td>Hỏi chi tiết một sản phẩm</td></tr>
+            <tr><td class="mono">check_compatibility</td><td>"Mấy món này lắp chung được không?"</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tile">
+        <span class="kicker">Chế độ dự phòng</span>
+        <h3>Hết quota Gemini vẫn demo được</h3>
+        <p>Không có API key, Gemini báo lỗi 429 hoặc quá 20 giây: hệ thống chuyển sang bộ hiểu tiếng Việt tự viết, gọi cùng engine và trả lời theo mẫu. Giao diện hiện nhãn "Chế độ dự phòng".</p>
+        <div class="scroll"><table>
+          <thead><tr><th>Người dùng gõ</th><th>Hệ thống hiểu</th></tr></thead>
+          <tbody>
+            <tr><td><span class="said">25tr chơi game</span></td><td>25.000.000₫ · chơi game</td></tr>
+            <tr><td><span class="said">hai mươi lăm củ</span></td><td>25.000.000₫</td></tr>
+            <tr><td><span class="said">i5 13600K</span></td><td>tên CPU, không phải 13,6 triệu</td></tr>
+            <tr><td><span class="said">card 3060 cũ, 20 triệu</span></td><td>20.000.000₫ ("cũ" khác "củ")</td></tr>
+            <tr><td><span class="said">mạnh hơn bản trước 5 triệu</span></td><td>cộng thêm 5 triệu</td></tr>
+            <tr><td><span class="said">chơi game 2K 30tr</span></td><td>độ phân giải 1440p, 30 triệu</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Ý chính: AI lo phần "hiểu người", thuật toán lo phần "đúng kỹ thuật". Tách như vậy để chống ảo giác (hallucination).</li>
+      <li>Bảng dự phòng có 164 test tự động. Các ví dụ "i5 13600K" và "cũ/củ" là lỗi thật đã bắt được khi review rồi sửa.</li>
+      <li>Nếu hội đồng hỏi "sao không fine-tune": catalog chỉ vài trăm sản phẩm, tool calling đủ và rẻ hơn nhiều.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J5 -->
+  <section class="board" id="engine" data-slide>
+    <div class="silk"><b>J5</b> Optimization Engine</div>
+    <h2>CSP cho tương thích, MCKP cho ngân sách</h2>
+    <div class="grid g3">
+      <div class="tile"><span class="kicker">Biến</span><p>8 vị trí: CPU, mainboard, RAM, GPU, ổ cứng, nguồn, case, tản nhiệt. GPU được bỏ trống khi máy văn phòng dùng CPU có đồ họa tích hợp.</p></div>
+      <div class="tile"><span class="kicker">Miền giá trị</span><p>Sản phẩm còn hàng của từng nhóm, sau khi lọc theo sở thích và loại các món bị "lấn át" (đắt hơn mà không tốt hơn).</p></div>
+      <div class="tile"><span class="kicker">Mục tiêu</span><p>Tối đa Σ trọng số × điểm hiệu năng, với tổng giá ≤ ngân sách. Trọng số theo mục đích, admin chỉnh được trên giao diện.</p></div>
+    </div>
+
+    <div class="pipe" aria-label="Các bước của thuật toán">
+      <div class="stage"><span class="mono">1</span><b>Lọc & cắt miền</b><span>Bỏ hết hàng, áp sở thích, loại món bị lấn át</span></div>
+      <div class="stage"><span class="mono">2</span><b>AC-3</b><span>Bỏ giá trị không có cặp tương thích nào</span></div>
+      <div class="stage"><span class="mono">3</span><b>Thứ tự biến</b><span>Miền một giá trị trước, rồi theo trọng số mục đích</span></div>
+      <div class="stage"><span class="mono">4</span><b>Backtracking + Forward Checking</b><span>Gán từng biến, lọc trước miền còn lại</span></div>
+      <div class="stage"><span class="mono">5</span><b>Branch & Bound</b><span>Cận trên bằng nới lỏng LP của MCKP, cắt nhánh không thể thắng</span></div>
+      <div class="stage"><span class="mono">6</span><b>Chọn 3 phương án</b><span>Hiệu năng · Cân bằng · Tiết kiệm, khác CPU hoặc GPU</span></div>
+    </div>
+
+    <div class="chart-box">
+      <div class="legend" style="margin-bottom:10px">
+        <span><i style="background:var(--red)"></i>Vét cạn: thời gian ước tính để duyệt hết mọi tổ hợp</span>
+        <span><i style="background:var(--cyan)"></i>Engine (p95 đo thật)</span>
+      </div>
+      <svg id="speed-chart" viewBox="0 0 760 300" role="img" aria-label="So sánh thời gian vét cạn và engine theo kích thước catalog, thang logarit"></svg>
+      <p class="caption" style="margin-top:8px">Thang logarit. Vét cạn đo được khoảng 40.000 nút/ms trên Apple M3, rồi ngoại suy theo kích thước không gian (250 sản phẩm ≈ 3,16 × 10¹¹ tổ hợp). Engine luôn cho kết quả tối ưu, giống vét cạn trên 1.502 ca kiểm tra ngẫu nhiên.</p>
+    </div>
+
+    <div class="scroll"><table>
+      <thead><tr><th>Mã</th><th>Luật</th><th>Mức</th></tr></thead>
+      <tbody id="rules"></tbody>
+    </table></div>
+
+    <div class="grid g2">
+      <div class="tile"><span class="kicker">Chấm điểm "đủ dùng"</span><p>Nguồn, mainboard, case, tản nhiệt chỉ cần đủ. Nguồn 1200W không được điểm cao hơn nguồn 450W khi máy ăn 300W, nên tiền chảy về CPU và GPU.</p></div>
+      <div class="tile"><span class="kicker">Hệ sinh thái CUDA</span><p>Máy cho AI và đồ họa ưu tiên card NVIDIA (hệ số 0,55 và 0,8 cho hãng khác), trừ khi người dùng chỉ định hãng.</p></div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Đây là phần "khoa học máy tính" của đồ án, ứng với mục 3.1 của phiếu: CSP (Backtracking, Forward Checking, Arc Consistency) và bài toán cái túi nhiều lựa chọn.</li>
+      <li>Biểu đồ: 250 sản phẩm thì vét cạn mất khoảng 2 giờ, engine mất 11,5 ms. 500 sản phẩm thì vét cạn khoảng 25 ngày, engine 40 ms.</li>
+      <li>Nói thật: AC-3 gần như không loại thêm giá trị trên dữ liệu này. Phần lớn tốc độ đến từ Forward Checking và cận Branch & Bound. Thứ tự biến MRV được thử làm đối chứng nhưng chậm hơn.</li>
+      <li>Kiểm thử: 175 test, độ phủ nhánh 98,85%, 4 chiến lược cho kết quả giống hệt nhau.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J6 -->
+  <section class="board" id="thuong-mai" data-slide>
+    <div class="silk"><b>J6</b> Thương mại</div>
+    <h2>Phần cửa hàng làm như hệ thống thật</h2>
+    <div class="grid g2">
+      <div class="tile">
+        <span class="kicker">Thông số động · PostgreSQL JSONB + GIN</span>
+        <p>Mỗi nhóm linh kiện có bộ thông số khác nhau, lưu trong một cột JSONB. Bộ lọc tự sinh từ schema của nhóm, tìm bằng phép chứa có chỉ mục GIN:</p>
+        <div class="scroll"><table><tbody><tr><td class="mono">specs @&gt; '{"socket":"AM5"}'</td></tr></tbody></table></div>
+      </div>
+      <div class="tile">
+        <span class="kicker">Chống bán vượt</span>
+        <p>Đặt hàng giữ chỗ trong một transaction. Chỉ trừ được khi còn đủ hàng, nên 5 người bấm mua món cuối cùng cùng lúc thì đúng 1 người thành công. Đơn chưa trả sau 15 phút tự hủy và trả hàng về kho.</p>
+        <div class="scroll"><table><tbody><tr><td class="mono">UPDATE products SET reserved = reserved + q WHERE id = $1 AND stock - reserved &gt;= q</td></tr></tbody></table></div>
+      </div>
+      <div class="tile">
+        <span class="kicker">VietQR động</span>
+        <p>Mã QR có sẵn số tiền và mã đơn. Ngân hàng báo về qua webhook chuẩn SePay. Hệ thống đối chiếu số tiền, bỏ qua giao dịch trùng, rồi tự chuyển đơn sang "Đã thanh toán".</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Báo giá PDF · Quản trị</span>
+        <p>Xuất báo giá cấu hình tiếng Việt. Admin quản lý sản phẩm bằng form sinh theo schema, điều chỉnh tồn kho, benchmark, ma trận trọng số thuật toán, đơn hàng, doanh thu và xem lại hội thoại AI.</p>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Câu chống bán vượt là điểm hay để nói: có test bắn 5 request song song và chỉ 1 thành công.</li>
+      <li>Webhook xử lý idempotent: ngân hàng gửi lại cùng giao dịch hai lần thì đơn không bị cộng tiền hai lần.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J7 -->
+  <section class="board" id="kien-truc" data-slide>
+    <div class="silk"><b>J7</b> Kiến trúc</div>
+    <h2>Monorepo, engine dùng chung cho web và server</h2>
+<pre class="mermaid">
+flowchart LR
+  U[Khách hàng / Admin] -->|HTTPS| WEB[Next.js 16<br/>SSR + client]
+  WEB -->|REST / SSE| API[Express 5 API]
+  API --> ENG[engine<br/>CSP + MCKP]
+  API --> PG[(PostgreSQL<br/>JSONB + GIN)]
+  API --> RD[(Redis<br/>cache, giỏ, rate limit)]
+  API -->|function calling| GEM[Google Gemini<br/>free tier]
+  BANK[Webhook SePay] -->|POST| API
+  WEB -. kiểm tra tương thích tức thì .-> ENG
+</pre>
+    <div class="grid g4">
+      <div class="tile"><span class="kicker">Frontend</span><p>Next.js 16 App Router, TypeScript, Tailwind v4, Zustand, TanStack Query</p></div>
+      <div class="tile"><span class="kicker">Backend</span><p>Node.js, Express 5, Zod, Drizzle ORM, JWT + refresh token xoay vòng, phân quyền theo vai trò</p></div>
+      <div class="tile"><span class="kicker">Dữ liệu</span><p>PostgreSQL 16 (JSONB, GIN), Redis 7 cho cache có phiên bản, giỏ khách, giữ hàng, giới hạn tần suất</p></div>
+      <div class="tile"><span class="kicker">Triển khai</span><p>Docker, Docker Compose, máy chủ đám mây (VPS) với HTTPS tự động</p></div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Điểm kiến trúc đáng nói: package engine không có I/O, chạy được cả trên trình duyệt (Customizer báo lỗi tức thì) lẫn server (nguồn chân lý).</li>
+      <li>Cache gắn số phiên bản catalog: admin sửa giá thì phiên bản tăng và cache cũ tự hết hiệu lực, không phải xóa từng key.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J8 -->
+  <section class="board" id="quy-trinh" data-slide>
+    <div class="silk"><b>J8</b> Quy trình</div>
+    <h2>Làm theo đặc tả, mỗi phần đều có người review</h2>
+    <div class="grid g2">
+      <div class="tile">
+        <span class="kicker">Spec-Code Graph</span>
+        <h3>200 node, 689 cạnh</h3>
+        <p>Mỗi yêu cầu nối tới use case, tính năng, module, file code, test và chương báo cáo. Một lệnh sinh ra bảng truy vết và tư liệu cho từng chương. Hỏi "yêu cầu này code ở đâu, test ở đâu" là có câu trả lời ngay.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">Review bắt lỗi thật</span>
+        <div class="scroll"><table>
+          <thead><tr><th>Lỗi</th><th>Đã sửa</th></tr></thead>
+          <tbody>
+            <tr><td>"i5 13600K" bị đọc thành ngân sách 13,6 triệu</td><td>Nhận diện số hiệu linh kiện</td></tr>
+            <tr><td>Bản "Tiết kiệm" đôi khi đắt hơn bản "Hiệu năng"</td><td>Giữ đúng vai trò khi chọn</td></tr>
+            <tr><td>Máy 300W được gợi ý nguồn 1200W</td><td>Chấm điểm nguồn theo "đủ dùng"</td></tr>
+            <tr><td>Máy AI chọn card AMD</td><td>Ưu tiên hệ sinh thái CUDA</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Kể chuyện: mỗi phần (engine, dữ liệu, AI, giao diện) được làm riêng rồi review độc lập trước khi ghép. Review chạy thử hàng nghìn ca ngẫu nhiên.</li>
+      <li>Graph này cũng là cách viết báo cáo nhanh: chương 4 lấy thẳng từ các node đã nối với code.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J9 -->
+  <section class="board" id="demo" data-slide>
+    <div class="silk"><b>J9</b> Kịch bản demo</div>
+    <h2>Năm phút, theo đúng thứ tự này</h2>
+    <div class="flow">
+      <div class="step"><h3>Trang chủ</h3><p>Gõ "Chơi game 25 triệu" vào ô AI. Nói: không cần biết socket hay chuẩn RAM.</p></div>
+      <div class="step"><h3>Advisor</h3><p>Chỉ chip trạng thái, 3 thẻ trượt ra, lời giải thích. Gõ tiếp "đổi sang card NVIDIA".</p></div>
+      <div class="step"><h3>Customizer</h3><p>"Mở trong Customizer", đổi CPU sang socket khác, cho xem lỗi đỏ C01 bằng tiếng Việt.</p></div>
+      <div class="step"><h3>Mua cả bộ</h3><p>Thêm cả bộ vào giỏ, đặt lắp ráp, trang VietQR đếm ngược, bấm giả lập thanh toán.</p></div>
+      <div class="step"><h3>Admin</h3><p>Tăng trọng số GPU cho gaming, quay lại hỏi AI và thấy phần trăm cho card tăng lên.</p></div>
+    </div>
+    <aside class="notes"><ul>
+      <li>Trước khi demo: chạy <code>pnpm infra:up</code>, <code>pnpm db:seed</code>, <code>pnpm dev</code>. Mở sẵn tab admin đã đăng nhập (admin@pcbuilder.vn).</li>
+      <li>Nếu mạng yếu hoặc hết quota Gemini, cứ demo tiếp. Nhãn "Chế độ dự phòng" hiện lên chính là điểm cộng, nên chủ động nói ra.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J10 -->
+  <section class="board" id="hoi-dap" data-slide>
+    <div class="silk"><b>J10</b> Câu hỏi hội đồng hay hỏi</div>
+    <h2>Chuẩn bị sẵn câu trả lời</h2>
+    <div>
+      <details><summary>Sao không để AI chọn luôn linh kiện cho đơn giản?</summary>
+        <p>Mô hình ngôn ngữ có thể bịa tên sản phẩm, nhớ sai giá, bỏ sót một ràng buộc như chiều dài card. Đồ án tách vai trò: AI hiểu nhu cầu và giải thích, engine quyết định linh kiện. Vì vậy kết quả luôn tương thích và giá luôn khớp kho.</p></details>
+      <details><summary>Hết quota Gemini miễn phí thì sao?</summary>
+        <p>Hệ thống tự chuyển sang chế độ dự phòng: bộ phân tích tiếng Việt viết bằng luật, gọi cùng engine, trả lời theo mẫu. Người dùng vẫn nhận 3 cấu hình. Có cache và giới hạn 10 tin/phút để tiết kiệm quota.</p></details>
+      <details><summary>Vì sao không vét cạn, chỉ có vài trăm sản phẩm?</summary>
+        <p>8 nhóm nhân với nhau nên 250 sản phẩm đã ra khoảng 3,16 × 10¹¹ tổ hợp, vét cạn mất khoảng 2 giờ. Engine dùng Forward Checking và Branch & Bound với cận LP, cho cùng kết quả tối ưu trong khoảng 11,5 ms.</p></details>
+      <details><summary>MCKP thể hiện ở đâu?</summary>
+        <p>Mỗi nhóm linh kiện là một lớp, phải chọn đúng một món. Giá trị là điểm hiệu năng nhân trọng số mục đích, trọng lượng là giá, sức chứa là ngân sách. Cận trên trong Branch & Bound là nghiệm nới lỏng tuyến tính của chính bài toán MCKP này.</p></details>
+      <details><summary>Dữ liệu giá và điểm benchmark lấy ở đâu?</summary>
+        <p>240 linh kiện là model thật 2023–2026. Giá là giá tham khảo thị trường Việt Nam, làm tròn 10.000₫. Điểm benchmark xấp xỉ Cinebench R23 cho CPU và 3DMark Time Spy cho GPU. Admin cập nhật được trên trang quản trị.</p></details>
+      <details><summary>Làm sao chắc không bán vượt khi nhiều người mua cùng lúc?</summary>
+        <p>Giữ hàng bằng một câu UPDATE có điều kiện trong transaction: chỉ trừ khi tồn kho trừ hàng đang giữ vẫn đủ. Có test bắn 5 đơn song song cho món còn 1 cái: đúng 1 đơn thành công, 4 đơn báo hết hàng.</p></details>
+    </div>
+    <aside class="notes"><ul>
+      <li>Mở sẵn trang này trên điện thoại khi thuyết trình để tra nhanh.</li>
+    </ul></aside>
+  </section>
+
+  <!-- J11 -->
+  <section class="board" id="tien-do" data-slide>
+    <div class="silk"><b>J11</b> Tiến độ</div>
+    <h2>Đã xong phần lõi, đang ghép giao diện</h2>
+    <ul class="status">
+      <li><span>Optimization Engine (CSP + MCKP, 15 luật, benchmark)</span><span class="tag ok"><span class="led"></span>Xong · đã review</span></li>
+      <li><span>Dữ liệu 240 linh kiện, schema thông số động</span><span class="tag ok"><span class="led"></span>Xong · đã review</span></li>
+      <li><span>Lõi chatbot: hiểu tiếng Việt, điều phối Gemini, chế độ dự phòng</span><span class="tag ok"><span class="led"></span>Xong · đã review</span></li>
+      <li><span>Design system "Tech Workshop"</span><span class="tag ok"><span class="led"></span>Xong · đã review</span></li>
+      <li><span>Spec-Code Graph phục vụ báo cáo</span><span class="tag ok"><span class="led"></span>Xong · đã review</span></li>
+      <li><span>API: tài khoản, catalog, gợi ý, giỏ hàng, đơn, VietQR, PDF, quản trị</span><span class="tag wip"><span class="led"></span>Đang hoàn thiện</span></li>
+      <li><span>Giao diện: cửa hàng, Advisor, Customizer, quản trị</span><span class="tag wip"><span class="led"></span>Đang làm</span></li>
+      <li><span>Kiểm thử tích hợp, E2E, đánh giá AI · Triển khai VPS · Khảo sát người dùng</span><span class="tag"><span class="led"></span>Kế tiếp</span></li>
+    </ul>
+    <p class="caption">Thời gian đồ án: 09/07/2026 → 14/01/2027 · Cập nhật 07/11/2026</p>
+    <aside class="notes"><ul>
+      <li>Kết bằng hướng phát triển: thêm dữ liệu giá theo thời gian thực, gợi ý nâng cấp từ máy đang có, mở rộng sang laptop.</li>
+    </ul></aside>
+  </section>
+
+  <footer>Trang nội bộ để chuẩn bị thuyết trình · không công khai</footer>
+</div>
+
+<div class="dock" role="toolbar" aria-label="Điều khiển thuyết trình">
+  <button type="button" id="prev" aria-label="Phần trước">‹</button>
+  <span class="pos" id="pos">1 / 11</span>
+  <button type="button" id="next" aria-label="Phần sau">›</button>
+  <button type="button" id="notes-toggle" aria-pressed="false">Ghi chú</button>
+</div>
+
+<script>
+(() => {
+  const vnd = (n) => new Intl.NumberFormat('vi-VN').format(n) + '₫';
+  const CAT = [
+    ['cpu', 'CPU'], ['mainboard', 'Mainboard'], ['ram', 'RAM'], ['gpu', 'Card đồ họa'],
+    ['storage', 'Ổ cứng'], ['psu', 'Nguồn'], ['case', 'Vỏ case'], ['cooler', 'Tản nhiệt'],
+  ];
+  const BUDGET = 25000000;
+  // Real output of the engine's seed smoke run (gaming, 25M).
+  const builds = [
+    { label: 'Tối ưu hiệu năng', score: 67.91, pick: true, parts: {
+      cpu: ['AMD Ryzen 5 9600X', 6190000], mainboard: ['Gigabyte A620M Gaming X', 2090000],
+      ram: ['32GB DDR5 5600', 2390000], gpu: ['Radeon RX 9060 XT 16GB', 10190000],
+      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['DeepCool PK450D 450W', 790000],
+      case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
+    { label: 'Cân bằng', score: 63.09, parts: {
+      cpu: ['AMD Ryzen 5 7500F', 3590000], mainboard: ['ASRock A620M-HDV/M.2', 1890000],
+      ram: ['32GB DDR5 5600', 2390000], gpu: ['Intel Arc B580 12GB', 6490000],
+      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['Corsair CV550 550W', 950000],
+      case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
+    { label: 'Tiết kiệm', score: 57.91, parts: {
+      cpu: ['Intel Core i3-12100F', 1890000], mainboard: ['ASRock H610M-HDV/M.2', 1490000],
+      ram: ['32GB DDR4 3200', 1590000], gpu: ['Intel Arc B580 12GB', 6490000],
+      storage: ['Kingston NV2 1TB', 1690000], psu: ['Corsair CV550 550W', 950000],
+      case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
+  ];
+
+  const host = document.getElementById('hero-cards');
+  for (const b of builds) {
+    const total = CAT.reduce((s, [k]) => s + b.parts[k][1], 0);
+    const on = Math.round(b.score / 10);
+    const card = document.createElement('article');
+    card.className = 'bcard' + (b.pick ? ' pick' : '');
+    card.innerHTML = `
+      <div class="lbl"><span>${b.label}</span><span class="ok">● Tương thích</span></div>
+      <div class="total">${vnd(total)}</div>
+      <div class="rest">Còn dư ${vnd(BUDGET - total)}</div>
+      <div class="meter"><span>${Math.round(b.score)}</span><span class="bars">${Array.from({ length: 10 }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span></div>
+      <div class="alloc" aria-label="Phân bổ ngân sách theo nhóm linh kiện">${CAT.map(([k, name]) => {
+        const pct = (b.parts[k][1] / total) * 100;
+        return `<span title="${name} ${pct.toFixed(0)}%" style="width:${pct}%;background:var(--c-${k})"></span>`;
+      }).join('')}</div>
+      <dl class="parts">
+        <dt>CPU</dt><dd>${b.parts.cpu[0]}</dd>
+        <dt>GPU</dt><dd>${b.parts.gpu[0]}</dd>
+        <dt>Nguồn</dt><dd>${b.parts.psu[0]}</dd>
+        <dt>GPU chiếm</dt><dd>${((b.parts.gpu[1] / total) * 100).toFixed(0)}% ngân sách</dd>
+      </dl>`;
+    host.appendChild(card);
+  }
+
+  const rules = [
+    ['C01', 'Socket CPU khớp mainboard', 'e'], ['C02', 'Loại RAM (DDR4/DDR5) khớp mainboard và CPU', 'e'],
+    ['C03', 'Số thanh và dung lượng RAM vừa mainboard', 'e'], ['C04', 'Kích thước mainboard vừa case', 'e'],
+    ['C05', 'Chiều dài card đồ họa vừa case', 'e'], ['C06', 'Chiều cao tản khí / kích thước rad AIO vừa case', 'e'],
+    ['C07', 'Tản nhiệt hỗ trợ socket CPU', 'e'], ['C08', 'Nguồn ≥ (TDP CPU + TGP GPU + 75W) × 1,3', 'e'],
+    ['C09', 'Tản nhiệt đủ sức cho TDP của CPU', 'w'], ['C10', 'Không có card rời thì CPU phải có đồ họa tích hợp', 'e'],
+    ['C11', 'Ổ M.2 cần mainboard có khe M.2', 'e'], ['C12', 'Chuẩn nguồn (ATX/SFX) vừa case', 'e'],
+    ['C13', 'CPU và GPU cân bằng, tránh nghẽn cổ chai khi chơi game', 'w'], ['C14', 'Tổng giá không vượt ngân sách', 'e'],
+    ['C15', 'CPU cao cấp không đi với mainboard phổ thông', 'w'],
+  ];
+  document.getElementById('rules').innerHTML = rules.map(([c, t, s]) =>
+    `<tr><td class="mono">${c}</td><td>${t}</td><td class="${s === 'e' ? 'sev-e' : 'sev-w'}">${s === 'e' ? 'chặn' : 'cảnh báo'}</td></tr>`).join('');
+
+  // Log-scale chart: brute-force extrapolation vs measured engine p95 (bench/results.md).
+  const rows = [
+    { n: '50 sp', brute: 30, full: 1.19, bl: '≈ 30 ms', fl: '1,2 ms' },
+    { n: '100 sp', brute: 4100, full: 1.98, bl: '≈ 4,1 giây', fl: '2,0 ms' },
+    { n: '250 sp', brute: 2.1 * 3600e3, full: 11.5, bl: '≈ 2,1 giờ', fl: '11,5 ms' },
+    { n: '500 sp', brute: 24.9 * 86400e3, full: 40.29, bl: '≈ 24,9 ngày', fl: '40,3 ms' },
+  ];
+  const svg = document.getElementById('speed-chart');
+  const W = 760, left = 70, right = 110, top = 16, rowH = 64;
+  const minL = Math.log10(0.5), maxL = Math.log10(3e9);
+  const x = (v) => left + ((Math.log10(v) - minL) / (maxL - minL)) * (W - left - right);
+  const ticks = [[1, '1 ms'], [1e3, '1 giây'], [6e4, '1 phút'], [3.6e6, '1 giờ'], [8.64e7, '1 ngày'], [2.592e9, '30 ngày']];
+  const H = top + rows.length * rowH + 28;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  let out = '';
+  for (const [v, label] of ticks) {
+    const tx = x(v);
+    out += `<line x1="${tx}" y1="${top - 4}" x2="${tx}" y2="${H - 26}" stroke="var(--line)" stroke-width="1" />`;
+    out += `<text x="${tx}" y="${H - 8}" text-anchor="middle" font-size="12" fill="var(--ink-dim)" font-family="var(--font-mono)">${label}</text>`;
+  }
+  rows.forEach((r, i) => {
+    const y = top + i * rowH;
+    out += `<text x="${left - 10}" y="${y + 30}" text-anchor="end" font-size="13" fill="var(--ink)" font-family="var(--font-mono)">${r.n}</text>`;
+    out += `<rect x="${left}" y="${y + 8}" width="${Math.max(2, x(r.brute) - left)}" height="18" rx="3" fill="var(--red)" opacity="0.85" />`;
+    out += `<text x="${x(r.brute) + 6}" y="${y + 22}" font-size="12" fill="var(--red-ink)" font-family="var(--font-mono)">${r.bl}</text>`;
+    out += `<rect x="${left}" y="${y + 30}" width="${Math.max(2, x(r.full) - left)}" height="18" rx="3" fill="var(--cyan)" />`;
+    out += `<text x="${x(r.full) + 6}" y="${y + 44}" font-size="12" fill="var(--cyan-ink)" font-family="var(--font-mono)">${r.fl}</text>`;
+  });
+  svg.innerHTML = out;
+
+  // Presenter controls: arrows / PageUp / PageDown move between boards; notes toggle is remembered per viewer.
+  const slides = [...document.querySelectorAll('[data-slide]')];
+  const pos = document.getElementById('pos');
+  let current = 0;
+  const show = (i) => { pos.textContent = `${i + 1} / ${slides.length}`; };
+  const go = (i) => {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    location.hash = slides[current].id;
+    show(current);
+  };
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { current = slides.indexOf(e.target); show(current); }
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  slides.forEach((s) => io.observe(s));
+  document.getElementById('prev').addEventListener('click', () => go(current - 1));
+  document.getElementById('next').addEventListener('click', () => go(current + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea, summary, button')) return;
+    if (['ArrowRight', 'PageDown'].includes(e.key)) { e.preventDefault(); go(current + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(current - 1); }
+    if (e.key === 'n' || e.key === 'N') toggleNotes();
+  });
+  const notesBtn = document.getElementById('notes-toggle');
+  const setNotes = (on) => {
+    document.body.classList.toggle('show-notes', on);
+    notesBtn.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem('pcb.notes', on ? '1' : '0'); } catch {}
+  };
+  const toggleNotes = () => setNotes(!document.body.classList.contains('show-notes'));
+  notesBtn.addEventListener('click', toggleNotes);
+  try { if (localStorage.getItem('pcb.notes') === '1') setNotes(true); } catch {}
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  if (start > 0) { current = start; show(start); }
+})();
+</script>

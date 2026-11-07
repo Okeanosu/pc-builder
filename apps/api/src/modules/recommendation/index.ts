@@ -2,6 +2,7 @@ import { recommendationRequestSchema } from '@pc/shared';
 import { Router } from 'express';
 import type { AppDeps } from '../../deps';
 import { handler, parseBody } from '../../lib/http';
+import { recommendationRateLimit } from './recommendation.rate-limit';
 import { createRecommendationService } from './recommendation.service';
 
 export function createRecommendationRouter(deps: AppDeps): Router {
@@ -10,6 +11,7 @@ export function createRecommendationRouter(deps: AppDeps): Router {
 
   router.post(
     '/recommendations',
+    recommendationRateLimit(deps.redis),
     handler(async (req, res) => {
       const body = parseBody(recommendationRequestSchema, req);
       const { cache, ...result } = await recommendation.recommend(body, {
@@ -24,7 +26,13 @@ export function createRecommendationRouter(deps: AppDeps): Router {
 }
 
 export { loadPurposeProfile } from './profile';
-export { canonicalRequest, RECOMMENDATION_TTL_SECONDS, recommendationCacheKey } from './recommendation.cache';
+export {
+  canonicalRequest,
+  isCacheable,
+  RECOMMENDATION_TTL_SECONDS,
+  recommendationCacheKey,
+} from './recommendation.cache';
+export { RECOMMENDATION_RATE_LIMIT, rateLimitSubject } from './recommendation.rate-limit';
 export {
   createRecommendationService,
   type RecommendationService,
