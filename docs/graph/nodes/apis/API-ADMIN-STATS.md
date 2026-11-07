@@ -2,7 +2,7 @@
 id: API-ADMIN-STATS
 type: api
 title: "API thống kê doanh thu"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["F-ADMIN-STATS"]
@@ -13,6 +13,8 @@ diagrams: []
 ---
 
 **Endpoint:**
-- `GET /api/admin/stats/revenue?from=&to=&groupBy=`
+- `GET /api/admin/stats/revenue?from=&to=&groupBy=day|week|month`
+- `GET /api/admin/stats/summary`
+- `GET /api/admin/payments?status=&page=&pageSize=`
 
-Trả mảng `RevenuePointDTO` (kỳ, doanh thu, số đơn).
+`revenue` trả mảng `RevenuePointDTO` (kỳ, doanh thu, số đơn) đã lấp kỳ trống; `summary` trả `AdminSummaryDTO`; `payments` trả danh sách `AdminPaymentDTO` để đối soát.

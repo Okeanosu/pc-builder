@@ -2,7 +2,7 @@
 id: F-CART
 type: feature
 title: "Giỏ hàng (khách vãng lai ở Redis, người dùng ở DB, gộp khi đăng nhập)"
-status: planned
+status: in-progress
 chapters: ["CH4"]
 links:
   realizes: ["FR-04", "UC-08"]
@@ -15,4 +15,6 @@ diagrams: []
 
 **Mục đích:** gom linh kiện lẻ và cả cấu hình trước khi đặt.
 
-**Mô tả:** khách vãng lai có giỏ ở Redis (`cart:guest:{guestId}`, 7 ngày); người dùng đăng nhập có giỏ trong `carts`/`cart_items`. Khi đăng nhập, giỏ tạm được gộp vào giỏ tài khoản. Thêm cả cấu hình qua `POST /cart/builds/:buildId` gắn `build_id` cho từng dòng để về sau tạo đơn nguyên bộ. Khóa duy nhất `(cart_id, product_id, build_id)` chặn dòng trùng.
+**Mô tả:** khách vãng lai có giỏ ở Redis: hash `cart:guest:{guestId}`, mỗi field `{productId}:{buildId|-}` → số lượng, TTL trượt 7 ngày. Người dùng đăng nhập có giỏ trong `carts`/`cart_items`. Ở request giỏ hàng đầu tiên có token kèm cookie `gid`, giỏ tạm được đọc và xóa trong một lệnh `MULTI` (hai request đồng thời không gộp hai lần) rồi gộp vào giỏ tài khoản: cộng số lượng, tối đa 20 mỗi dòng. `POST /cart/builds/:buildId` đọc cấu hình đã lưu và thêm từng linh kiện với `build_id` (thêm lại không nhân đôi). Giá dòng luôn là `effectivePrice` lấy từ DB; số lượng vượt tồn khả dụng (`stock - reserved`, tính trên mọi dòng cùng sản phẩm) bị từ chối `409 INSUFFICIENT_STOCK`.
+
+**Trạng thái:** phần API đã xong và có integration test; giao diện giỏ hàng (web) chưa làm.
