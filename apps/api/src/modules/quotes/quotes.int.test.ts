@@ -1,6 +1,8 @@
 import { formatVnd } from '@pc/shared';
+import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { builds } from '../../db/schema';
 import { createCommerceHarness } from '../cart/test-support';
 import { embeddedFontNames, extractPdfText } from './test-pdf-text';
 
@@ -23,6 +25,10 @@ describe('GET /api/quotes/builds/:id.pdf', () => {
       { category: 'cpu', id: cpu.id, name: cpu.name, price: 4_590_000 },
       { category: 'gpu', id: gpu.id, name: gpu.name, price: gpu.price },
     ]);
+    await h.deps.db
+      .update(builds)
+      .set({ estimatedWattage: 412, recommendedPsuWattage: 650 })
+      .where(eq(builds.id, buildId));
 
     const res = await request(h.app).get(`/api/quotes/builds/${buildId}.pdf`).buffer(true).parse(binary);
 
@@ -45,6 +51,8 @@ describe('GET /api/quotes/builds/:id.pdf', () => {
     expect(flat).toContain(gpu.name);
     expect(text).toContain(formatVnd(4_290_000));
     expect(text).toContain('Phí lắp ráp');
+    expect(flat).toContain('Công suất ước tính: 412 W');
+    expect(flat).toContain('Nguồn đề xuất: 650 W');
     expect(text).toContain(formatVnd(h.deps.env.ASSEMBLY_FEE));
     expect(text).toContain(formatVnd(4_290_000 + 9_990_000 + h.deps.env.ASSEMBLY_FEE));
     expect(text).toContain('Giá tham khảo, có hiệu lực 7 ngày');

@@ -17,6 +17,8 @@ export interface QuoteLine {
 export interface QuoteData {
   /** Second header line, e.g. the build name. */
   subtitle?: string;
+  /** Extra header lines such as estimated power draw. */
+  details?: string[];
   date: Date;
   lines: QuoteLine[];
   assemblyFee: number;
@@ -66,6 +68,7 @@ export function renderQuotePdf(data: QuoteData): Promise<Buffer> {
     .fontSize(10)
     .text(`Ngày báo giá: ${dateVn.format(data.date)}`);
   if (data.subtitle) doc.text(data.subtitle);
+  for (const line of data.details ?? []) doc.text(line);
   doc.moveDown(0.8);
 
   const bottom = doc.page.height - MARGIN;

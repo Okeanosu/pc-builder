@@ -34,8 +34,13 @@ export function createQuotesService(deps: AppDeps) {
         };
       });
       const purpose = PURPOSE_LABELS[build.purpose as Purpose];
+      const power = [
+        build.estimatedWattage > 0 ? `Công suất ước tính: ${build.estimatedWattage} W` : null,
+        build.recommendedPsuWattage > 0 ? `Nguồn đề xuất: ${build.recommendedPsuWattage} W` : null,
+      ].filter((s): s is string => s !== null);
       return renderQuotePdf({
         subtitle: `Cấu hình: ${build.name}${purpose ? ` · Nhu cầu: ${purpose}` : ''}`,
+        details: power.length > 0 ? [power.join(' · ')] : [],
         date: deps.now(),
         lines,
         assemblyFee: deps.env.ASSEMBLY_FEE,
