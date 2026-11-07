@@ -1,7 +1,7 @@
 import { DEFAULT_PROFILES } from '@pc/engine';
 import { CATEGORY_KEYS } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
-import { checkWeights, isWeightDraftDirty, parseShare, sumHint, toWeightDraft } from './weights';
+import { checkWeights, isWeightDraftDirty, parseShare, rebaseDraft, sumHint, toWeightDraft } from './weights';
 
 const gaming = DEFAULT_PROFILES.gaming;
 
@@ -83,5 +83,21 @@ describe('isWeightDraftDirty', () => {
     expect(isWeightDraftDirty(draft, gaming)).toBe(false);
     draft.allocation.cpu = { min: '0.10', max: '0.30' };
     expect(isWeightDraftDirty(draft, gaming)).toBe(true);
+  });
+});
+
+describe('rebaseDraft', () => {
+  const updated = { ...gaming, weights: { ...gaming.weights, gpu: 0.4, cpu: 0.24 } };
+
+  it('follows the server copy when the column has no local edits', () => {
+    const next = rebaseDraft(toWeightDraft(gaming), gaming, updated);
+    expect(next.weights.gpu).toBe('0.40');
+    expect(next.weights.cpu).toBe('0.24');
+  });
+
+  it('keeps a column the admin is still editing', () => {
+    const draft = toWeightDraft(gaming);
+    draft.weights.ram = '0.12';
+    expect(rebaseDraft(draft, gaming, updated)).toBe(draft);
   });
 });

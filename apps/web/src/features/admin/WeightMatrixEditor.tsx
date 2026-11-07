@@ -28,6 +28,7 @@ import {
   checkWeights,
   isWeightDraftDirty,
   parseShare,
+  rebaseDraft,
   sumHint,
   toWeightDraft,
   type WeightDraft,
@@ -86,6 +87,17 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
   const [drafts, setDrafts] = useState<Drafts>(
     () => Object.fromEntries(PURPOSES.map((p) => [p, toWeightDraft(savedProfile(rows, p))])) as Drafts,
   );
+  const [baseRows, setBaseRows] = useState(rows);
+  if (rows !== baseRows) {
+    // Adjusting state during render (React's documented pattern) avoids a stale frame after a refetch.
+    setBaseRows(rows);
+    setDrafts(
+      (d) =>
+        Object.fromEntries(
+          PURPOSES.map((p) => [p, rebaseDraft(d[p], savedProfile(baseRows, p), savedProfile(rows, p))]),
+        ) as Drafts,
+    );
+  }
   const [open, setOpen] = useState<Partial<Record<CategoryKey, boolean>>>({});
   const [saving, setSaving] = useState<Purpose | null>(null);
   const [serverErrors, setServerErrors] = useState<Partial<Record<Purpose, string>>>({});
