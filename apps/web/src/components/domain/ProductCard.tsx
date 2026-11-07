@@ -91,7 +91,6 @@ export function ProductCard({
       <article
         className={cn(
           '@container relative rounded-md border border-border bg-surface p-3 transition-[border-color,box-shadow] duration-150 hover:border-border-strong has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
-          out && 'opacity-70',
           className,
         )}
       >
@@ -102,7 +101,7 @@ export function ProductCard({
             category={product.category}
             designator={false}
             sizes="96px"
-            className="w-20 shrink-0 @min-[26rem]:w-24"
+            className={cn('w-20 shrink-0 @min-[26rem]:w-24', out && 'opacity-60')}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-2.5 @min-[26rem]:flex-row @min-[26rem]:items-center @min-[26rem]:gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">

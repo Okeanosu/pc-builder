@@ -11,22 +11,10 @@ import {
   DialogBody,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/Dialog';
-import {
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/Drawer';
+import { Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/Drawer';
 import { Input } from '@/components/ui/Input';
 import { toast } from '@/components/ui/Toast';
 import { BUILD_AMOUNTS, PICKER_PRODUCTS } from './_fixtures';
@@ -41,14 +29,11 @@ export function OverlayDemo() {
             Mở hộp thoại xác nhận
           </Button>
         </DialogTrigger>
-        <DialogContent size="sm">
-          <DialogHeader>
-            <DialogTitle>Xóa cấu hình đã lưu?</DialogTitle>
-            <DialogDescription>
-              Cấu hình “Gaming 2K tầm 25 triệu” sẽ bị xóa khỏi tài khoản. Liên kết chia sẻ cũng ngừng hoạt
-              động.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent
+          size="sm"
+          title="Xóa cấu hình đã lưu?"
+          description="Cấu hình “Gaming 2K tầm 25 triệu” sẽ bị xóa khỏi tài khoản. Liên kết chia sẻ cũng ngừng hoạt động."
+        >
           <DialogBody className="pt-4 pb-5">
             <p className="text-muted">Các sản phẩm trong giỏ hàng không bị ảnh hưởng.</p>
           </DialogBody>
@@ -67,11 +52,7 @@ export function OverlayDemo() {
         <DrawerTrigger asChild>
           <Button variant="secondary">Mở ngăn chọn linh kiện</Button>
         </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Chọn card đồ họa</DrawerTitle>
-            <DrawerDescription>3 sản phẩm tương thích với cấu hình hiện tại</DrawerDescription>
-          </DrawerHeader>
+        <DrawerContent title="Chọn card đồ họa" description="3 sản phẩm tương thích với cấu hình hiện tại">
           <DrawerBody className="grid content-start gap-3">
             <Input type="search" placeholder="Lọc theo tên, chipset…" aria-label="Lọc sản phẩm" />
             {PICKER_PRODUCTS.map((p) => (

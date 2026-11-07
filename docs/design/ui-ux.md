@@ -1,7 +1,8 @@
 # UI/UX — Hệ thống thiết kế "Tech Workshop"
 
 > Phạm vi: `apps/web` (Next.js 16, Tailwind v4). Tài liệu này là nguồn tham chiếu cho các agent Frontend khi dựng trang.
-> Xem trực tiếp mọi thành phần ở cả hai giao diện tại **`/design`** (route group `(dev)`, `noindex`).
+> Xem trực tiếp mọi thành phần ở cả hai giao diện tại **`/design`** (route group `(dev)`, `noindex`). Trang chỉ mở ở `next dev`;
+> bản build production trả 404 trừ khi build với `NEXT_PUBLIC_SHOW_DESIGN=1`.
 > Ảnh chụp: `docs/design/screenshots/`.
 
 ## 1. Ý tưởng
@@ -130,8 +131,8 @@ Import từ `@/components/ui/*`, `@/components/domain/*`, `@/components/layout/*
 | `Checkbox` | `label`, `description`, `meta` (số lượng facet), `checked` gồm `"indeterminate"` | unchecked, checked, indeterminate, disabled, focus |
 | `Badge` | `tone`: neutral · accent · ok · warn · danger · solid · outline; `size` sm/md; `mono` | — |
 | `Card` (+ `CardHeader/Title/Description/Content/Footer`) | `variant`: default · inset · interactive · selected | hover/focus-within (interactive), selected |
-| `Dialog` (+ `DialogTrigger/Content/Header/Body/Footer/Title/Description/Close`) | `DialogContent size` sm/md/lg, `hideClose` | open/closed (animation), focus trap, Esc |
-| `Drawer` (+ `DrawerTrigger/Content/Header/Body/Footer/Title/Description/Close`) | `side`: responsive (mặc định: bottom sheet < 640 px, panel phải ≥ 640 px) · right · left · bottom | open/closed |
+| `Dialog` (+ `DialogTrigger/Content/Body/Footer/Close`) | `DialogContent`: **`title` bắt buộc**, `description?`, `hideTitle?` (chỉ cho trình đọc màn hình), `size` sm/md/lg, `hideClose`. Tiêu đề do `DialogContent` tự vẽ nên không thể thiếu hay bị lặp | open/closed (animation), focus trap, Esc |
+| `Drawer` (+ `DrawerTrigger/Content/Body/Footer/Close`) | `DrawerContent`: **`title` bắt buộc**, `description?`, `hideTitle?`, `side`: responsive (mặc định: bottom sheet < 640 px, panel phải ≥ 640 px) · right · left · bottom | open/closed |
 | `Tabs` (+ `TabsList/Trigger/Content`) | `variant`: segmented · line | active, hover, focus, disabled; tràn → cuộn ngang |
 | `Tooltip` | `content`, `side`, `open`/`defaultOpen` | delayed/instant open, closed |
 | `Skeleton`, `SkeletonText` | kích thước qua `className` | shimmer (tĩnh khi reduced-motion) |
@@ -151,7 +152,7 @@ Import từ `@/components/ui/*`, `@/components/domain/*`, `@/components/layout/*
 | `AllocationBar` | `allocation` (0..1, `BuildDTO.allocation`), `amounts?`, `total?`, `legend` full/compact/none, `size`, `animate` | chạy trái→phải khi mount; đổi tỉ lệ thì vạch co giãn mượt (500 ms); hover vạch/chú thích làm mờ phần còn lại; `role="img"` + `aria-label` tóm tắt |
 | `PerfMeter` | `score` 0–100, `label`, `caption`, `size` sm/md, `animate`; helper `perfTier()` | bậc: Cơ bản < 40 ≤ Phổ thông < 60 ≤ Khá < 75 ≤ Mạnh < 90 ≤ Rất mạnh; `role="meter"` |
 | `ProductImage` | `src?`, `alt`, `category`, `designator`, `sizes`, `priority` | có ảnh → `next/image`; không ảnh → bản vẽ kỹ thuật SVG theo danh mục + ký hiệu in lụa (ẩn khi ô < 176 px) |
-| `ProductCard` | `product: ProductSummaryDTO`, `href?` (mặc định `/p/{slug}`), `action?` (slot nút), `variant` grid/list, `maxSpecs` | còn hàng / "Chỉ còn N" (≤ 5) / hết hàng (ảnh mờ); cả thẻ bấm được, `action` nằm trên link; `list` tự xếp lại theo bề rộng khung (container query) |
+| `ProductCard` | `product: ProductSummaryDTO`, `href?` (mặc định `/p/{slug}`), `action?` (slot nút), `variant` grid/list, `maxSpecs` | còn hàng / "Chỉ còn N" (≤ 5) / hết hàng (chỉ làm mờ ảnh, chữ giữ nguyên độ tương phản); cả thẻ bấm được, `action` nằm trên link; `list` tự xếp lại theo bề rộng khung (container query) |
 | `CategoryIllustration` | `category` | dùng lẻ cho slot trống của Builder |
 | `category.ts` | `CATEGORY_COLOR`, `CATEGORY_DESIGNATOR` (`CPU1`, `MB1`, `DIMM_A1`, `PCIE_X16`, `M2_1`, `ATX_PWR`, `CHASSIS`, `CPU_FAN`) | |
 
@@ -161,7 +162,7 @@ Import từ `@/components/ui/*`, `@/components/domain/*`, `@/components/layout/*
 | --- | --- | --- |
 | `SiteHeader` | `cartCount`, `categories?` (mặc định 8 danh mục → `/c/{key}`), `activeCategory?`, `accountSlot?`, `searchAction` (mặc định `/search`, tham số `q`), `searchDefaultValue` | Logo, ô tìm kiếm, nút **AI tư vấn cấu hình** (biến thể workshop, đèn LED nhấp nháy chậm), đổi giao diện, giỏ hàng có số, tài khoản; hàng danh mục cuộn ngang + "Tự build PC". Mobile: logo thu gọn, ô tìm kiếm xuống dòng. |
 | `SiteFooter` | `categories?`, `note?` | 3 cột liên kết + ThemeToggle segmented |
-| `AdminShell` | `title`, `actions`, `user`, `activeHref?`, `embedded?` | Sidebar than chì (Tổng quan, Sản phẩm, Tồn kho, Benchmark, Trọng số thuật toán, Đơn hàng, Hội thoại AI) + topbar; mobile: menu mở drawer trái. `usePathname` nằm sau `Suspense` riêng vì route admin có tham số động. Export `ADMIN_NAV`. |
+| `AdminShell` | `title`, `actions`, `user`, `activeHref?`, `embedded?` | Sidebar than chì (Tổng quan, Sản phẩm, Tồn kho, Benchmark, Trọng số thuật toán, Đơn hàng, Hội thoại AI) + topbar; mobile: menu mở drawer trái. `usePathname` nằm sau `Suspense` riêng vì route admin có tham số động. Danh sách mục nằm ở `admin-nav.ts` (`ADMIN_NAV`, module thường để server component import được). |
 | `WorkshopSurface` | `mat` (lưới chấm) | Bọc khu Advisor/Builder |
 | `ThemeToggle` | `variant` icon/segmented | |
 | `Logo`, `LogoMark`, `BRAND_NAME` | `href`, `compact` | Tên thương hiệu đặt một chỗ để dễ đổi |
@@ -174,7 +175,7 @@ Bản dựng tham chiếu nằm ở mục **Bề mặt Workshop** trên `/design
 - **ChatMessage:** người dùng = bong bóng `bg-accent text-accent-fg rounded-md rounded-ee-xs` canh phải, tối đa `max-w-md`; trợ lý = chữ `text-fg` không bong bóng trên mat; con trỏ stream `animate-caret` vạch 2 px màu accent.
 - **BuildCard:** `Card` (cấu hình đang chọn = `variant="selected"`), thứ tự: `Badge` nhãn (`BUILD_LABEL_TEXT`) + `CompatibilityBadge size="sm"` → `Price size="xl"` + "Còn dư …" → `PerfMeter size="sm"` → `AllocationBar size="sm" legend="compact"` → danh sách linh kiện (nhãn muted trái, tên phải) → `Button` "Mở trong Customizer" + nút icon giỏ. Vào cảnh: `animate-card-in` so le 110 ms.
 - **BuildSlot:** khung nét đứt như `EmptyState` khi trống, ký hiệu in lụa `CATEGORY_DESIGNATOR` mono `text-xs text-muted`, `CategoryIllustration` nhỏ; khi đã chọn dùng `ProductCard variant="list"`.
-- **PartPicker:** `Drawer` (side mặc định responsive) + `Input` lọc + danh sách `ProductCard variant="list"` với nút "Chọn"; đặt `DrawerBody` dạng `grid content-start` (flex column sẽ ép các con co lại).
+- **PartPicker:** `Drawer` (side mặc định responsive, `title="Chọn card đồ họa"`, `description` = số sản phẩm tương thích) + `Input` lọc + danh sách `ProductCard variant="list"` với nút "Chọn"; đặt `DrawerBody` dạng `grid content-start` (flex column sẽ ép các con co lại).
 - **BuildSummaryBar:** thanh dính đáy `bg-surface/92 backdrop-blur border-t`, chứa tổng `Price size="xl"`, công suất ước tính mono, `CompatibilityBadge`.
 - **VietQRPanel / OrderTimeline:** ảnh QR trên nền trắng cố định (kể cả giao diện tối) để app ngân hàng quét được; đếm ngược mono `text-2xl`; mốc thời gian dùng chấm 8 px, mốc hiện tại = accent.
 

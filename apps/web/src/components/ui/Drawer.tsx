@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from '@/lib/cn';
-import { overlayClass } from './Dialog';
+import { describedByProps, OverlayHeading, type OverlayHeadingProps, overlayClass } from './Dialog';
 import { usePortalContainer } from './ThemeScope';
 
 export const Drawer = DialogPrimitive.Root;
@@ -22,11 +22,22 @@ const SIDES = {
     'inset-x-0 bottom-0 max-h-[88dvh] rounded-t-lg border-t max-sm:data-[state=closed]:animate-sheet-out-bottom max-sm:data-[state=open]:animate-sheet-in-bottom sm:inset-x-auto sm:inset-y-0 sm:end-0 sm:h-full sm:max-h-none sm:w-[min(480px,100vw)] sm:rounded-none sm:border-t-0 sm:border-s sm:data-[state=closed]:animate-sheet-out-right sm:data-[state=open]:animate-sheet-in-right',
 } as const;
 
-interface DrawerContentProps extends ComponentPropsWithRef<typeof DialogPrimitive.Content> {
+interface DrawerContentProps
+  extends Omit<ComponentPropsWithRef<typeof DialogPrimitive.Content>, 'title'>,
+    OverlayHeadingProps {
   side?: keyof typeof SIDES;
 }
 
-export function DrawerContent({ className, children, side = 'responsive', ...props }: DrawerContentProps) {
+/** Compose with <DrawerBody> and <DrawerFooter>; the header comes from `title` / `description`. */
+export function DrawerContent({
+  title,
+  description,
+  hideTitle,
+  className,
+  children,
+  side = 'responsive',
+  ...props
+}: DrawerContentProps) {
   const container = usePortalContainer();
   const showHandle = side === 'bottom' || side === 'responsive';
   return (
@@ -38,6 +49,7 @@ export function DrawerContent({ className, children, side = 'responsive', ...pro
           SIDES[side],
           className,
         )}
+        {...describedByProps(description)}
         {...props}
       >
         {showHandle && (
@@ -49,6 +61,12 @@ export function DrawerContent({ className, children, side = 'responsive', ...pro
             aria-hidden
           />
         )}
+        <OverlayHeading
+          title={title}
+          description={description}
+          hideTitle={hideTitle}
+          className="flex shrink-0 flex-col gap-1 border-b border-border px-5 py-4 pe-12"
+        />
         {children}
         <DialogPrimitive.Close
           aria-label="Đóng"
@@ -61,15 +79,7 @@ export function DrawerContent({ className, children, side = 'responsive', ...pro
   );
 }
 
-export function DrawerHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return (
-    <div
-      className={cn('flex shrink-0 flex-col gap-1 border-b border-border px-5 py-4 pe-12', className)}
-      {...props}
-    />
-  );
-}
-
+/** Scrolling region. Prefer `grid content-start` over flex for lists: flex children shrink inside a scroller. */
 export function DrawerBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div className={cn('min-h-0 flex-1 overflow-y-auto px-5 py-4', className)} {...props} />;
 }
@@ -81,15 +91,4 @@ export function DrawerFooter({ className, ...props }: ComponentPropsWithRef<'div
       {...props}
     />
   );
-}
-
-export function DrawerTitle({ className, ...props }: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn('text-lg font-semibold text-fg', className)} {...props} />;
-}
-
-export function DrawerDescription({
-  className,
-  ...props
-}: ComponentPropsWithRef<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description className={cn('text-sm text-muted', className)} {...props} />;
 }

@@ -55,7 +55,9 @@ export function setThemePreference(pref: ThemePreference) {
   try {
     if (pref === 'system') localStorage.removeItem(THEME_STORAGE_KEY);
     else localStorage.setItem(THEME_STORAGE_KEY, pref);
-  } catch {}
+  } catch {
+    // Storage can throw in private mode; the choice still applies to this page view.
+  }
   applyPreference(pref);
   for (const l of listeners) l();
 }

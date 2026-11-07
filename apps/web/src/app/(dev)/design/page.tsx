@@ -2,6 +2,7 @@ import { BUILD_LABEL_TEXT, CATEGORY_KEYS, CATEGORY_LABELS } from '@pc/shared';
 import { Check, CloudOff, Download, Info, PackageOpen, Plus, SearchX, ShoppingCart } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { AllocationBar } from '@/components/domain/AllocationBar';
 import { CompatibilityBadge } from '@/components/domain/CompatibilityBadge';
 import { CATEGORY_COLOR } from '@/components/domain/category';
@@ -87,7 +88,13 @@ const RADII = [
 
 const SPACING = [1, 2, 3, 4, 6, 8, 12, 16];
 
+/** Dev-only showcase; a production build serves it only when NEXT_PUBLIC_SHOW_DESIGN=1 (e.g. for a design review). */
+function isDesignPageEnabled() {
+  return process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_SHOW_DESIGN === '1';
+}
+
 export default function DesignSystemPage() {
+  if (!isDesignPageEnabled()) notFound();
   return (
     <div className="min-h-dvh">
       <div className="border-b border-border bg-surface">
@@ -624,16 +631,16 @@ export default function DesignSystemPage() {
                     </div>
                   </Specimen>
                   <Specimen
-                    label="ProductCard dạng danh sách (ngăn chọn linh kiện)"
+                    label="ProductCard dạng danh sách: còn hàng, sắp hết, hết hàng"
                     className="grid items-start"
                   >
-                    {PRODUCTS.slice(0, 2).map((p) => (
+                    {[PRODUCTS[0], PRODUCTS[1], PRODUCTS[3]].map((p) => (
                       <ProductCard
                         key={p.id}
                         product={p}
                         variant="list"
                         action={
-                          <Button size="sm" variant="secondary">
+                          <Button size="sm" variant="secondary" disabled={p.stock <= 0}>
                             Chọn
                           </Button>
                         }

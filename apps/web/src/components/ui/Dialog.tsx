@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import type { ComponentPropsWithRef } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { usePortalContainer } from './ThemeScope';
 
@@ -13,15 +13,69 @@ export const DialogClose = DialogPrimitive.Close;
 export const overlayClass =
   'fixed inset-0 z-50 bg-scrim backdrop-blur-[2px] data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in';
 
+/** Props shared by Dialog and Drawer content: the accessible name is mandatory. */
+export interface OverlayHeadingProps {
+  /** Rendered as the overlay heading and used as its accessible name. */
+  title: ReactNode;
+  description?: ReactNode;
+  /** Keep title/description for screen readers only (the content already shows its own heading). */
+  hideTitle?: boolean;
+}
+
+/** Without a description Radix expects aria-describedby to be explicitly unset. */
+export function describedByProps(description: ReactNode) {
+  return description ? {} : { 'aria-describedby': undefined };
+}
+
+export function OverlayHeading({
+  title,
+  description,
+  hideTitle,
+  className,
+}: OverlayHeadingProps & { className: string }) {
+  if (hideTitle) {
+    return (
+      <>
+        <DialogPrimitive.Title className="sr-only">{title}</DialogPrimitive.Title>
+        {description && (
+          <DialogPrimitive.Description className="sr-only">{description}</DialogPrimitive.Description>
+        )}
+      </>
+    );
+  }
+  return (
+    <div className={className}>
+      <DialogPrimitive.Title className="text-lg font-semibold text-fg">{title}</DialogPrimitive.Title>
+      {description && (
+        <DialogPrimitive.Description className="text-sm text-muted">
+          {description}
+        </DialogPrimitive.Description>
+      )}
+    </div>
+  );
+}
+
 const SIZES = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' } as const;
 
-interface DialogContentProps extends ComponentPropsWithRef<typeof DialogPrimitive.Content> {
+interface DialogContentProps
+  extends Omit<ComponentPropsWithRef<typeof DialogPrimitive.Content>, 'title'>,
+    OverlayHeadingProps {
   size?: keyof typeof SIZES;
   /** Hide the corner close button when the footer already offers a clear way out. */
   hideClose?: boolean;
 }
 
-export function DialogContent({ className, children, size = 'md', hideClose, ...props }: DialogContentProps) {
+/** Compose with <DialogBody> and <DialogFooter>; the heading comes from `title` / `description`. */
+export function DialogContent({
+  title,
+  description,
+  hideTitle,
+  className,
+  children,
+  size = 'md',
+  hideClose,
+  ...props
+}: DialogContentProps) {
   const container = usePortalContainer();
   return (
     <DialogPrimitive.Portal container={container}>
@@ -32,8 +86,15 @@ export function DialogContent({ className, children, size = 'md', hideClose, ...
           SIZES[size],
           className,
         )}
+        {...describedByProps(description)}
         {...props}
       >
+        <OverlayHeading
+          title={title}
+          description={description}
+          hideTitle={hideTitle}
+          className="flex flex-col gap-1.5 px-6 pt-6 pe-12"
+        />
         {children}
         {!hideClose && (
           <DialogPrimitive.Close
@@ -46,10 +107,6 @@ export function DialogContent({ className, children, size = 'md', hideClose, ...
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );
-}
-
-export function DialogHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <div className={cn('flex flex-col gap-1.5 px-6 pt-6 pe-12', className)} {...props} />;
 }
 
 export function DialogBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
@@ -66,15 +123,4 @@ export function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div
       {...props}
     />
   );
-}
-
-export function DialogTitle({ className, ...props }: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn('text-lg font-semibold text-fg', className)} {...props} />;
-}
-
-export function DialogDescription({
-  className,
-  ...props
-}: ComponentPropsWithRef<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description className={cn('text-sm text-muted', className)} {...props} />;
 }

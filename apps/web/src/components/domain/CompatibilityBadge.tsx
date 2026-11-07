@@ -39,7 +39,7 @@ const STATUS = {
 interface CompatibilityBadgeProps {
   /** Derived from `issues` when omitted. */
   status?: CompatibilityStatus;
-  /** Rule violations shown in the tooltip with their rule code (C01–C14). */
+  /** Rule violations; the tooltip lists each one's rule code and message. */
   issues?: readonly Issue[];
   size?: 'sm' | 'md';
   /** Overrides the default label ("Tương thích" / "Cảnh báo" / "Xung đột"). */

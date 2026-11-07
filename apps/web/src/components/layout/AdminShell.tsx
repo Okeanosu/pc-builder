@@ -1,38 +1,13 @@
 'use client';
 
-import {
-  ArrowLeft,
-  Gauge,
-  LayoutDashboard,
-  Menu,
-  MessagesSquare,
-  Package,
-  Receipt,
-  SlidersHorizontal,
-  Warehouse,
-} from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactNode, Suspense, useState } from 'react';
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/Drawer';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/Drawer';
 import { cn } from '@/lib/cn';
+import { ADMIN_NAV } from './admin-nav';
 import { LogoMark } from './Logo';
-
-export interface AdminNavItem {
-  href: string;
-  label: string;
-  icon: typeof Package;
-}
-
-export const ADMIN_NAV: AdminNavItem[] = [
-  { href: '/admin', label: 'Tổng quan', icon: LayoutDashboard },
-  { href: '/admin/products', label: 'Sản phẩm', icon: Package },
-  { href: '/admin/inventory', label: 'Tồn kho', icon: Warehouse },
-  { href: '/admin/benchmarks', label: 'Benchmark', icon: Gauge },
-  { href: '/admin/weights', label: 'Trọng số thuật toán', icon: SlidersHorizontal },
-  { href: '/admin/orders', label: 'Đơn hàng', icon: Receipt },
-  { href: '/admin/chats', label: 'Hội thoại AI', icon: MessagesSquare },
-];
 
 function isActive(href: string, current: string | null) {
   if (!current) return false;
@@ -167,8 +142,7 @@ export function AdminShell({
             >
               <Menu className="size-5" aria-hidden />
             </DrawerTrigger>
-            <DrawerContent side="left" className="workshop" aria-describedby={undefined}>
-              <DrawerTitle className="sr-only">Menu quản trị</DrawerTitle>
+            <DrawerContent side="left" className="workshop" title="Menu quản trị" hideTitle>
               <SidebarBody activeHref={activeHref} user={user} onNavigate={() => setMenuOpen(false)} />
             </DrawerContent>
           </Drawer>
