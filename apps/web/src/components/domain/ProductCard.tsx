@@ -73,17 +73,23 @@ export function ProductCard({
       <span className="line-clamp-2">{product.name}</span>
     </Link>
   );
+  const chipClass = 'max-w-full truncate rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-muted';
+  // Narrow cards (2-column phone grid) keep two chips plus a "+n"; the rest stay readable to screen readers.
   const specChips = chips.length > 0 && (
-    <ul className="flex flex-wrap gap-1.5">
-      {chips.map((c) => (
-        <li
-          key={c}
-          className="whitespace-nowrap rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-muted"
-        >
-          {c}
-        </li>
-      ))}
-    </ul>
+    <div className="@container">
+      <ul className="flex flex-wrap gap-1.5">
+        {chips.map((c, i) => (
+          <li key={c} title={c} className={cn(chipClass, i >= 2 && '@max-[11rem]:sr-only')}>
+            {c}
+          </li>
+        ))}
+        {chips.length > 2 && (
+          <li aria-hidden className={cn(chipClass, 'hidden @max-[11rem]:block')}>
+            +{chips.length - 2}
+          </li>
+        )}
+      </ul>
+    </div>
   );
 
   if (variant === 'list') {

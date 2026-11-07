@@ -9,7 +9,7 @@ links:
   dependsOn: ["M-PAYMENTS", "E-PAYMENT", "F-ORDER", "F-INVENTORY-LOCK"]
   decidedBy: ["ADR-008"]
   shownIn: ["SCR-PAY"]
-code: ["apps/api/src/modules/payments/**", "apps/web/src/features/payment/**"]
+code: ["apps/api/src/modules/payments/**", "apps/web/src/features/checkout/PaymentView.tsx", "apps/web/src/features/checkout/payment.ts"]
 tests: ["apps/api/src/modules/payments/**/*.test.ts", "apps/api/src/modules/payments/**/*.int.test.ts"]
 diagrams: ["docs/diagrams/seq-checkout-vietqr.mmd"]
 ---
