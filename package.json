@@ -21,7 +21,7 @@
     "graph": "pnpm --filter @pc/graph build-graph",
     "graph:check": "pnpm --filter @pc/graph check",
     "e2e": "playwright test -c e2e/playwright.config.ts",
-    "perf": "pnpm --filter @pc/api exec tsx test/perf/recommendations.autocannon.ts",
+    "perf": "pnpm --filter @pc/api exec tsx test/perf/recommendations.autocannon.ts && pnpm --filter @pc/api exec tsx test/perf/chat-sse.latency.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm graph:check"
   },
   "devDependencies": {
