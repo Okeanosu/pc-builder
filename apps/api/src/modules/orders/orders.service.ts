@@ -1,4 +1,4 @@
-import type { CheckoutInput, OrderDTO, OrderStatus, Paginated } from '@pc/shared';
+import type { CheckoutInput, OrderDTO, OrderStatus, OrderType, Paginated } from '@pc/shared';
 import { and, count, desc, eq, ilike, inArray, or, type SQL, sql } from 'drizzle-orm';
 import { orderItems, orders, products } from '../../db/schema';
 import type { AppDeps } from '../../deps';
@@ -68,6 +68,7 @@ export async function afterTransitions(redis: Redis, applied: AppliedTransition[
 
 export interface OrderListFilter {
   status?: OrderStatus;
+  type?: OrderType;
   q?: string;
   userId?: string;
   page: number;
@@ -224,6 +225,7 @@ export function createOrdersService(deps: AppDeps) {
     async list(filter: OrderListFilter): Promise<Paginated<OrderDTO>> {
       const conds: SQL[] = [];
       if (filter.status) conds.push(eq(orders.status, filter.status));
+      if (filter.type) conds.push(eq(orders.type, filter.type));
       if (filter.userId) conds.push(eq(orders.userId, filter.userId));
       if (filter.q) {
         const like = `%${filter.q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;

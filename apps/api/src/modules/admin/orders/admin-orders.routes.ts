@@ -2,6 +2,7 @@ import {
   type AdminOrderDetailDTO,
   type AdminPaymentDTO,
   ORDER_STATUSES,
+  ORDER_TYPES,
   updateOrderStatusSchema,
 } from '@pc/shared';
 import { desc, eq } from 'drizzle-orm';
@@ -16,6 +17,7 @@ import { pageQuery } from '../admin.shared';
 
 const listQuery = pageQuery.extend({
   status: z.enum(ORDER_STATUSES).optional(),
+  type: z.enum(ORDER_TYPES).optional(),
   q: z.string().trim().max(100).optional(),
 });
 

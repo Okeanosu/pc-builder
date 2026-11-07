@@ -35,6 +35,11 @@ describe('GET /api/admin/orders', () => {
       .get(`/api/admin/orders?q=${pending.code.slice(3, 9).toLowerCase()}`)
       .set('Authorization', staff);
     expect(byCode.body.items.map((o: { code: string }) => o.code)).toEqual([pending.code]);
+
+    const retail = await request(h.app).get('/api/admin/orders?type=RETAIL').set('Authorization', staff);
+    expect(retail.body.total).toBe(2);
+    const build = await request(h.app).get('/api/admin/orders?type=BUILD').set('Authorization', staff);
+    expect(build.body.total).toBe(0);
   });
 
   it('shows an order with its payments', async () => {
