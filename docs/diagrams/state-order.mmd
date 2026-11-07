@@ -1,10 +1,20 @@
+%% Mirrors ORDER_TRANSITIONS in apps/api/src/modules/orders/orders.state.ts. Every change goes through applyTransition (status-guarded UPDATE).
 stateDiagram-v2
-  [*] --> PENDING_PAYMENT: tạo đơn, giữ hàng 15 phút
-  PENDING_PAYMENT --> PAID: webhook SePay / giả lập thanh toán
-  PENDING_PAYMENT --> CANCELLED: khách hủy hoặc quá hạn (nhả reserved)
-  PAID --> PROCESSING: nhân viên xác nhận (BUILD: đang lắp ráp)
-  PAID --> CANCELLED: hủy, hoàn tiền thủ công
+  [*] --> PENDING_PAYMENT: tạo đơn, giữ hàng (reserved += q), hết hạn sau 15 phút
+  PENDING_PAYMENT --> PAID: webhook SePay hoặc giả lập (COMMIT: stock và reserved giảm q, movement ORDER)
+  PENDING_PAYMENT --> PAID: ADMIN xác nhận tay, ghi payments MANUAL (STAFF bị 403)
+  PENDING_PAYMENT --> CANCELLED: khách hủy, nhân viên hủy hoặc job hết hạn (RELEASE: reserved giảm q)
+  PAID --> PROCESSING: STAFF hoặc ADMIN xác nhận (đơn BUILD là đang lắp ráp)
+  PAID --> CANCELLED: chỉ ADMIN, hoàn tiền thủ công (RESTOCK: trả hàng về kho, movement CANCEL, payment_status REFUNDED)
   PROCESSING --> SHIPPING: bàn giao vận chuyển
   SHIPPING --> COMPLETED: giao thành công
   COMPLETED --> [*]
   CANCELLED --> [*]
+  note right of PENDING_PAYMENT
+    Đua giữa webhook và job hết hạn: UPDATE chỉ thành công
+    khi status còn đúng giá trị vừa đọc nên một bên thắng.
+    Tiền đến sau khi đơn CANCELLED được lưu là MANUAL_REVIEW.
+  end note
+  note right of PROCESSING
+    Mọi bước khác (nhảy cách, đi lùi) trả 409 INVALID_TRANSITION.
+  end note

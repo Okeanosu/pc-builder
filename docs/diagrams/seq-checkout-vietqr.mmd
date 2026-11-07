@@ -6,42 +6,71 @@ sequenceDiagram
   participant DB as Postgres
   participant R as Redis
   participant B as Ngân hàng / SePay
+  participant J as Job hết hạn (60 giây)
   U->>W: Điền thông tin giao hàng, bấm Đặt hàng
-  W->>A: POST /api/orders
-  A->>A: tính lại giá từ DB (không tin giá client)
+  W->>A: POST /api/orders (giỏ hiện tại, buildId nếu là đơn lắp ráp)
+  alt Khách vãng lai
+    A->>R: SET lock:checkout:{gid} NX PX 10000
+    Note over A,R: đã có khóa thì 409 CHECKOUT_IN_PROGRESS
+  end
   rect rgb(235, 245, 255)
     note over A,DB: Một transaction
-    loop mỗi sản phẩm trong đơn
-      A->>DB: UPDATE products SET reserved = reserved + q WHERE id = $1 AND stock - reserved >= q
+    A->>DB: tài khoản: SELECT carts FOR UPDATE, đọc dòng giỏ (bấm đôi thấy giỏ trống, 400 EMPTY_CART)
+    loop mỗi sản phẩm, theo thứ tự product_id
+      A->>DB: UPDATE products SET reserved = reserved + q WHERE id AND status ACTIVE AND stock - reserved >= q RETURNING name, price
       alt 0 dòng bị ảnh hưởng
-        A-->>W: 409 hết hàng (rollback toàn bộ)
+        A-->>W: 409 OUT_OF_STOCK (rollback toàn bộ)
       end
     end
-    A->>DB: INSERT orders (PENDING_PAYMENT, expires_at = now + 15 phút), order_items
+    A->>DB: INSERT orders (PENDING_PAYMENT, guest_id, expires_at = now + 15 phút), order_items (snapshot tên và giá), xóa dòng giỏ đã đặt
   end
-  A->>R: SET hold:order:{code} TTL 15 phút
+  A->>R: afterCommit (lỗi chỉ ghi log): SET hold:order:{code} EX 15 phút, trừ giỏ khách theo số lượng đã đọc, nhả khóa checkout, INCR catalog:version
   A-->>W: 201 {code}
   W->>A: GET /api/orders/:code/payment
-  A-->>W: URL ảnh VietQR (img.vietqr.io, amount, addInfo = mã đơn)
-  W-->>U: hiển thị mã QR + đếm ngược
-  U->>B: quét QR và chuyển khoản
-  loop mỗi 3 giây
+  A-->>W: PaymentInfoDTO (qrImageUrl chỉ khi PENDING_PAYMENT, ngược lại null) + expiresAt
+  W-->>U: hiển thị mã QR VietQR và đếm ngược theo đồng hồ máy chủ
+  U->>B: quét QR và chuyển khoản (nội dung là mã đơn PCB...)
+  loop mỗi 3 giây cho đến khi đơn có kết quả
     W->>A: GET /api/orders/:code/payment (polling)
     A-->>W: trạng thái đơn
   end
   B->>A: POST /api/payments/webhook/sepay (Authorization: Apikey ...)
-  A->>A: xác thực API key, nội dung chứa mã đơn, transferAmount >= total
-  A->>DB: provider_txn_id đã có chưa? (idempotent)
-  rect rgb(235, 255, 240)
-    note over A,DB: Một transaction
-    A->>DB: INSERT payments, UPDATE orders SET status = PAID, payment_status = PAID, paid_at
-    A->>DB: UPDATE products SET stock = stock - q, reserved = reserved - q
-    A->>DB: INSERT inventory_movements (reason = ORDER)
+  A->>A: xác thực khóa (so sánh thời gian hằng, production bắt buộc khác mặc định), chỉ xử lý transferType in
+  A->>A: thử từng mã PCB[A-Z2-7]{8} trong nội dung và trường code
+  alt Không khớp đơn nào
+    A->>DB: INSERT payments (order_id NULL, status NO_ORDER) ON CONFLICT (provider_txn_id) DO NOTHING
+    A-->>B: 200 {success: true} (log warn, admin đối soát ở GET /admin/payments?status=NO_ORDER)
+  else Khớp đơn
+    rect rgb(235, 255, 240)
+      note over A,DB: Một transaction, khóa dòng đơn FOR UPDATE
+      A->>DB: INSERT payments ON CONFLICT (provider_txn_id) DO NOTHING (cổng idempotent)
+      alt Đã có (gửi lặp hoặc đồng thời)
+        A-->>B: 200, không xử lý lần hai
+      else Đơn PENDING_PAYMENT và transferAmount >= total
+        A->>DB: UPDATE orders SET status PAID, payment_status PAID, paid_at WHERE status = PENDING_PAYMENT (UPDATE có điều kiện)
+        A->>DB: UPDATE products SET stock = stock - q, reserved = reserved - q
+        A->>DB: INSERT inventory_movements (reason ORDER), payments.status = SUCCESS
+      else Đơn PENDING_PAYMENT nhưng chuyển thiếu
+        A->>DB: payments.status = UNDERPAID, đơn giữ nguyên
+      else Đơn đã hết hạn hoặc đã hủy
+        A->>DB: payments.status = MANUAL_REVIEW, đơn giữ nguyên
+      end
+    end
+    A->>R: DEL hold:order:{code}, INCR catalog:version
+    A-->>B: 200 {success: true}
   end
-  A->>R: DEL hold:order:{code}
   W->>A: GET /api/orders/:code/payment
   A-->>W: PAID
   W-->>U: chuyển sang trang đơn hàng thành công
   opt Quá hạn 15 phút không thanh toán
-    A->>DB: sweeper 60 giây: đơn PENDING_PAYMENT quá expires_at → CANCELLED, reserved -= q
+    J->>DB: mỗi đơn PENDING_PAYMENT có expires_at < now: UPDATE CANCELLED WHERE status = PENDING_PAYMENT, reserved = reserved - q
+    Note over J,DB: chạy đua với webhook thì chỉ một bên thắng nhờ điều kiện trạng thái
+    J->>R: DEL hold:order:{code}, INCR catalog:version
+  end
+  opt Môi trường dev hoặc ADMIN
+    W->>A: POST /api/payments/:orderCode/simulate (cùng đường xử lý, provider SIMULATOR)
+  end
+  opt Admin xác nhận tay (chỉ ADMIN)
+    W->>A: PATCH /api/admin/orders/:code/status {PAID}
+    A->>DB: cùng transaction: chuyển PAID và INSERT payments (provider MANUAL, status SUCCESS, raw actor)
   end

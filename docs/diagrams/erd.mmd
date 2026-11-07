@@ -1,4 +1,8 @@
-%% Mirrors apps/api/src/db/schema.ts; update this diagram whenever the schema changes
+%% Mirrors apps/api/src/db/schema.ts (migrations 0000_init, 0001_commerce_hardening); update this diagram whenever the schema changes
+%% Indexes: products_specs_gin = GIN(specs jsonb_path_ops); products_category_price_idx(category_id, price); products_name_search_idx = GIN(to_tsvector(simple, name))
+%% Indexes: inventory_movements_product_idx(product_id, created_at); builds_user_idx(user_id); orders_user_idx(user_id, created_at); orders_status_expires_idx(status, expires_at)
+%% Indexes: payments_status_created_idx(status, created_at); chat_messages_session_idx(session_id, created_at)
+%% Constraint: cart_items_cart_product_build_uq = UNIQUE NULLS NOT DISTINCT (cart_id, product_id, build_id)
 erDiagram
   users {
     uuid id PK "default random"
@@ -91,13 +95,14 @@ erDiagram
     uuid id PK "default random"
     uuid cart_id FK
     uuid product_id FK
-    int qty
-    uuid build_id FK "nullable"
+    int qty "capped at 20 per line"
+    uuid build_id FK "nullable; in UNIQUE NULLS NOT DISTINCT (cart_id, product_id, build_id)"
   }
   orders {
     uuid id PK "default random"
     text code UK
     uuid user_id FK "nullable"
+    text guest_id "nullable; gid cookie of a guest checkout (0001)"
     order_type type "RETAIL|BUILD"
     order_status status "PENDING_PAYMENT|PAID|PROCESSING|SHIPPING|COMPLETED|CANCELLED; default PENDING_PAYMENT"
     payment_status payment_status "UNPAID|PAID|REFUNDED; default UNPAID"
@@ -126,13 +131,13 @@ erDiagram
   }
   payments {
     uuid id PK "default random"
-    uuid order_id FK
-    text provider
+    uuid order_id FK "nullable: NO_ORDER transfers (0001)"
+    text provider "SEPAY|SIMULATOR|MANUAL"
     bigint amount
     text transfer_content "nullable"
     text provider_txn_id UK "nullable"
     jsonb raw "nullable"
-    text status
+    text status "SUCCESS|UNDERPAID|MANUAL_REVIEW|NO_ORDER; index (status, created_at)"
     timestamptz created_at "default now"
   }
   chat_sessions {
@@ -172,6 +177,6 @@ erDiagram
   orders ||--o{ order_items : "order_id"
   products ||--o{ order_items : "product_id"
   builds ||--o{ order_items : "build_id"
-  orders ||--o{ payments : "order_id"
+  orders |o--o{ payments : "order_id (nullable)"
   users ||--o{ chat_sessions : "user_id"
   chat_sessions ||--o{ chat_messages : "session_id"
