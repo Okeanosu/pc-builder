@@ -251,7 +251,7 @@ export function ChatDetailPage({ id }: { id: string }) {
           Bắt đầu {formatDateTime(chat.createdAt)} · <span className="font-mono">{chat.id}</span>
         </span>
       </div>
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="min-w-0">
           <CardContent>
             {chat.messages.length === 0 ? (

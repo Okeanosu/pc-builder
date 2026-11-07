@@ -320,7 +320,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
           </div>
         )}
 
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="flex min-w-0 flex-col gap-6">
             <Card>
               <CardHeader>
@@ -510,7 +510,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
 
 function EditorSkeleton() {
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]" aria-busy>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]" aria-busy>
       <Skeleton className="h-[640px] rounded-md" />
       <Skeleton className="h-[420px] rounded-md" />
     </div>

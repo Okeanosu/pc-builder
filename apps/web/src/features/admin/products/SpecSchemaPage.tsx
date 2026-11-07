@@ -102,7 +102,7 @@ function SchemaEditor({ category, canEdit }: { category: CategoryDTO; canEdit: b
   };
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
       <Card className="min-w-0">
         <CardHeader className="flex-row flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">

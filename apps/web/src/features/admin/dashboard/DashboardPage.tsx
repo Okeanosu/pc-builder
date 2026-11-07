@@ -278,7 +278,7 @@ export function DashboardPage() {
       <AdminPageHeader title="Tổng quan" />
       <SummaryTiles />
       <RevenueChart />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <RecentOrders />
         <div className="flex flex-col gap-6">
           <OrdersByStatus />
