@@ -4,18 +4,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth';
+import { dropPersonalQueries } from './personal-cache';
 
 /** Auth store actions plus the cache work that must follow them: carts merge on login, per-user data goes on logout. */
 export function useAuthActions() {
   const qc = useQueryClient();
   const store = useAuthStore();
 
-  const dropPersonal = useCallback(() => {
-    qc.removeQueries({ queryKey: queryKeys.myOrders });
-    qc.removeQueries({ queryKey: queryKeys.myBuilds });
-    qc.removeQueries({ queryKey: ['order'] });
-    qc.removeQueries({ queryKey: ['payment'] });
-  }, [qc]);
+  const dropPersonal = useCallback(() => dropPersonalQueries(qc), [qc]);
 
   const login = useCallback(
     async (email: string, password: string) => {
