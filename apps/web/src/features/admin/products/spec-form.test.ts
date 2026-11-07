@@ -1,0 +1,138 @@
+import type { SpecField } from '@pc/shared';
+import { describe, expect, it } from 'vitest';
+import { addNumberChip, draftToSpecs, parseNumber, specsToDraft } from './spec-form';
+
+const fields: SpecField[] = [
+  {
+    key: 'socket',
+    label: 'Socket',
+    type: 'enum',
+    options: ['AM5', 'LGA1700'],
+    required: true,
+    filterable: true,
+  },
+  { key: 'cores', label: 'Số nhân', type: 'number', required: true, filterable: true },
+  {
+    key: 'boostClockGHz',
+    label: 'Xung boost',
+    type: 'number',
+    unit: 'GHz',
+    required: false,
+    filterable: false,
+  },
+  { key: 'chipset', label: 'Chipset', type: 'string', required: false, filterable: false },
+  { key: 'integratedGraphics', label: 'iGPU', type: 'boolean', required: true, filterable: true },
+  {
+    key: 'memoryTypes',
+    label: 'Loại RAM',
+    type: 'enum[]',
+    options: ['DDR4', 'DDR5'],
+    required: true,
+    filterable: true,
+  },
+  {
+    key: 'radiatorSupportMm',
+    label: 'Radiator',
+    type: 'number[]',
+    unit: 'mm',
+    required: false,
+    filterable: false,
+  },
+];
+
+describe('parseNumber', () => {
+  it('accepts dot and comma decimals, empty as null, rejects text', () => {
+    expect(parseNumber('3.5')).toBe(3.5);
+    expect(parseNumber(' 3,5 ')).toBe(3.5);
+    expect(parseNumber('12')).toBe(12);
+    expect(parseNumber('')).toBeNull();
+    expect(parseNumber('abc')).toBe('invalid');
+    expect(parseNumber('3.')).toBe('invalid');
+  });
+});
+
+describe('specsToDraft', () => {
+  it('turns stored JSONB values into editable form state per type', () => {
+    const draft = specsToDraft(fields, {
+      socket: 'AM5',
+      cores: 6,
+      boostClockGHz: 5.3,
+      integratedGraphics: true,
+      memoryTypes: ['DDR5'],
+      radiatorSupportMm: [240, 360],
+    });
+    expect(draft).toEqual({
+      socket: 'AM5',
+      cores: '6',
+      boostClockGHz: '5.3',
+      chipset: '',
+      integratedGraphics: true,
+      memoryTypes: ['DDR5'],
+      radiatorSupportMm: [240, 360],
+    });
+  });
+
+  it('gives empty values for a new product', () => {
+    const draft = specsToDraft(fields, {});
+    expect(draft.cores).toBe('');
+    expect(draft.integratedGraphics).toBe(false);
+    expect(draft.memoryTypes).toEqual([]);
+  });
+});
+
+describe('draftToSpecs', () => {
+  it('parses numbers and drops empty optional values', () => {
+    const { specs, errors } = draftToSpecs(fields, {
+      socket: 'AM5',
+      cores: '8',
+      boostClockGHz: '',
+      chipset: '  ',
+      integratedGraphics: false,
+      memoryTypes: ['DDR5'],
+      radiatorSupportMm: [],
+    });
+    expect(errors).toEqual({});
+    expect(specs).toEqual({ socket: 'AM5', cores: 8, integratedGraphics: false, memoryTypes: ['DDR5'] });
+  });
+
+  it('reports parse errors and missing required values on the spec path', () => {
+    const { errors } = draftToSpecs(fields, {
+      socket: '',
+      cores: 'tám',
+      integratedGraphics: false,
+      memoryTypes: [],
+    });
+    expect(Object.keys(errors).sort()).toEqual(['specs.cores', 'specs.memoryTypes', 'specs.socket']);
+    expect(errors['specs.cores']).toContain('nhập một số');
+  });
+
+  it('leaves semantic checks (integers, ranges) to the server', () => {
+    const { specs, errors } = draftToSpecs(fields, {
+      socket: 'AM5',
+      cores: '6.5',
+      integratedGraphics: true,
+      memoryTypes: ['DDR5'],
+    });
+    expect(errors).toEqual({});
+    expect(specs.cores).toBe(6.5);
+  });
+
+  it('keeps stored keys the current schema does not show', () => {
+    const { specs } = draftToSpecs(
+      fields,
+      { socket: 'AM5', cores: '6', integratedGraphics: true, memoryTypes: ['DDR5'], boostClockGHz: '' },
+      { threads: 12, boostClockGHz: 5.1 },
+    );
+    expect(specs.threads).toBe(12);
+    expect(specs).not.toHaveProperty('boostClockGHz');
+  });
+});
+
+describe('addNumberChip', () => {
+  it('adds unique numbers in order and flags text', () => {
+    expect(addNumberChip([240], '120').list).toEqual([120, 240]);
+    expect(addNumberChip([240], '240').list).toEqual([240]);
+    expect(addNumberChip([240], 'x').error).toBeTruthy();
+    expect(addNumberChip([240], '').list).toEqual([240]);
+  });
+});

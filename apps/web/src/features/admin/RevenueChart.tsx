@@ -23,7 +23,7 @@ import { queryKeys } from '@/lib/query-keys';
 import { adminApi, type RevenueGroupBy } from './api';
 import { shopDay } from './format';
 import { formatAxisVnd, periodLabel, periodTitle, revenueRange, revenueTotals } from './revenue';
-import { QueryError, refetchClass, tableClass, td, th } from './ui';
+import { QueryError, refetchClass, tableClass, td, th, thEnd } from './ui';
 
 const GROUPS: { value: RevenueGroupBy; label: string; window: string }[] = [
   { value: 'day', label: 'Ngày', window: '30 ngày gần nhất' },
@@ -163,8 +163,8 @@ export function RevenueChart() {
               <thead>
                 <tr>
                   <th className={th}>Kỳ</th>
-                  <th className={`${th} text-end`}>Doanh thu</th>
-                  <th className={`${th} text-end`}>Số đơn</th>
+                  <th className={thEnd}>Doanh thu</th>
+                  <th className={thEnd}>Số đơn</th>
                 </tr>
               </thead>
               <tbody>

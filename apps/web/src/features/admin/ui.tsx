@@ -51,6 +51,7 @@ export function TableFrame({ className, children }: { className?: string; childr
 }
 
 export const th = 'h-10 whitespace-nowrap px-4 text-start text-xs font-semibold text-muted';
+export const thEnd = 'h-10 whitespace-nowrap px-4 text-end text-xs font-semibold text-muted';
 export const td = 'px-4 py-3 align-middle';
 export const tableClass = 'w-full border-collapse text-sm [&_tbody_tr]:border-t [&_tbody_tr]:border-border';
 
@@ -183,4 +184,14 @@ export function SectionTitle({ className, ...props }: ComponentPropsWithRef<'h2'
 /** Faded while a list refetches, so the frame stays put instead of flashing a skeleton. */
 export function refetchClass(fetching: boolean, hasData: boolean) {
   return cn('transition-opacity duration-150', fetching && hasData && 'opacity-60');
+}
+
+/** Placeholder shown while a route's URL data resolves on the client. */
+export function PageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy>
+      <Skeleton className="h-10 w-full max-w-xl" />
+      <Skeleton className="h-[420px] rounded-md" />
+    </div>
+  );
 }

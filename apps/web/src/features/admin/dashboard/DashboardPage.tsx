@@ -18,7 +18,7 @@ import { adminApi } from '../api';
 import { OrderStatusBadge, OrderTypeBadge } from '../badges';
 import { formatDateTime, orderStatusLabel } from '../format';
 import { RevenueChart } from '../RevenueChart';
-import { QueryError, TableFrame, tableClass, td, th } from '../ui';
+import { QueryError, TableFrame, tableClass, td, th, thEnd } from '../ui';
 
 function StatTile({
   label,
@@ -233,7 +233,7 @@ function RecentOrders() {
                 <th className={th}>Mã đơn</th>
                 <th className={th}>Khách hàng</th>
                 <th className={th}>Trạng thái</th>
-                <th className={`${th} text-end`}>Tổng tiền</th>
+                <th className={thEnd}>Tổng tiền</th>
                 <th className={th}>Đặt lúc</th>
               </tr>
             </thead>
