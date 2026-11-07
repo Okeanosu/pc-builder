@@ -195,7 +195,7 @@ export function createScorer(catalog: readonly EngineProduct[], purpose: Purpose
   return scorer;
 }
 
-export function scoreProduct(p: EngineProduct, purpose: Purpose, catalog: EngineProduct[]): number {
+export function scoreProduct(p: EngineProduct, purpose: Purpose, catalog: readonly EngineProduct[]): number {
   return createScorer(catalog, purpose).score(p);
 }
 
@@ -212,7 +212,7 @@ function tierRaw(p: EngineProduct, refs: Refs): number {
 const tierCache = new WeakMap<readonly EngineProduct[], { refs: Refs; sorted: Map<CategoryKey, number[]> }>();
 
 /** Quintile of the product's mid-rank percentile within its category (1 = slowest fifth, 5 = fastest). */
-export function cpuGpuTier(p: EngineProduct, catalog: EngineProduct[]): Tier {
+export function cpuGpuTier(p: EngineProduct, catalog: readonly EngineProduct[]): Tier {
   let entry = tierCache.get(catalog);
   if (!entry) {
     const refs = computeRefs(catalog);

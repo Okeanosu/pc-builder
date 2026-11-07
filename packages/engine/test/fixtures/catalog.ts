@@ -22,7 +22,8 @@ function product<K extends CategoryKey>(
   specs: SpecsByCategory[K],
   extra: { benchmark?: Benchmark; stock?: number; commercialBoost?: number } = {},
 ): EngineProduct {
-  return { id, category, name, brand, price, stock: extra.stock ?? 10, specs, ...extra };
+  const { stock = 10, ...rest } = extra;
+  return { ...rest, id, category, name, brand, price, stock, specs };
 }
 
 const cpu = (
