@@ -21,15 +21,33 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+const SECRET_KEYS = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'SEPAY_API_KEY'] as const;
+const PLACEHOLDER_SECRET = /^(dev-|change-me)/;
+const MIN_SECRET_LENGTH = 32;
+const PLACEHOLDER_ACCOUNT_NO = '0000000000';
+
+/**
+ * Production refuses to start with a default or guessable secret: a known JWT secret lets anyone forge an admin
+ * token, and the SePay key is the only thing that stops anyone from marking orders as paid.
+ */
+function assertProductionSafe(env: Env): void {
+  for (const key of SECRET_KEYS) {
+    const value = env[key];
+    if (PLACEHOLDER_SECRET.test(value) || value.length < MIN_SECRET_LENGTH) {
+      throw new Error(
+        `${key} must be set in production to a random value of at least ${MIN_SECRET_LENGTH} characters ` +
+          '(openssl rand -hex 32)',
+      );
+    }
+  }
+  if (env.VIETQR_ACCOUNT_NO === PLACEHOLDER_ACCOUNT_NO) {
+    throw new Error('VIETQR_ACCOUNT_NO must be set in production to the bank account that receives payments');
+  }
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const env = envSchema.parse(source);
-  if (env.NODE_ENV === 'production' && env.JWT_ACCESS_SECRET.startsWith('dev-')) {
-    throw new Error('JWT secrets must be set in production');
-  }
-  // The webhook key is the only thing that stops anyone from marking orders as paid.
-  if (env.NODE_ENV === 'production' && env.SEPAY_API_KEY === 'dev-sepay-key') {
-    throw new Error('SEPAY_API_KEY must be set in production');
-  }
+  if (env.NODE_ENV === 'production') assertProductionSafe(env);
   return env;
 }
 
