@@ -8,6 +8,8 @@ export interface ToolCallRecord {
   response: Record<string, unknown>;
   ok: boolean;
   durationMs: number;
+  /** Builds this call created (recommend_builds / modify_build), for the chat_messages.build_ids column. */
+  buildIds?: string[];
   /** Internal failure detail for logs; never sent to the model or the user. */
   error?: string;
 }
@@ -42,8 +44,16 @@ export async function executeTool(
   try {
     const result = await tool.run(args, ctx);
     for (const event of result.events ?? []) emit(event);
+    const buildIds = result.buildIds ?? [];
     return {
-      record: { name, args, response: result.forModel, ok: true, durationMs: Date.now() - started },
+      record: {
+        name,
+        args,
+        response: result.forModel,
+        ok: true,
+        durationMs: Date.now() - started,
+        ...(buildIds.length > 0 ? { buildIds } : {}),
+      },
       result,
     };
   } catch (err) {

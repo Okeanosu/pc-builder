@@ -162,6 +162,13 @@ function separatorAfter(text: string): string {
 
 const withCallId = (id: string | undefined) => (id ? { id } : {});
 
+/** Appends the new message; a trailing user turn (e.g. left by a cancelled turn) is extended so roles alternate. */
+function withUserText(history: LlmMessage[], text: string): LlmMessage[] {
+  const last = history.at(-1);
+  if (last?.role !== 'user') return [...history, { role: 'user', parts: [{ text }] }];
+  return [...history.slice(0, -1), { role: 'user', parts: [...last.parts, { text }] }];
+}
+
 async function runAiLoop(
   llm: LlmClient,
   input: RunTurnInput,
@@ -169,7 +176,7 @@ async function runAiLoop(
   state: TurnState,
   emitText: (text: string) => void,
 ): Promise<void> {
-  const messages: LlmMessage[] = [...input.history, { role: 'user', parts: [{ text: input.userText }] }];
+  const messages = withUserText(input.history, input.userText);
   const tools = [...deps.tools.values()].map((t) => t.decl);
   const timeoutMs = deps.timeoutMs ?? DEFAULT_LLM_TIMEOUT_MS;
 

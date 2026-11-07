@@ -2,7 +2,7 @@
 id: M-CHAT-LLM
 type: module
 title: "Lớp trừu tượng LlmClient và bộ chọn nhà cung cấp"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-API-CORE"]
