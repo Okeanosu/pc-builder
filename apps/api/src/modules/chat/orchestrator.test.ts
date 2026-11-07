@@ -441,6 +441,19 @@ describe('runTurn — fallback mode', () => {
     expect(res.intent).toMatchObject({ budget: 25_000_000, purpose: 'gaming' });
   });
 
+  it('suggests switching to the other GPU brand in the follow-up hint', async () => {
+    const res = await runTurn(
+      {
+        ...base,
+        userText: 'đổi sang card AMD',
+        previousIntent: { budget: 25_000_000, purpose: 'gaming', preferences: {} },
+      },
+      { tools: registry(recommendTool()), emit: () => {} },
+    );
+    expect(res.assistantText).toContain('Em đã đổi sang card AMD');
+    expect(res.assistantText).toContain('"đổi card NVIDIA"');
+  });
+
   it('applies "rẻ hơn" to the previous intent and says so', async () => {
     const rec = recommendTool();
     const res = await runTurn(

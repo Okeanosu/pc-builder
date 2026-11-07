@@ -226,18 +226,27 @@ const PURPOSE_PATTERNS: Record<Purpose, RegExp> = {
     /\b(van phong|ke toan|word|excel|powerpoint|office|hoc tap|hoc online|hoc sinh|sinh vien|luot web|xem phim|youtube|zoom|google meet|ban hang|quan ly|giai tri nhe|soan thao|nhap lieu)\b/g,
 };
 
+/** Upper-case "AI" as a workload, not the user addressing the bot ("AI ơi", "bạn là AI"). */
+function workloadAiMention(raw: string): number | undefined {
+  for (const m of raw.matchAll(/(?<![A-Za-z])AI(?![A-Za-z])/g)) {
+    const before = foldVietnamese(raw.slice(Math.max(0, m.index - 12), m.index).toLowerCase());
+    const after = foldVietnamese(raw.slice(m.index + 2, m.index + 8).toLowerCase());
+    if (/^\s*(oi|a\b|ha\b|\?)/.test(after) || /\b(ban|em|la|voi|hoi)\s*$/.test(before)) continue;
+    return m.index;
+  }
+  return undefined;
+}
+
 function detectPurpose(p: Prepared): Purpose | undefined {
   let best: { purpose: Purpose; hits: number; first: number } | undefined;
   for (const purpose of Object.keys(PURPOSE_PATTERNS) as Purpose[]) {
     const matches = [...p.norm.matchAll(PURPOSE_PATTERNS[purpose])];
     let hits = matches.length;
     let first = matches[0]?.index ?? Number.POSITIVE_INFINITY;
-    if (purpose === 'ai') {
-      const upper = /(?<![A-Za-z])AI(?![A-Za-z])/.exec(p.raw);
-      if (upper) {
-        hits += 1;
-        first = Math.min(first, upper.index);
-      }
+    const aiAt = purpose === 'ai' ? workloadAiMention(p.raw) : undefined;
+    if (aiAt !== undefined) {
+      hits += 1;
+      first = Math.min(first, aiAt);
     }
     if (hits === 0) continue;
     if (!best || hits > best.hits || (hits === best.hits && first < best.first)) {

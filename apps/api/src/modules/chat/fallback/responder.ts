@@ -21,7 +21,8 @@ const PURPOSE_PHRASE: Record<Purpose, string> = {
   office: 'văn phòng, học tập',
 };
 
-const ADJUST_HINT = 'Anh/chị có thể nhắn "rẻ hơn", "mạnh hơn" hoặc "đổi card AMD" để em điều chỉnh nhé.';
+const adjustHint = (intent?: ParsedIntent) =>
+  `nhắn "rẻ hơn", "mạnh hơn" hoặc "đổi card ${intent?.preferences.gpuBrand === 'AMD' ? 'NVIDIA' : 'AMD'}" để em điều chỉnh nhé.`;
 
 export const FALLBACK_TEXT = {
   askBoth:
@@ -36,10 +37,10 @@ export const FALLBACK_TEXT = {
     'Anh/chị có thể nâng ngân sách lên không ạ?',
   unavailable:
     'Xin lỗi anh/chị, hệ thống gợi ý cấu hình đang tạm gián đoạn. Anh/chị thử lại sau ít phút giúp em nhé.',
-  thanks: `Dạ, em cảm ơn anh/chị! ${ADJUST_HINT}`,
-  help:
+  thanks: (intent?: ParsedIntent) => `Dạ, em cảm ơn anh/chị! Anh/chị có thể ${adjustHint(intent)}`,
+  help: (intent?: ParsedIntent) =>
     'Em đang ở chế độ tư vấn tự động nên chỉ hiểu các yêu cầu về cấu hình. ' +
-    `Anh/chị cho em biết ngân sách hoặc mục đích mới, hoặc ${ADJUST_HINT.charAt(0).toLowerCase()}${ADJUST_HINT.slice(1)}`,
+    `Anh/chị cho em biết ngân sách hoặc mục đích mới, hoặc ${adjustHint(intent)}`,
 };
 
 export function isRecommendOutput(x: unknown): x is RecommendToolOutput {
@@ -140,7 +141,7 @@ export function explainRecommendation(output: RecommendToolOutput, intent: Parse
     '',
     ...output.builds.map(describeBuild),
     '',
-    `Chi tiết linh kiện và giá có trong các thẻ cấu hình bên dưới. ${ADJUST_HINT}`,
+    `Chi tiết linh kiện và giá có trong các thẻ cấu hình bên dưới. Anh/chị có thể ${adjustHint(intent)}`,
   ].join('\n');
 }
 
@@ -196,7 +197,7 @@ export async function respondFallback(input: FallbackInput, deps: FallbackDeps):
     const thanks = /\b(cam on|thank|thanks|tks|ok|oke|okay)\b/.test(
       foldVietnamese(input.userText.toLowerCase()),
     );
-    return reply(thanks ? FALLBACK_TEXT.thanks : FALLBACK_TEXT.help);
+    return reply(thanks ? FALLBACK_TEXT.thanks(parsed) : FALLBACK_TEXT.help(parsed));
   }
   if (budget === undefined && purpose === undefined) return reply(FALLBACK_TEXT.askBoth);
   if (budget === undefined) return reply(FALLBACK_TEXT.askBudget(purpose as Purpose));

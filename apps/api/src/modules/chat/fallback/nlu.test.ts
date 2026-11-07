@@ -97,6 +97,11 @@ describe('parseIntent — purpose', () => {
     expect(parseIntent(text).purpose).toBe(purpose);
   });
 
+  it('does not treat addressing the bot as "AI" as the AI purpose', () => {
+    expect(parseIntent('AI ơi, tư vấn máy chơi game 20 triệu').purpose).toBe('gaming');
+    expect(parseIntent('bạn là AI à?').purpose).toBeUndefined();
+  });
+
   it('leaves purpose undefined for small talk', () => {
     const r = parseIntent('xin chào shop');
     expect(r.purpose).toBeUndefined();
