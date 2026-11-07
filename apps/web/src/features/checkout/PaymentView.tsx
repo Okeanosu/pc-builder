@@ -130,11 +130,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
   const authReady = useAuthStore((s) => s.status === 'ready');
   const signedIn = useAuthStore((s) => Boolean(s.user));
   const role = useAuthStore((s) => s.user?.role);
-  const simulator = paymentSimulator({
-    nodeEnv: process.env.NODE_ENV,
-    role,
-    flag: process.env.NEXT_PUBLIC_PAYMENT_SIMULATOR,
-  });
+  const simulator = paymentSimulator({ nodeEnv: process.env.NODE_ENV, role });
   const payment = useQuery({
     queryKey: queryKeys.payment(code),
     queryFn: () => api<PaymentInfoDTO>(`/orders/${code}/payment`),
