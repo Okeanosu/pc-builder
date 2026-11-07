@@ -26,7 +26,7 @@ import {
   th,
   thEnd,
 } from '../ui';
-import { pickEnum, useListParams } from '../use-list-params';
+import { pickEnum, useClampPage, useListParams } from '../use-list-params';
 import { AdjustStockDialog } from './AdjustStockDialog';
 import { MovementsDrawer } from './MovementsDrawer';
 import { LOW_STOCK, stockLevel } from './stock';
@@ -139,6 +139,7 @@ export function InventoryPage() {
     placeholderData: keepPreviousData,
     refetchInterval: LIVE_MS,
   });
+  useClampPage(page, all.isPlaceholderData ? undefined : all.data?.total, PAGE_SIZE, set);
   const filtered = Boolean(category || q);
 
   return (

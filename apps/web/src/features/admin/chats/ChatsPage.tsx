@@ -23,7 +23,7 @@ import {
   th,
   thEnd,
 } from '../ui';
-import { pickEnum, useListParams } from '../use-list-params';
+import { pickEnum, useClampPage, useListParams } from '../use-list-params';
 
 const PAGE_SIZE = 20;
 const ALL = 'all';
@@ -37,6 +37,7 @@ export function ChatsPage() {
     queryFn: () => adminApi.chats(filter),
     placeholderData: keepPreviousData,
   });
+  useClampPage(page, query.isPlaceholderData ? undefined : query.data?.total, PAGE_SIZE, set);
 
   return (
     <div className="flex flex-col gap-4">

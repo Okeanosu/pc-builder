@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 export type ListPatch = Record<string, string | number | null | undefined>;
 
@@ -32,6 +32,26 @@ export function useListParams() {
   const get = useCallback((key: string) => params.get(key) ?? '', [params]);
   const page = Math.max(1, Number.parseInt(params.get('page') ?? '1', 10) || 1);
   return { get, set, page };
+}
+
+/** The page to jump to when `page` lies past the last page (e.g. a stale link), or null if it is valid. */
+export function clampPage(page: number, total: number, pageSize: number): number | null {
+  const last = Math.max(1, Math.ceil(total / pageSize));
+  return page > last ? last : null;
+}
+
+/** Once the list total is known, replaces an out-of-range `?page=` with the last page. */
+export function useClampPage(
+  page: number,
+  total: number | undefined,
+  pageSize: number,
+  set: (patch: ListPatch) => void,
+) {
+  useEffect(() => {
+    if (total === undefined) return;
+    const target = clampPage(page, total, pageSize);
+    if (target !== null) set({ page: target });
+  }, [page, total, pageSize, set]);
 }
 
 export function pickEnum<T extends string>(value: string, allowed: readonly T[]): T | undefined {
