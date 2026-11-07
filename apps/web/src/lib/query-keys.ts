@@ -23,6 +23,7 @@ export const queryKeys = {
     benchmarks: (category: string) => ['admin', 'benchmarks', category] as const,
     orders: (q: unknown) => ['admin', 'orders', q] as const,
     order: (code: string) => ['admin', 'order', code] as const,
+    payments: (q: unknown) => ['admin', 'payments', q] as const,
     weights: ['admin', 'weights'] as const,
     chats: (q: unknown) => ['admin', 'chats', q] as const,
     chat: (id: string) => ['admin', 'chat', id] as const,
