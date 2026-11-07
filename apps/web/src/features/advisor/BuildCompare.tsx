@@ -22,7 +22,7 @@ interface BuildCompareProps {
 function SkeletonCard({ index }: { index: number }) {
   return (
     <Card
-      className="flex w-[min(20rem,85cqw)] shrink-0 animate-card-in snap-start flex-col gap-4 p-5 @min-[50rem]:w-auto"
+      className="flex w-[min(20rem,85cqw)] shrink-0 animate-card-in snap-start flex-col gap-4 p-5 @min-[44rem]:w-auto"
       style={{ animationDelay: `${index * 110}ms` }}
     >
       <div className="flex justify-between">
@@ -70,7 +70,7 @@ export function BuildCompare({ builds, selectedId, onSelect, pending, className 
       </div>
 
       {pending ? (
-        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 @min-[50rem]:mx-0 @min-[50rem]:grid @min-[50rem]:grid-cols-3 @min-[50rem]:overflow-visible @min-[50rem]:px-0">
+        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0">
           {[0, 1, 2].map((i) => (
             <SkeletonCard key={i} index={i} />
           ))}
@@ -86,7 +86,7 @@ export function BuildCompare({ builds, selectedId, onSelect, pending, className 
       ) : (
         <div
           key={builds.map((b) => b.id).join()}
-          className="no-scrollbar -mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-1 @min-[50rem]:mx-0 @min-[50rem]:grid @min-[50rem]:grid-cols-3 @min-[50rem]:overflow-visible @min-[50rem]:px-0"
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0"
         >
           {builds.map((b, i) => (
             <BuildCard
@@ -95,7 +95,7 @@ export function BuildCompare({ builds, selectedId, onSelect, pending, className 
               index={i}
               selected={b.id === selectedId}
               onSelect={() => onSelect(b.id)}
-              className="w-[min(20rem,85cqw)] shrink-0 snap-start @min-[50rem]:w-auto"
+              className="w-[min(20rem,85cqw)] shrink-0 snap-start @min-[44rem]:w-auto"
             />
           ))}
         </div>

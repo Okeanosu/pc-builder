@@ -62,9 +62,15 @@ export function BuildSlot({
             )}
             action={
               <div className="flex gap-1.5">
-                <Button size="sm" variant="secondary" onClick={onPick}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={onPick}
+                  aria-label={`Đổi ${categoryInSentence(category)}`}
+                  className="@max-[26rem]:w-8 @max-[26rem]:px-0"
+                >
                   <RefreshCw aria-hidden />
-                  Đổi
+                  <span className="@max-[26rem]:sr-only">Đổi</span>
                 </Button>
                 <Button
                   size="icon-sm"

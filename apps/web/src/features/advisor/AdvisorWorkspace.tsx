@@ -50,14 +50,14 @@ export function AdvisorWorkspace() {
   return (
     <WorkshopSurface
       data-workshop-shell
-      className="flex flex-1 flex-col"
+      className="flex shrink-0 flex-col"
       style={{ height: `calc(100dvh - ${offset}px)`, minHeight: 520 }}
     >
       <h1 className="sr-only">AI tư vấn cấu hình PC</h1>
       <Tabs
         value={tab}
         onValueChange={(v) => setTab(v as 'chat' | 'builds')}
-        className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-0 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6 lg:p-6"
+        className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-0 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:p-6"
       >
         <TabsList className="mx-4 mt-3 mb-3 grid w-auto shrink-0 grid-cols-2 lg:hidden">
           <TabsTrigger value="chat" className="justify-center">

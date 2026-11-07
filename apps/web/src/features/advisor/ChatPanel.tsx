@@ -56,17 +56,30 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
   const streaming = status === 'streaming';
 
   const listRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
 
   useEffect(() => {
     void init();
   }, [init]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: follow every streamed change while pinned to the bottom
+  // biome-ignore lint/correctness/useExhaustiveDependencies: follow every new message while pinned to the bottom
   useLayoutEffect(() => {
     const el = listRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // Text is revealed gradually and cards animate in, so follow size changes too, not just store updates.
+  useEffect(() => {
+    const el = listRef.current;
+    const content = contentRef.current;
+    if (!el || !content) return;
+    const observer = new ResizeObserver(() => {
+      if (stick.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, []);
 
   const sendAndFollow = (text: string) => {
     stick.current = true;
@@ -76,12 +89,15 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
       <div className="flex min-h-11 shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2">
-        <span className="truncate text-sm font-medium text-muted">
-          {streaming
-            ? 'Đang trả lời…'
-            : messages.length > 0
-              ? 'Cuộc trò chuyện hiện tại'
-              : 'Cuộc trò chuyện mới'}
+        <span className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-muted">
+          <span
+            aria-hidden
+            className={cn(
+              'size-1.5 shrink-0 rounded-full bg-accent shadow-(--led-shadow)',
+              streaming && 'animate-blink-dot',
+            )}
+          />
+          <span className="truncate">{streaming ? 'Đang trả lời…' : 'Trợ lý cấu hình'}</span>
         </span>
         <div className="flex shrink-0 items-center gap-1">
           {actions}
@@ -90,10 +106,11 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
             variant="ghost"
             onClick={reset}
             disabled={messages.length === 0}
-            className="text-muted hover:text-fg"
+            title="Cuộc trò chuyện mới"
+            className={cn('text-muted hover:text-fg', compact && 'w-8 px-0')}
           >
             <MessageSquarePlus aria-hidden />
-            <span className={cn(compact && 'max-sm:sr-only')}>Cuộc trò chuyện mới</span>
+            <span className={cn(compact && 'sr-only')}>Cuộc trò chuyện mới</span>
           </Button>
         </div>
       </div>
@@ -110,32 +127,34 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
         aria-label="Hội thoại với trợ lý"
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4"
       >
-        {historyStatus !== 'ready' && messages.length === 0 ? (
-          <div className="flex flex-col gap-4" aria-hidden>
-            <Skeleton className="ms-auto h-10 w-2/3 rounded-md" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-3/5" />
-          </div>
-        ) : messages.length === 0 ? (
-          <Welcome compact={compact} onPick={sendAndFollow} />
-        ) : (
-          <div className="flex flex-col gap-6">
-            {messages.map((m) => (
-              <ChatMessage
-                key={m.id}
-                message={m}
-                buildsDisplay={compact ? 'cards' : 'summary'}
-                selectedBuildId={selectedBuildId}
-                onSelectBuild={selectBuild}
-                onShowBuilds={onShowBuilds}
-                onRetry={(id) => {
-                  stick.current = true;
-                  void retry(id);
-                }}
-              />
-            ))}
-          </div>
-        )}
+        <div ref={contentRef}>
+          {historyStatus !== 'ready' && messages.length === 0 ? (
+            <div className="flex flex-col gap-4" aria-hidden>
+              <Skeleton className="ms-auto h-10 w-2/3 rounded-md" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-3/5" />
+            </div>
+          ) : messages.length === 0 ? (
+            <Welcome compact={compact} onPick={sendAndFollow} />
+          ) : (
+            <div className="flex flex-col gap-6">
+              {messages.map((m) => (
+                <ChatMessage
+                  key={m.id}
+                  message={m}
+                  buildsDisplay={compact ? 'cards' : 'summary'}
+                  selectedBuildId={selectedBuildId}
+                  onSelectBuild={selectBuild}
+                  onShowBuilds={onShowBuilds}
+                  onRetry={(id) => {
+                    stick.current = true;
+                    void retry(id);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="shrink-0 border-t border-border bg-bg/70 px-3 pt-3 pb-2 backdrop-blur sm:px-4">

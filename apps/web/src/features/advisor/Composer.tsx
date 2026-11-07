@@ -76,9 +76,7 @@ export function Composer({
           maxLength={MAX_LENGTH}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder={
-            compact ? 'Nhu cầu và ngân sách…' : 'Ví dụ: chơi Valorant và dựng video nhẹ, tầm 25 triệu…'
-          }
+          placeholder={compact ? 'Nhu cầu và ngân sách…' : 'Nhập nhu cầu và ngân sách…'}
           aria-label="Nhập yêu cầu cho trợ lý"
           enterKeyHint="send"
           className="max-h-42 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-base text-fg outline-none placeholder:text-muted"

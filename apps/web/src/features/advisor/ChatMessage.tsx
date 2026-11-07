@@ -10,6 +10,7 @@ import type { AssistantMessage, ChatItem } from '@/stores/chat';
 import { BuildCard, buildTitle } from './BuildCard';
 import { Markdown } from './Markdown';
 import { ToolStatusChip } from './ToolStatusChip';
+import { useSmoothText } from './useSmoothText';
 
 export type BuildsDisplay = 'summary' | 'cards';
 
@@ -93,6 +94,7 @@ function AssistantBody({
   onRetry,
 }: Omit<ChatMessageProps, 'message' | 'className'> & { message: AssistantMessage }) {
   const { text, tools, streaming, builds, products, error, stopped } = message;
+  const { shown, revealing } = useSmoothText(text, streaming);
   const thinking = streaming && !text && tools.every((t) => t.status === 'done') && builds.length === 0;
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -129,7 +131,7 @@ function AssistantBody({
           />
         ))}
 
-      {text ? <Markdown text={text} streaming={streaming} /> : thinking && <TypingDots />}
+      {shown ? <Markdown text={shown} streaming={revealing} /> : thinking && <TypingDots />}
 
       {products.length > 0 && (
         <ul className="flex flex-col gap-2" aria-label="Sản phẩm gợi ý">

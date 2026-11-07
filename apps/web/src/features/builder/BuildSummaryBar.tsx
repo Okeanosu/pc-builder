@@ -51,12 +51,12 @@ export function WattageLine({ summary, className }: { summary: BuildSummary; cla
   const ratio = psuWattage ? Math.min(1, estimatedWattage / psuWattage) : 0;
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="inline-flex items-center gap-1.5 text-muted">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm">
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-muted">
           <Gauge className="size-4" aria-hidden />
           Công suất ước tính
         </span>
-        <span className="font-mono text-fg tabular-nums">
+        <span className="whitespace-nowrap font-mono text-fg tabular-nums">
           ~{estimatedWattage}W{psuWattage ? <span className="text-muted"> / nguồn {psuWattage}W</span> : null}
         </span>
       </div>
