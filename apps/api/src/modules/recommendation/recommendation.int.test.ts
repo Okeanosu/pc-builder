@@ -184,6 +184,18 @@ describe('POST /api/recommendations', () => {
     }
   });
 
+  it('lets the request through and logs a warning when a command inside the rate-limit MULTI fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const broken = createApp({ ...t.deps, redis: redisWithFailingMulti(redis, 'reply-error') });
+      const res = await request(broken).post('/api/recommendations').send(body);
+      expect(res.status).toBe(200);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('rate limit'), expect.any(Error));
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('validates the request', async () => {
     const res = await request(app).post('/api/recommendations').send({ budget: 1_000, purpose: 'gaming' });
     expect(res.status).toBe(422);

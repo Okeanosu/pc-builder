@@ -499,6 +499,21 @@ describe('chat rate limit', () => {
     expect((await messageFrom('198.51.100.9', sessions[1]!)).status).toBe(200);
   });
 
+  it('creates the session and logs a warning when a command inside the rate-limit MULTI fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const broken = createApp({
+        ...t.deps,
+        llm: undefined,
+        redis: redisWithFailingMulti(redis, 'reply-error'),
+      });
+      expect((await request(broken).post('/api/chat/sessions')).status).toBe(201);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('rate limit'), expect.any(Error));
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('lets sessions and messages through and logs a warning when the rate-limit store fails', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {

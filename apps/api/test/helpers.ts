@@ -23,14 +23,20 @@ export function createTestDeps(overrides: Partial<AppDeps> = {}) {
   };
 }
 
-/** The same client, except that every MULTI rejects on exec(), as it does when Redis goes away mid-request. */
-export function redisWithFailingMulti(redis: Redis): Redis {
+/**
+ * The same client, except that every MULTI fails on exec(): `rejects` as when Redis goes away mid-request,
+ * `reply-error` as when a queued command fails, which ioredis reports as an `[err, null]` reply.
+ */
+export function redisWithFailingMulti(redis: Redis, failure: 'rejects' | 'reply-error' = 'rejects'): Redis {
   return new Proxy(redis, {
     get(target, prop, receiver) {
       if (prop === 'multi') {
         return () => {
           const tx = target.multi();
-          tx.exec = () => Promise.reject(new Error('simulated Redis outage'));
+          tx.exec = () =>
+            failure === 'rejects'
+              ? Promise.reject(new Error('simulated Redis outage'))
+              : Promise.resolve([[new Error('simulated command failure'), null]]);
           return tx;
         };
       }

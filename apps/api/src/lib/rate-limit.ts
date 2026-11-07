@@ -28,9 +28,13 @@ async function hit(redis: Redis, keys: string[]): Promise<{ count: number; ttl: 
   const tx = redis.multi();
   for (const key of keys) tx.incr(key).expire(key, WINDOW_SECONDS, 'NX').ttl(key);
   const replies = await tx.exec();
+  if (!replies) throw new Error('rate-limit transaction was discarded');
+  // ioredis reports a failed queued command as an [err, null] reply instead of rejecting
+  const failed = replies.find(([err]) => err);
+  if (failed) throw failed[0];
   return keys.map((_, i) => ({
-    count: Number(replies?.[i * 3]?.[1] ?? 0),
-    ttl: Number(replies?.[i * 3 + 2]?.[1] ?? WINDOW_SECONDS),
+    count: Number(replies[i * 3]?.[1] ?? 0),
+    ttl: Number(replies[i * 3 + 2]?.[1] ?? WINDOW_SECONDS),
   }));
 }
 
