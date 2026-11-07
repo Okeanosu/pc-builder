@@ -16,6 +16,7 @@ import { toast } from '@/components/ui/Toast';
 import { ApiError } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 import { queryKeys } from '@/lib/query-keys';
+import { useAuthStore } from '@/stores/auth';
 import { AdminPageHeader } from '../AdminChrome';
 import { adminApi } from '../api';
 import { ProductStatusBadge } from '../badges';
@@ -54,10 +55,12 @@ function BoostSlider({
   value,
   onChange,
   error,
+  readOnly,
 }: {
   value: number;
   onChange: (v: number) => void;
   error?: string;
+  readOnly?: boolean;
 }) {
   const shown = Math.min(BOOST_MAX, Math.max(BOOST_MIN, value));
   return (
@@ -74,6 +77,7 @@ function BoostSlider({
           step={0.01}
           value={shown}
           onChange={(e) => onChange(Number(e.target.value))}
+          disabled={readOnly}
           className="h-10 min-w-0 flex-1 accent-ring"
           aria-valuetext={formatNumber(shown)}
         />
@@ -81,6 +85,7 @@ function BoostSlider({
           {formatWeight(shown)}
         </span>
       </div>
+      {readOnly && <p className="text-xs text-muted">Chỉ quản trị viên chỉnh hệ số ưu tiên.</p>}
       {value < 0 && (
         <p className="text-xs text-warn-ink">
           Giá trị đang lưu là {formatNumber(value)} (bộ giải coi như 0). Chỉ thay đổi khi bạn kéo thanh trượt.
@@ -189,6 +194,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
   const router = useRouter();
   const qc = useQueryClient();
   const isEdit = Boolean(product);
+  const isAdmin = useAuthStore((s) => s.user?.role === 'ADMIN');
   const startCategory =
     categories.find((c) => (product ? c.id === product.categoryId : c.key === initialCategory)) ??
     categories[0]!;
@@ -496,6 +502,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                   value={draft.commercialBoost}
                   onChange={(v) => set('commercialBoost', v)}
                   error={errors.commercialBoost}
+                  readOnly={!isAdmin}
                 />
               </CardContent>
             </Card>
