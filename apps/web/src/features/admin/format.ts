@@ -59,7 +59,7 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, Tone> = {
 
 /** Retail orders are "processing"; build orders are physically assembled at that step. */
 export function orderStatusLabel(status: OrderStatus, type?: OrderType): string {
-  if (status === 'PROCESSING') return type === 'BUILD' ? 'Đang lắp ráp' : 'Đang xử lý';
+  if (status === 'PROCESSING' && type) return type === 'BUILD' ? 'Đang lắp ráp' : 'Đang xử lý';
   return ORDER_STATUS_LABELS[status];
 }
 
