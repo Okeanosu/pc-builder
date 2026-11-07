@@ -66,10 +66,8 @@ const fail = (error: string, message: string): ModificationPlan => ({
 });
 
 /**
- * Turns a modify_build call into a recommendation request: every current part stays fixed except the categories
- * being changed; a replaced category without a chosen product excludes the current part so the solver picks
- * another. A budget-only change re-solves the whole build. `relaxed` additionally frees dependent categories, for a
- * retry when keeping them makes the request infeasible.
+ * modify_build → recommendation request: current parts stay fixed except the changed categories (a replaced one
+ * excludes its current part); a budget-only change re-solves everything; `relaxed` also frees dependent parts.
  */
 export function planModification({ build, base, args, newProduct }: ModificationInput): ModificationPlan {
   const replaceCategory = toCategory(args.replaceCategory);

@@ -16,6 +16,7 @@ export const TURN_ERROR_MESSAGE =
 
 export interface TurnResponse extends SseTarget {
   writableFinished: boolean;
+  destroyed: boolean;
 }
 
 export interface ChatTurnDeps {
@@ -52,6 +53,7 @@ export async function streamChatTurn(
   res.on('close', () => {
     if (!res.writableFinished) abort.abort();
   });
+  if (res.destroyed && !res.writableFinished) abort.abort();
   sse.send({ type: 'session', sessionId: session.id, mode });
 
   let done: Extract<ChatEvent, { type: 'done' }> | undefined;

@@ -10,10 +10,13 @@ import type { LlmMessage } from './llm/types';
 import type { RunTurnResult } from './orchestrator';
 
 export const CHAT_RATE_LIMIT = 10;
+export const SESSION_CREATE_LIMIT = 10;
 export const TITLE_MAX_CHARS = 60;
 export const INTENT_TTL_SECONDS = 24 * 3600;
 export const intentKey = (sessionId: string) => `chat:intent:${sessionId}`;
-export const rateLimitKey = (who: string, epochMinute: number) => `rl:chat:${who}:${epochMinute}`;
+export type RateLimitScope = 'chat' | 'chat-session';
+export const rateLimitKey = (scope: RateLimitScope, who: string, epochMinute: number) =>
+  `rl:${scope}:${who}:${epochMinute}`;
 
 export type ChatSessionRow = typeof chatSessions.$inferSelect;
 
@@ -23,12 +26,23 @@ export interface Requester {
   guestId?: string;
 }
 
-/** A logged-in user owns by user id; a guest by the gid cookie. Staff and admins may read every session. */
-export function canAccessSession(session: ChatSessionRow, who: Requester): boolean {
-  if (who.role === 'STAFF' || who.role === 'ADMIN') return true;
+/** A logged-in user owns by user id; a guest by the gid cookie. Only the owner may write into a session. */
+export function isSessionOwner(session: ChatSessionRow, who: Requester): boolean {
   if (session.userId) return session.userId === who.userId;
   return session.guestId !== null && session.guestId === who.guestId;
 }
+
+/** Read access: the owner, plus staff and admins (read-only, for reviewing conversations). */
+export function canAccessSession(session: ChatSessionRow, who: Requester): boolean {
+  return who.role === 'STAFF' || who.role === 'ADMIN' || isSessionOwner(session, who);
+}
+
+/** Message rate-limit identity: the user when logged in, otherwise the guest cookie. */
+export const requesterKey = (who: Requester) =>
+  who.userId ? `u:${who.userId}` : `g:${who.guestId ?? 'anonymous'}`;
+
+const isVisible = (r: { role: string; content: string; buildIds: string[] }) =>
+  r.role === 'user' || r.content.trim() !== '' || r.buildIds.length > 0;
 
 export const sessionTitle = (text: string) =>
   Array.from(text.trim()).slice(0, TITLE_MAX_CHARS).join('').trim();
@@ -94,9 +108,10 @@ export function createChatService(deps: AppDeps) {
         .from(chatMessages)
         .where(and(eq(chatMessages.sessionId, session.id), inArray(chatMessages.role, ['user', 'assistant'])))
         .orderBy(asc(chatMessages.createdAt));
-      const ids = [...new Set(rows.flatMap((r) => r.buildIds))];
+      const visible = rows.filter(isVisible);
+      const ids = [...new Set(visible.flatMap((r) => r.buildIds))];
       const byId = new Map((await buildsService.getMany(ids)).map((b) => [b.id, b]));
-      const messages = rows.map(
+      const messages = visible.map(
         (r): ChatMessageDTO => ({
           id: r.id,
           role: r.role,
@@ -154,7 +169,10 @@ export function createChatService(deps: AppDeps) {
       return row!;
     },
 
-    /** One row per tool call, then the assistant reply (id = the `done` messageId); the session takes the turn's mode. */
+    /**
+     * One row per tool call, then the assistant reply (id = the `done` messageId); the session takes the turn's mode.
+     * A turn cancelled before producing any text or build stores no reply.
+     */
     async saveTurn(sessionId: string, result: RunTurnResult, latencyMs: number): Promise<void> {
       const start = (await nextTimestamp(sessionId)).getTime();
       const at = (i: number) => new Date(start + i);
@@ -168,33 +186,46 @@ export function createChatService(deps: AppDeps) {
         buildIds: c.buildIds ?? [],
         createdAt: at(i),
       }));
+      const reply = !(result.cancelled && !result.assistantText.trim() && result.buildIds.length === 0);
+      const rows = [
+        ...toolRows,
+        ...(reply
+          ? [
+              {
+                id: result.messageId,
+                sessionId,
+                role: 'assistant' as const,
+                content: stripNul(result.assistantText),
+                buildIds: result.buildIds,
+                mode: result.mode,
+                latencyMs: Math.round(latencyMs),
+                createdAt: at(toolRows.length),
+              },
+            ]
+          : []),
+      ];
+      if (rows.length === 0) return;
       await db.transaction(async (tx) => {
-        await tx.insert(chatMessages).values([
-          ...toolRows,
-          {
-            id: result.messageId,
-            sessionId,
-            role: 'assistant' as const,
-            content: stripNul(result.assistantText),
-            buildIds: result.buildIds,
-            mode: result.mode,
-            latencyMs: Math.round(latencyMs),
-            createdAt: at(toolRows.length),
-          },
-        ]);
-        await tx.update(chatSessions).set({ mode: result.mode }).where(eq(chatSessions.id, sessionId));
+        await tx.insert(chatMessages).values(rows);
+        if (reply) {
+          await tx.update(chatSessions).set({ mode: result.mode }).where(eq(chatSessions.id, sessionId));
+        }
       });
     },
 
-    /** Fixed one-minute window per user (or guest): INCR + EXPIRE on `rl:chat:{who}:{epochMinute}`. */
-    async consumeRateLimit(who: Requester): Promise<{ allowed: boolean; retryAfterSeconds: number }> {
+    /** Fixed one-minute window: INCR + EXPIRE on `rl:{scope}:{who}:{epochMinute}`. */
+    async consumeRateLimit(
+      scope: RateLimitScope,
+      who: string,
+      limit: number,
+    ): Promise<{ allowed: boolean; retryAfterSeconds: number }> {
       const nowMs = deps.now().getTime();
       const minute = Math.floor(nowMs / 60_000);
-      const key = rateLimitKey(who.userId ? `u:${who.userId}` : `g:${who.guestId ?? 'anonymous'}`, minute);
+      const key = rateLimitKey(scope, who, minute);
       const count = await redis.incr(key);
       if (count === 1) await redis.expire(key, 120);
       return {
-        allowed: count <= CHAT_RATE_LIMIT,
+        allowed: count <= limit,
         retryAfterSeconds: Math.max(1, Math.ceil(((minute + 1) * 60_000 - nowMs) / 1000)),
       };
     },

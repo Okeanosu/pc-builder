@@ -277,11 +277,22 @@ describe('POST /api/chat/sessions/:id/messages — AI mode with a scripted LLM',
     expect(row!.mode).toBe('FALLBACK');
   });
 
-  it('cancels the turn when the client disconnects and still keeps the user message', async () => {
+  it('cancels the turn on disconnect, keeps only the user message, and the next turn still alternates roles', async () => {
     const created = await request(aiApp).post('/api/chat/sessions');
     const s = created.body as ChatSessionDTO;
     const setCookie = ([] as string[]).concat(created.headers['set-cookie'] ?? []);
     const gid = setCookie.map((c) => c.split(';')[0]).join('; ');
+    const post = (body: object) =>
+      request(aiApp)
+        .post(`/api/chat/sessions/${s.id}/messages`)
+        .set('Cookie', gid)
+        .send(body)
+        .buffer(true)
+        .parse(rawBody as never);
+
+    llm.steps = [[call('search_products', { category: 'gpu' })], [text('Có mấy mẫu card đây ạ.')]];
+    expect((await post({ text: 'có card nào không' })).status).toBe(200);
+
     llm.steps = ['hang'];
     const server = aiApp.listen(0);
     try {
@@ -299,17 +310,65 @@ describe('POST /api/chat/sessions/:id/messages — AI mode with a scripted LLM',
       expect(first).toContain('"type":"session"');
       controller.abort();
       const deadline = Date.now() + 5000;
-      let rows = await rowsOf(s.id);
-      while ((!llm.aborted || !rows.some((r) => r.role === 'assistant')) && Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, 50));
-        rows = await rowsOf(s.id);
-      }
-      expect(llm.aborted).toBe(true);
-      expect(rows.map((r) => r.role)).toEqual(['user', 'assistant']);
-      expect(rows[1]!.content).toBe('');
+      while (!llm.aborted && Date.now() < deadline) await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 300));
     } finally {
       server.close();
     }
+    expect(llm.aborted).toBe(true);
+    const rows = await rowsOf(s.id);
+    expect(rows.map((r) => r.role)).toEqual(['user', 'tool', 'assistant', 'user']);
+    expect(rows[3]!.content).toBe('chơi game 25 triệu');
+
+    llm.calls = [];
+    llm.steps = [[text('Dạ, em đây.')]];
+    expect((await post({ text: 'alo, còn đó không' })).status).toBe(200);
+    const history = llm.calls[0]!.history;
+    const roles = history.map((m) => m.role);
+    expect(roles).toEqual(['user', 'model', 'user', 'model', 'user']);
+    for (let i = 1; i < roles.length; i++) expect(roles[i]).not.toBe(roles[i - 1]);
+    history.forEach((m, i) => {
+      if (m.parts.some((p) => 'functionCall' in p)) {
+        expect(history[i + 1]!.parts.some((p) => 'functionResponse' in p)).toBe(true);
+      }
+    });
+    expect(history.at(-1)!.parts).toEqual([{ text: 'chơi game 25 triệu' }, { text: 'alo, còn đó không' }]);
+  });
+
+  it('GET leaves out empty assistant rows', async () => {
+    const s = await newSession(guest);
+    llm.steps = [[text('Dạ, chào anh.')]];
+    await send(guest, s.id, { text: 'chào shop' });
+    await db.insert(chatMessages).values({
+      sessionId: s.id,
+      role: 'assistant',
+      content: '',
+      mode: 'AI',
+      createdAt: new Date(Date.now() + 60_000),
+    });
+    const dto = (await guest.get(`/api/chat/sessions/${s.id}`)).body as ChatSessionDTO;
+    expect(dto.messages.map((m) => [m.role, m.content])).toEqual([
+      ['user', 'chào shop'],
+      ['assistant', 'Dạ, chào anh.'],
+    ]);
+  });
+
+  it('lets staff read but not write into a customer session', async () => {
+    const before = await rowsOf(session.id);
+    const staff = agent();
+    const sent = await send(staff, session.id, { text: 'nhân viên chen vào' }, staffToken);
+    expect(sent.res.status).toBe(403);
+    expect(sent.res.headers['content-type']).toMatch(/json/);
+    expect(JSON.parse(sent.res.body as string)).toMatchObject({
+      error: { code: 'FORBIDDEN', message: 'Bạn không thể gửi tin vào cuộc trò chuyện này' },
+    });
+    expect(await rowsOf(session.id)).toHaveLength(before.length);
+    const [s] = await db.select().from(chatSessions).where(eq(chatSessions.id, session.id));
+    expect(s!.mode).toBe('AI');
+    expect(
+      (await staff.get(`/api/chat/sessions/${session.id}`).set('Authorization', `Bearer ${staffToken}`))
+        .status,
+    ).toBe(200);
   });
 });
 
@@ -358,6 +417,24 @@ describe('POST /api/chat/sessions/:id/messages — fallback mode (no LLM)', () =
 });
 
 describe('chat rate limit', () => {
+  it('allows 10 new sessions per minute per visitor, keyed by IP for cookie-less clients', async () => {
+    const fixed = new Date('2026-11-07T11:00:10Z');
+    const app = createApp({ ...t.deps, llm: undefined, now: () => fixed });
+    const guest = request.agent(app);
+    await guest.get('/api/health');
+    for (let i = 0; i < 10; i++) expect((await guest.post('/api/chat/sessions')).status).toBe(201);
+    const limited = await guest.post('/api/chat/sessions');
+    expect(limited.status).toBe(429);
+    expect(limited.body).toMatchObject({ error: { code: 'RATE_LIMITED' } });
+    expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
+
+    for (let i = 0; i < 10; i++) expect((await request(app).post('/api/chat/sessions')).status).toBe(201);
+    expect((await request(app).post('/api/chat/sessions')).status).toBe(429);
+    expect(
+      (await request(app).post('/api/chat/sessions').set('Authorization', `Bearer ${userToken}`)).status,
+    ).toBe(201);
+  });
+
   it(`allows ${CHAT_RATE_LIMIT} messages per minute and answers the next with 429 JSON before streaming`, async () => {
     const fixed = new Date('2026-11-07T10:00:30Z');
     const app = createApp({ ...t.deps, llm: undefined, now: () => fixed });

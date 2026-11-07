@@ -9,6 +9,7 @@ class FakeResponse extends EventEmitter implements TurnResponse {
   statusCode = 0;
   writableEnded = false;
   writableFinished = false;
+  destroyed = false;
   chunks: string[] = [];
   setHeader() {}
   flushHeaders() {}
@@ -150,6 +151,26 @@ describe('streamChatTurn', () => {
     await streamChatTurn(input, res, h.deps);
     expect(signal?.aborted).toBe(true);
     expect(h.saved).toHaveLength(1);
+  });
+
+  it('aborts at once when the client already left before the stream opened', async () => {
+    const res = new FakeResponse();
+    let abortedAtStart: boolean | undefined;
+    const h = harness(
+      async (_input, d) => {
+        abortedAtStart = d.signal?.aborted;
+        return result({ cancelled: true });
+      },
+      {
+        addUserMessage: async () => {
+          res.destroyed = true;
+          res.emit('close');
+          return { id: 'u1', createdAt: new Date() };
+        },
+      },
+    );
+    await streamChatTurn(input, res, h.deps);
+    expect(abortedAtStart).toBe(true);
   });
 
   it('passes history, previous intent, owner context and the timeout to runTurn', async () => {

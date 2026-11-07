@@ -1,3 +1,4 @@
+import { preferencesSchema } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
 import { TOOL_DECLARATIONS } from './declarations';
 
@@ -83,6 +84,21 @@ describe('TOOL_DECLARATIONS', () => {
         required: ['key', 'value'],
       },
     });
+  });
+
+  it('advertises only preferences the engine honours', () => {
+    const supported = Object.keys(preferencesSchema.shape);
+    for (const decl of TOOL_DECLARATIONS) {
+      const props = (decl.parametersJsonSchema as { properties: Record<string, { properties?: object }> })
+        .properties;
+      for (const key of ['preferences', 'preferenceChanges']) {
+        const declared = Object.keys(props[key]?.properties ?? {});
+        expect(
+          declared.filter((k) => !supported.includes(k)),
+          `${decl.name}.${key}`,
+        ).toEqual([]);
+      }
+    }
   });
 
   it('the checker itself rejects schema-valued additionalProperties', () => {

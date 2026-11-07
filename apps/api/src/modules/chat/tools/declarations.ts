@@ -18,7 +18,6 @@ const preferencesSchema = {
       description: 'Dung lượng ổ cứng tối thiểu (GB, 1TB = 1000).',
     },
     needWifi: { type: 'boolean', description: 'Cần mainboard có Wi-Fi.' },
-    rgb: { type: 'boolean', description: 'Thích linh kiện có đèn RGB.' },
     resolution: { type: 'string', enum: RESOLUTIONS, description: 'Độ phân giải màn hình chơi game.' },
     requireDiscreteGpu: { type: 'boolean', description: 'Bắt buộc có card đồ họa rời.' },
   },
