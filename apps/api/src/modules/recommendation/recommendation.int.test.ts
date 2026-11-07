@@ -145,6 +145,32 @@ describe('POST /api/recommendations', () => {
     expect(limited.status).toBe(429);
   });
 
+  const fromIp = (ip: string, gid: string) =>
+    request(app)
+      .post('/api/recommendations')
+      .set('X-Forwarded-For', ip)
+      .set('Cookie', `gid=${gid}`)
+      .send(body);
+
+  it('caps one IP at 60 requests per minute, however often the guest cookie changes', async () => {
+    for (let i = 0; i < 60; i++) {
+      expect((await fromIp('203.0.113.7', `rotating-${i}-aaaaaaaaaa`)).status).toBe(200);
+    }
+    const limited = await fromIp('203.0.113.7', 'rotating-new-aaaaaaaaaa');
+    expect(limited.status).toBe(429);
+    expect(limited.body.error.code).toBe('RATE_LIMITED');
+    expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
+  });
+
+  it('counts each client IP separately', async () => {
+    for (let i = 0; i < 60; i++) {
+      expect((await fromIp('203.0.113.7', `ip-a-${i}-aaaaaaaaaa`)).status).toBe(200);
+      expect((await fromIp('198.51.100.9', `ip-b-${i}-aaaaaaaaaa`)).status).toBe(200);
+    }
+    expect((await fromIp('203.0.113.7', 'ip-a-new-aaaaaaaaaa')).status).toBe(429);
+    expect((await fromIp('198.51.100.9', 'ip-b-new-aaaaaaaaaa')).status).toBe(429);
+  });
+
   it('validates the request', async () => {
     const res = await request(app).post('/api/recommendations').send({ budget: 1_000, purpose: 'gaming' });
     expect(res.status).toBe(422);

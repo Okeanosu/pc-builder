@@ -117,10 +117,13 @@ beforeAll(async () => {
   userToken = await login(aiApp, 'khach@pcbuilder.vn', 'Khach@123');
   staffToken = await login(aiApp, 'staff@pcbuilder.vn', 'Staff@123');
 });
-beforeEach(() => {
+beforeEach(async () => {
   llm.steps = [];
   llm.calls = [];
   llm.aborted = false;
+  // every request here comes from one address, so per-IP counters must not carry over between tests
+  const counters = await redis.keys('rl:*');
+  if (counters.length > 0) await redis.del(...counters);
 });
 afterAll(() => t.close());
 
@@ -455,5 +458,44 @@ describe('chat rate limit', () => {
     const other = request.agent(app);
     const otherSession = await newSession(other);
     expect((await send(other, otherSession.id, { text: 'xin chào' })).res.status).toBe(200);
+  });
+
+  const createFrom = (ip: string, gid: string) =>
+    request(fallbackApp).post('/api/chat/sessions').set('X-Forwarded-For', ip).set('Cookie', `gid=${gid}`);
+  const messageFrom = (ip: string, s: { id: string; gid: string }) =>
+    request(fallbackApp)
+      .post(`/api/chat/sessions/${s.id}/messages`)
+      .set('X-Forwarded-For', ip)
+      .set('Cookie', `gid=${s.gid}`)
+      .send({ text: 'xin chào' })
+      .buffer(true)
+      .parse(rawBody as never);
+
+  it('caps one IP at 30 new sessions per minute, however often the guest cookie changes', async () => {
+    for (let i = 0; i < 30; i++) {
+      expect((await createFrom('203.0.113.7', `rotating-${i}-aaaaaaaaaa`)).status).toBe(201);
+    }
+    const limited = await createFrom('203.0.113.7', 'rotating-new-aaaaaaaaaa');
+    expect(limited.status).toBe(429);
+    expect(limited.body).toMatchObject({ error: { code: 'RATE_LIMITED' } });
+    expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
+    expect((await createFrom('198.51.100.9', 'rotating-new-aaaaaaaaaa')).status).toBe(201);
+  });
+
+  it('caps one IP at 40 messages per minute across guests, and counts each IP separately', async () => {
+    const sessions: { id: string; gid: string }[] = [];
+    for (let g = 0; g < 5; g++) {
+      const gid = `msg-guest-${g}-aaaaaaaaaa`;
+      const created = await createFrom('203.0.113.8', gid);
+      expect(created.status).toBe(201);
+      sessions.push({ id: (created.body as ChatSessionDTO).id, gid });
+    }
+    for (const s of sessions) {
+      for (let i = 0; i < 8; i++) expect((await messageFrom('203.0.113.8', s)).status).toBe(200);
+    }
+    const limited = await messageFrom('203.0.113.8', sessions[0]!);
+    expect(limited.status).toBe(429);
+    expect(JSON.parse(limited.body as string)).toMatchObject({ error: { code: 'RATE_LIMITED' } });
+    expect((await messageFrom('198.51.100.9', sessions[1]!)).status).toBe(200);
   });
 });

@@ -1,11 +1,13 @@
 import { chatMessageSchema } from '@pc/shared';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 import { Router } from 'express';
 import type { AppDeps } from '../../deps';
 import { AppError, notFound } from '../../lib/errors';
 import { handler, parseBody } from '../../lib/http';
+import { enforceRateLimit, ipSubject, type RateLimitRule, visitorSubject } from '../../lib/rate-limit';
 import { streamChatTurn } from './chat.controller';
 import {
+  CHAT_IP_RATE_LIMIT,
   CHAT_RATE_LIMIT,
   type ChatService,
   type ChatSessionRow,
@@ -13,7 +15,7 @@ import {
   createChatService,
   isSessionOwner,
   type Requester,
-  requesterKey,
+  SESSION_CREATE_IP_LIMIT,
   SESSION_CREATE_LIMIT,
 } from './chat.service';
 import { createToolRegistry } from './tools/registry';
@@ -41,21 +43,14 @@ async function loadSession(
   return session;
 }
 
-/** Guests are identified by their cookie once they have one; a client that drops cookies is limited by IP. */
-const sessionCreatorKey = (req: Request) =>
-  req.user ? `u:${req.user.id}` : req.cookies?.gid ? `g:${req.guestId}` : `ip:${req.ip ?? 'unknown'}`;
-
-async function enforceLimit(
-  chat: ChatService,
-  res: Response,
-  check: Parameters<ChatService['consumeRateLimit']>,
-  message: string,
-): Promise<void> {
-  const limit = await chat.consumeRateLimit(...check);
-  if (limit.allowed) return;
-  res.set('Retry-After', String(limit.retryAfterSeconds));
-  throw new AppError(429, 'RATE_LIMITED', message);
-}
+const SESSION_LIMITS: RateLimitRule[] = [
+  { scope: 'chat-session', limit: SESSION_CREATE_LIMIT, subject: visitorSubject },
+  { scope: 'chat-session-ip', limit: SESSION_CREATE_IP_LIMIT, subject: ipSubject },
+];
+const MESSAGE_LIMITS: RateLimitRule[] = [
+  { scope: 'chat', limit: CHAT_RATE_LIMIT, subject: visitorSubject },
+  { scope: 'chat-ip', limit: CHAT_IP_RATE_LIMIT, subject: ipSubject },
+];
 
 export function createChatRouter(deps: AppDeps): Router {
   const router = Router();
@@ -65,10 +60,11 @@ export function createChatRouter(deps: AppDeps): Router {
   router.post(
     '/chat/sessions',
     handler(async (req, res) => {
-      await enforceLimit(
-        chat,
+      await enforceRateLimit(
+        deps.redis,
+        req,
         res,
-        ['chat-session', sessionCreatorKey(req), SESSION_CREATE_LIMIT],
+        SESSION_LIMITS,
         'Bạn tạo cuộc trò chuyện quá nhanh, vui lòng đợi một chút rồi thử lại',
       );
       res.status(201).json(await chat.createSession(requester(req), deps.llm ? 'AI' : 'FALLBACK'));
@@ -88,10 +84,11 @@ export function createChatRouter(deps: AppDeps): Router {
       const { text } = parseBody(chatMessageSchema, req);
       const session = await loadSession(chat, req, 'write');
       const who = requester(req);
-      await enforceLimit(
-        chat,
+      await enforceRateLimit(
+        deps.redis,
+        req,
         res,
-        ['chat', requesterKey(who), CHAT_RATE_LIMIT],
+        MESSAGE_LIMITS,
         'Bạn gửi tin nhắn quá nhanh, vui lòng đợi một chút rồi thử lại',
       );
       await streamChatTurn({ session, text, who }, res, {
