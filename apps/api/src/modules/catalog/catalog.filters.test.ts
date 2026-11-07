@@ -47,6 +47,16 @@ describe('nestBracketParams', () => {
   it('keeps records produced by an extended parser', () => {
     expect(nestBracketParams({ specs: { socket: 'AM5' } })).toEqual({ specs: { socket: 'AM5' } });
   });
+
+  it('drops prototype-polluting keys', () => {
+    const out = nestBracketParams({
+      'specs[__proto__]': ['a', 'b'],
+      __proto__x: '1',
+      'specs[socket]': 'AM5',
+    });
+    expect(Object.getPrototypeOf(out.specs)).toBe(Object.prototype);
+    expect(out).toEqual({ specs: { socket: 'AM5' } });
+  });
 });
 
 describe('catalogQuerySchema', () => {

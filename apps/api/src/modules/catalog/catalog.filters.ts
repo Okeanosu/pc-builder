@@ -4,6 +4,7 @@ import { AppError } from '../../lib/errors';
 
 const SPEC_KEY = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;
 const NESTED_PARAMS = new Set(['specs', 'specsMin', 'specsMax']);
+const UNSAFE_KEY = /__proto__|constructor|prototype/;
 
 const queryBoolean = z
   .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
@@ -31,6 +32,7 @@ export type CatalogQuery = Omit<ProductQuery, 'sort' | 'page' | 'pageSize'> &
 export function nestBracketParams(query: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [rawKey, value] of Object.entries(query)) {
+    if (UNSAFE_KEY.test(rawKey)) continue;
     const m = /^(\w+)\[([^\]]+)\](\[\])?$/.exec(rawKey);
     if (!m || !NESTED_PARAMS.has(m[1]!)) {
       out[rawKey] = value;
