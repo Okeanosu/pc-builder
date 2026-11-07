@@ -1,8 +1,6 @@
 import { CATEGORY_LABELS, type ProductDTO } from '@pc/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
 import { ProductDetail } from '@/features/catalog/ProductDetail';
 import { getBenchmarkReference, getCategory, getProduct } from '@/features/catalog/server';
 import { formatVnd } from '@/lib/format';
@@ -48,7 +46,11 @@ function productJsonLd(p: ProductDTO) {
   };
 }
 
-async function ProductContent({ params }: Pick<PageProps<'/p/[slug]'>, 'params'>) {
+// Resolved before any Suspense so HTML-only crawlers get a real 404 (needs `instant = false` to block).
+// Browsers still get 200 + noindex: Next 16 PPR flushes the static layout shell before the page can throw.
+export const instant = false;
+
+export default async function ProductPage({ params }: PageProps<'/p/[slug]'>) {
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) notFound();
@@ -70,35 +72,5 @@ async function ProductContent({ params }: Pick<PageProps<'/p/[slug]'>, 'params'>
         benchmarkReference={reference}
       />
     </>
-  );
-}
-
-function ProductSkeleton() {
-  return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 lg:px-6 lg:py-8" aria-busy>
-      <Skeleton className="h-4 w-64" />
-      <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
-        <Skeleton className="aspect-[4/3] w-full rounded-md" />
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-9 w-48" />
-          <div className="flex gap-3">
-            <Skeleton className="h-12 w-40" />
-            <Skeleton className="h-12 w-44" />
-          </div>
-          <SkeletonText lines={3} className="pt-4" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function ProductPage({ params }: PageProps<'/p/[slug]'>) {
-  return (
-    <Suspense fallback={<ProductSkeleton />}>
-      <ProductContent params={params} />
-    </Suspense>
   );
 }
