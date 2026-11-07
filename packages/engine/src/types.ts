@@ -29,7 +29,8 @@ export type RuleCode =
   | 'C11'
   | 'C12'
   | 'C13'
-  | 'C14';
+  | 'C14'
+  | 'C15';
 
 export interface CompatibilityIssue {
   code: RuleCode;
@@ -42,6 +43,13 @@ export interface CompatibilityReport {
   issues: CompatibilityIssue[];
   estimatedWattage: number;
   recommendedPsuWattage: number;
+}
+
+/** Optional context: C13 needs `purpose: 'gaming'` + a reference `catalog` for tiers; C14 needs `budget`. */
+export interface CompatibilityContext {
+  purpose?: Purpose;
+  budget?: number;
+  catalog?: readonly EngineProduct[];
 }
 
 export interface PurposeProfile {
@@ -60,14 +68,19 @@ export interface SolveRequest {
   exclude?: string[];
   topK?: number;
   strategy?: SolveStrategy;
+  /** Safety cap on search nodes (all strategies); a capped run returns its best-so-far builds. */
+  nodeLimit?: number;
 }
 
 export interface Build {
   label: BuildLabel;
   parts: PartMap;
   totalPrice: number;
+  /** Σ weight × category score (+ small boost/colour bonuses, − soft-warning penalties); roughly 0..100. */
   score: number;
+  /** Per-category normalized score, 0..100. */
   scoreBreakdown: Partial<Record<CategoryKey, number>>;
+  /** Share of total price per category, 0..1. */
   allocation: Partial<Record<CategoryKey, number>>;
   estimatedWattage: number;
   recommendedPsuWattage: number;
@@ -81,9 +94,18 @@ export interface SolveStats {
   prunedByForwardChecking: number;
   prunedByBound: number;
   timeMs: number;
+  /** Values removed by dominance pruning before search (`full` only). */
+  prunedByDominance?: number;
+  /** True when the node limit stopped the search early, so the builds may be sub-optimal. */
+  capped?: boolean;
 }
 
-export type InfeasibleReason = 'BUDGET_TOO_LOW' | 'NO_COMPATIBLE_COMBINATION' | 'FIXED_PART_CONFLICT';
+/** `SEARCH_LIMIT`: the node limit stopped the search before any build (or a proof of infeasibility) was found. */
+export type InfeasibleReason =
+  | 'BUDGET_TOO_LOW'
+  | 'NO_COMPATIBLE_COMBINATION'
+  | 'FIXED_PART_CONFLICT'
+  | 'SEARCH_LIMIT';
 
 export interface SolveResult {
   builds: Build[];
