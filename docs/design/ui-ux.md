@@ -26,7 +26,7 @@ Hình ảnh lấy từ chính bàn lắp ráp PC:
 
 1. **Token trước, màu sau.** Thành phần chỉ dùng token ngữ nghĩa (`bg-surface`, `text-muted`, `border-border-strong`…). Bảng màu mặc định của Tailwind đã bị tắt (`--color-*: initial`) để không ai dùng `bg-red-500`.
 2. **Màu có nghĩa cố định.** Cyan = hành động. Lime = _chỉ_ "tương thích". Amber = cảnh báo. Đỏ = xung đột. Màu trạng thái luôn đi kèm biểu tượng + chữ, không bao giờ chỉ là màu.
-3. **Số liệu dùng mono.** Giá, thông số, mã luật (C01–C14) dùng JetBrains Mono với `tabular-nums`; chữ giao diện dùng Be Vietnam Pro.
+3. **Số liệu dùng mono.** Giá, thông số, mã luật (C01–C15) dùng JetBrains Mono với `tabular-nums`; chữ giao diện dùng Be Vietnam Pro.
 4. **Workshop bám theo bề mặt, không theo trang.** AI tư vấn / Builder luôn tối kể cả khi site sáng; lớp phủ mở từ đó (ngăn chọn linh kiện, tooltip) cũng tối nhờ `ThemeScope` cung cấp portal container.
 5. **Chuyển động chỉ để chỉ ra điều vừa thay đổi.** Một khoảnh khắc dàn dựng duy nhất (3 BuildCard trượt vào, thanh phân bổ chạy, LED sáng dần). Mọi animation tắt theo `prefers-reduced-motion`.
 6. **Lỗi và trạng thái trống luôn chỉ đường.** Nói sai gì và làm gì tiếp; không xin lỗi, không "Không có dữ liệu".
@@ -146,7 +146,7 @@ Import từ `@/components/ui/*`, `@/components/domain/*`, `@/components/layout/*
 
 | Thành phần | Props (theo DTO `@pc/shared`) | Trạng thái / ghi chú |
 | --- | --- | --- |
-| `CompatibilityBadge` | `issues?: CompatibilityIssueDTO[]`, `status?`, `size`, `label?`, `tooltipOpen?`; helper `getCompatibilityStatus()` | ok "Tương thích" · warning "Cảnh báo" / "N cảnh báo" · error "Xung đột" / "N xung đột"; tooltip liệt kê mã luật C01–C14 + thông điệp, lỗi trước cảnh báo |
+| `CompatibilityBadge` | `issues?: CompatibilityIssueDTO[]`, `status?`, `size`, `label?`, `tooltipOpen?`; helper `getCompatibilityStatus()` | ok "Tương thích" · warning "Cảnh báo" / "N cảnh báo" · error "Xung đột" / "N xung đột"; tooltip liệt kê mã luật C01–C15 + thông điệp, lỗi trước cảnh báo |
 | `PriceTag` | `price`, `salePrice?`, `size` sm/md/lg, `layout` stacked/inline; helper `discountPercent()` | giá thường; khuyến mãi = giá mới + giá gốc gạch + badge `-N%` |
 | `SpecTable` | `fields: SpecField[]`, `specs`, `highlight?: {key: 'warning'|'error'}`, `showEmpty`, `dense`, `caption` | dòng xung đột/cảnh báo tô nền + biểu tượng + chữ ẩn cho trình đọc màn hình |
 | `AllocationBar` | `allocation` (0..1, `BuildDTO.allocation`), `amounts?`, `total?`, `legend` full/compact/none, `size`, `animate` | chạy trái→phải khi mount; đổi tỉ lệ thì vạch co giãn mượt (500 ms); hover vạch/chú thích làm mờ phần còn lại; `role="img"` + `aria-label` tóm tắt |

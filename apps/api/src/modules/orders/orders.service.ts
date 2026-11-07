@@ -17,7 +17,6 @@ export type OrderRow = typeof orders.$inferSelect;
 type OrderItemRow = typeof orderItems.$inferSelect;
 type OrderLine = Pick<CartLine, 'productId' | 'buildId' | 'qty'>;
 
-export const holdKey = (code: string) => `hold:order:${code}`;
 export const checkoutLockKey = (guestId: string) => `lock:checkout:${guestId}`;
 const CHECKOUT_LOCK_MS = 10_000;
 
@@ -73,10 +72,8 @@ export async function afterCommit(what: string, fn: () => Promise<unknown>): Pro
   }
 }
 
-/** Post-commit bookkeeping for status changes: stop hold timers and invalidate catalog caches. */
+/** Post-commit bookkeeping for status changes: stock moved, so catalog caches are invalidated. */
 export async function afterTransitions(redis: Redis, applied: AppliedTransition[]): Promise<void> {
-  const holds = applied.filter((a) => a.from === 'PENDING_PAYMENT').map((a) => holdKey(a.code));
-  if (holds.length > 0) await afterCommit('clear hold keys', () => redis.del(...holds));
   if (applied.some((a) => a.effect !== 'NONE'))
     await afterCommit('bump catalog version', () => bumpCatalogVersion(redis));
 }
@@ -226,10 +223,8 @@ export function createOrdersService(deps: AppDeps) {
     return toOrderDTO(created!, items);
   }
 
-  async function afterCheckout(order: OrderDTO, extra?: () => Promise<unknown>): Promise<void> {
-    await afterCommit('set hold key', () =>
-      redis.set(holdKey(order.code), order.id, 'EX', env.ORDER_HOLD_MINUTES * 60),
-    );
+  /** The stock hold itself is orders.expires_at, which the expiry job reads; only caches change here. */
+  async function afterCheckout(extra?: () => Promise<unknown>): Promise<void> {
     if (extra) await afterCommit('clear ordered cart lines', extra);
     await afterCommit('bump catalog version', () => bumpCatalogVersion(redis));
   }
@@ -252,7 +247,7 @@ export function createOrdersService(deps: AppDeps) {
       await deleteCartLines(tx, cartRow.id, lines);
       return dto;
     });
-    await afterCheckout(order);
+    await afterCheckout();
     return order;
   }
 
@@ -270,7 +265,7 @@ export function createOrdersService(deps: AppDeps) {
       const order = await db.transaction((tx) =>
         insertOrder(tx, lines, input, { userId: null, guestId: owner.guestId }),
       );
-      await afterCheckout(order, () => cart.consumeGuestLines(owner.guestId, lines));
+      await afterCheckout(() => cart.consumeGuestLines(owner.guestId, lines));
       return order;
     } finally {
       await lock.release();

@@ -271,6 +271,11 @@ export const chatMessages = pgTable(
     buildIds: jsonb('build_ids').$type<string[]>().notNull().default([]),
     mode: chatModeEnum('mode'),
     latencyMs: integer('latency_ms'),
+    /** AI-mode assistant rows: VND amounts in the reply that no tool returned (null when not checked). */
+    priceCheck: jsonb('price_check').$type<{
+      mentions: number;
+      unmatched: Array<{ text: string; amount: number }>;
+    }>(),
     createdAt: createdAt(),
   },
   (t) => [index('chat_messages_session_idx').on(t.sessionId, t.createdAt)],

@@ -164,14 +164,9 @@ describe('admin product CRUD', () => {
     const ok = await request(h.app)
       .patch(`/api/admin/products/${cpu.id}`)
       .set('Authorization', staff)
-      .send({ price: 5_555_000, salePrice: null, stock: 999, commercialBoost: 0.1 });
+      .send({ price: 5_555_000, salePrice: null, stock: 999 });
     expect(ok.status).toBe(200);
-    expect(ok.body).toMatchObject({
-      price: 5_555_000,
-      salePrice: null,
-      stockOnHand: 5,
-      commercialBoost: 0.1,
-    });
+    expect(ok.body).toMatchObject({ price: 5_555_000, salePrice: null, stockOnHand: 5 });
     expect(await getCatalogVersion(h.deps.redis)).toBeGreaterThan(before);
 
     const bad = await request(h.app)
@@ -190,6 +185,42 @@ describe('admin product CRUD', () => {
     expect(
       (await request(h.app).patch('/api/admin/products/nope').set('Authorization', staff).send({})).status,
     ).toBe(404);
+  });
+
+  it('lets only ADMIN set commercialBoost, since it steers recommendations like the purpose weights', async () => {
+    const cpu = await h.product('cpu');
+    const patch = (auth: string, body: Record<string, unknown>) =>
+      request(h.app).patch(`/api/admin/products/${cpu.id}`).set('Authorization', auth).send(body);
+
+    for (const body of [{ commercialBoost: 0.2 }, { price: 4_444_000, commercialBoost: 0 }]) {
+      const res = await patch(staff, body);
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatchObject({
+        code: 'FORBIDDEN_FIELD',
+        details: { fields: ['commercialBoost'] },
+      });
+    }
+    expect(await h.getProduct(cpu.id)).toMatchObject({
+      price: cpu.price,
+      commercialBoost: cpu.commercialBoost,
+    });
+
+    expect((await patch(staff, { price: 4_444_000 })).body).toMatchObject({ price: 4_444_000 });
+    const byAdmin = await patch(admin, { commercialBoost: 0.2 });
+    expect(byAdmin.status).toBe(200);
+    expect(byAdmin.body.commercialBoost).toBe(0.2);
+
+    const boosted = await request(h.app)
+      .post('/api/admin/products')
+      .set('Authorization', staff)
+      .send(await newCpuBody({ commercialBoost: 0.3 }));
+    expect(boosted.status).toBe(403);
+    expect(boosted.body.error.code).toBe('FORBIDDEN_FIELD');
+    const neutral = await request(h.app)
+      .post('/api/admin/products')
+      .set('Authorization', staff)
+      .send(await newCpuBody({ commercialBoost: 0 }));
+    expect(neutral.status).toBe(201);
   });
 
   it('soft-deletes by hiding the product', async () => {

@@ -53,6 +53,7 @@ function harness(
   chatOverrides: Partial<ChatTurnDeps['chat']> = {},
 ) {
   const log: Array<{ err: unknown; message: string }> = [];
+  const warnings: Array<{ data: Record<string, unknown>; message: string }> = [];
   const saved: Array<{ result: RunTurnResult; latencyMs: number }> = [];
   const intents: unknown[] = [];
   const deps: ChatTurnDeps = {
@@ -60,6 +61,7 @@ function harness(
     timeoutMs: 1000,
     runTurn,
     logError: (err, message) => log.push({ err, message }),
+    logWarn: (data, message) => warnings.push({ data, message }),
     chat: {
       loadHistory: async () => [],
       getIntent: async () => undefined,
@@ -73,7 +75,7 @@ function harness(
       ...chatOverrides,
     },
   };
-  return { deps, log, saved, intents };
+  return { deps, log, warnings, saved, intents };
 }
 
 const input = { session, text: 'chơi game 25 triệu', who: { guestId: 'g1' } };
@@ -195,5 +197,23 @@ describe('streamChatTurn', () => {
       ctx: { sessionId: 's1', userId: 'u9', guestId: 'g1' },
     });
     expect(seen?.deps.timeoutMs).toBe(1000);
+  });
+
+  it('logs a warning, and still saves the reply unchanged, when the model quoted an amount no tool returned', async () => {
+    const unmatched = [{ text: '19.000.000₫', amount: 19_000_000 }];
+    const h = harness(async () =>
+      result({ assistantText: 'Chỉ 19.000.000₫.', priceCheck: { mentions: 1, unmatched } }),
+    );
+    await streamChatTurn(input, new FakeResponse(), h.deps);
+    expect(h.saved[0]?.result.assistantText).toBe('Chỉ 19.000.000₫.');
+    expect(h.warnings).toEqual([
+      { data: { sessionId: 's1', messageId: 'm1', unmatched }, message: expect.stringMatching(/price/i) },
+    ]);
+  });
+
+  it('does not warn when every quoted amount matched', async () => {
+    const h = harness(async () => result({ priceCheck: { mentions: 2, unmatched: [] } }));
+    await streamChatTurn(input, new FakeResponse(), h.deps);
+    expect(h.warnings).toEqual([]);
   });
 });

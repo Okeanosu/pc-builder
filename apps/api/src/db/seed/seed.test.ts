@@ -160,6 +160,14 @@ describe('catalog seed', () => {
     expect(await db.select().from(products)).toHaveLength(totals.products);
     await seedDatabase(db);
   });
+
+  it('refuses a production seed without SEED_ADMIN_PASSWORD before wiping anything', async () => {
+    await expect(seedDatabase(db, { env: { NODE_ENV: 'production' } })).rejects.toThrow(
+      /SEED_ADMIN_PASSWORD/,
+    );
+    expect(await db.select().from(users)).toHaveLength(3);
+    expect(await db.select().from(products)).toHaveLength(totals.products);
+  });
 });
 
 describe('catalog coverage', () => {

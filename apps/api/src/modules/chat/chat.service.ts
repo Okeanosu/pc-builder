@@ -195,6 +195,7 @@ export function createChatService(deps: AppDeps) {
                 buildIds: result.buildIds,
                 mode: result.mode,
                 latencyMs: Math.round(latencyMs),
+                priceCheck: result.priceCheck ?? null,
                 createdAt: at(toolRows.length),
               },
             ]

@@ -1,4 +1,4 @@
-import type { BuildDTO, Preferences, Purpose, RecommendationRequest } from '@pc/shared';
+import type { BuildDTO, InfeasibleReason, Preferences, Purpose, RecommendationRequest } from '@pc/shared';
 import type { Redis } from '../../../lib/redis';
 import type { RecommendMeta } from '../../recommendation';
 import {
@@ -12,7 +12,7 @@ import type { ToolContext, ToolResult } from './types';
 
 export interface RecommendOutcome {
   builds: BuildDTO[];
-  infeasibleReason?: string;
+  infeasibleReason?: InfeasibleReason;
   minFeasibleBudget?: number;
 }
 

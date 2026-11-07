@@ -17,6 +17,7 @@ import { HISTORY_LIMIT, type HistoryRow, toLlmHistory } from '../src/modules/cha
 import type { ParsedIntent } from '../src/modules/chat/fallback/nlu';
 import { createLlmFromEnv } from '../src/modules/chat/llm/factory';
 import { type RunTurnResult, runTurn } from '../src/modules/chat/orchestrator';
+import type { PriceCheck } from '../src/modules/chat/price-check';
 import type { ToolCallRecord } from '../src/modules/chat/tools/execute';
 import { createToolRegistry } from '../src/modules/chat/tools/registry';
 import { sanitizePreferences, toInt } from '../src/modules/chat/tools/shared';
@@ -69,6 +70,8 @@ interface CaseResult {
   /** Checks against the expectation applied in this mode; same as `strict` unless `adjusted`. */
   checks: Check[];
   builds: { total: number; valid: number };
+  /** Price-mention checks of every AI-mode reply in the case (setup turns included); empty in fallback mode. */
+  priceChecks: PriceCheck[];
 }
 
 type CheckSet = 'strict' | 'checks';
@@ -97,6 +100,7 @@ interface Conversation {
   sessionId: string;
   rows: HistoryRow[];
   intent?: ParsedIntent;
+  priceChecks: PriceCheck[];
 }
 
 async function turn(conv: Conversation, text: string) {
@@ -131,6 +135,7 @@ async function turn(conv: Conversation, text: string) {
     row('assistant', result.assistantText),
   );
   conv.intent = result.intent;
+  if (result.priceCheck) conv.priceChecks.push(result.priceCheck);
   return { result, events, latencyMs };
 }
 
@@ -243,7 +248,7 @@ function score(expect: Expectation, { result, emittedBuilds, validation }: TurnO
 }
 
 async function evaluate(c: GoldenCase): Promise<CaseResult> {
-  const conv: Conversation = { sessionId: randomUUID(), rows: [] };
+  const conv: Conversation = { sessionId: randomUUID(), rows: [], priceChecks: [] };
   for (const text of c.setup ?? []) await turn(conv, text);
   const { result, events, latencyMs } = await turn(conv, c.prompt);
   const outcome: TurnOutcome = {
@@ -264,6 +269,7 @@ async function evaluate(c: GoldenCase): Promise<CaseResult> {
     strict,
     checks: adjusted ? score({ ...c.expect, ...c.fallbackExpect }, outcome) : strict,
     builds: { total: outcome.validation.total, valid: outcome.validation.valid },
+    priceChecks: conv.priceChecks,
   };
 }
 
@@ -276,6 +282,16 @@ function metric(results: CaseResult[], name: Check['name'], set: CheckSet = 'che
   const applicable = results.flatMap((r) => r[set].filter((c) => c.name === name));
   const ok = applicable.filter((c) => c.ok).length;
   return `${pct(ok, applicable.length)} (${ok}/${applicable.length})`;
+}
+
+/** Share of VND amounts in AI replies that match no tool-returned number (±1% or rounded to the triệu). */
+function priceMismatch(results: CaseResult[]) {
+  const checks = results.flatMap((r) => r.priceChecks);
+  if (checks.length === 0) return 'n/a (no AI-mode replies; fallback replies are templated from tool data)';
+  const mentions = checks.reduce((s, c) => s + c.mentions, 0);
+  const unmatched = checks.reduce((s, c) => s + c.unmatched.length, 0);
+  const replies = checks.filter((c) => c.unmatched.length > 0).length;
+  return `${pct(unmatched, mentions)} (${unmatched}/${mentions} amounts; ${replies}/${checks.length} AI replies with a mismatch)`;
 }
 
 function passing(results: CaseResult[], set: CheckSet) {
@@ -357,6 +373,7 @@ function render(results: CaseResult[], meta: { modeLabel: string; cold: boolean;
       ? `| Cases passing every check | ${passing(results, 'strict')} | ${passing(results, 'checks')} |`
       : `| Cases passing every check | ${passing(results, 'checks')} |`,
     same('Latency p50 / p95 / max (one turn, ms)', latency),
+    same('Price-mention mismatch rate (AI mode)', priceMismatch(results)),
     '',
     '## Hạn chế / Limitations',
     '',
@@ -394,8 +411,13 @@ function render(results: CaseResult[], meta: { modeLabel: string; cold: boolean;
     '- Tool-call accuracy: the expected tool appears among the calls of the measured turn (or no tool at all when a question is expected).',
     '- Parameters come from the first successful call of the expected tool (for modify_build: the budget and purpose it solved with).',
     '- Follow-up cases run their `setup` turns first in the same conversation; only the last turn is measured.',
-    '- Every build id any measured turn returned is reloaded and re-checked with the engine rules C01–C14 and the budget; this must stay at 100%.',
+    '- Every build id any measured turn returned is reloaded and re-checked with the engine rules C01–C15 and the budget; this must stay at 100%.',
+    '- Price-mention mismatch rate: VND amounts the model wrote in AI-mode replies (e.g. 25.000.000₫, 25 triệu, 25tr) that match no number the tools returned (prices, totals, budgets, minFeasibleBudget, allocation shares × total, budget − total, gaps between builds; ±1% or rounded to the triệu). The same check runs on every live AI reply and is stored in chat_messages.price_check.',
   ];
+  const mismatches = results.flatMap((r) =>
+    r.priceChecks.flatMap((c) => c.unmatched.map((u) => `- ${r.c.id}: ${cell(u.text)}`)),
+  );
+  if (mismatches.length > 0) lines.push('', '## Unmatched price mentions', '', ...mismatches);
   if (llmWarnings.length > 0) {
     lines.push('', '## LLM warnings', '', ...[...new Set(llmWarnings)].map((w) => `- ${cell(w)}`));
   }

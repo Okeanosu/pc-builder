@@ -1,6 +1,6 @@
-import { pathToFileURL } from 'node:url';
 import { CATEGORY_KEYS } from '@pc/shared';
 import { sql } from 'drizzle-orm';
+import { isEntrypoint } from '../../lib/entrypoint';
 import { createDb, type Db } from '../client';
 import {
   benchmarks,
@@ -15,20 +15,24 @@ import { BRAND_NAMES } from './data/brands';
 import { CATALOG } from './data/catalog';
 import { CATEGORY_ROWS } from './data/categories';
 import { slugify } from './data/helpers';
-import { buildUserRows } from './users';
+import { buildUserRows, type SeedUserEnv } from './users';
 import { WEIGHT_ROWS } from './weights';
 
 export interface SeedOptions {
   users?: boolean;
   weights?: boolean;
+  /** Decides which accounts are seeded; defaults to process.env. */
+  env?: SeedUserEnv;
 }
 
 export async function seedDatabase(
   db: Db,
   opts: SeedOptions = {},
-): Promise<{ products: number; categories: number }> {
+): Promise<{ products: number; categories: number; users: string[] }> {
   const withUsers = opts.users ?? true;
   const withWeights = opts.weights ?? true;
+  // Built before the TRUNCATE so a refused production seed leaves the existing data untouched.
+  const userRows = withUsers ? await buildUserRows(opts.env ?? process.env) : [];
 
   await db.execute(sql`TRUNCATE chat_messages, chat_sessions, payments, order_items, orders, cart_items, carts, builds,
     inventory_movements, benchmarks, products, brands, categories, purpose_weights, users RESTART IDENTITY CASCADE`);
@@ -93,10 +97,14 @@ export async function seedDatabase(
   );
   await db.insert(inventoryMovements).values(movements);
 
-  if (withUsers) await db.insert(users).values(await buildUserRows());
+  if (userRows.length > 0) await db.insert(users).values(userRows);
   if (withWeights) await db.insert(purposeWeights).values(WEIGHT_ROWS);
 
-  return { products: inserted.length, categories: categoryRows.length };
+  return {
+    products: inserted.length,
+    categories: categoryRows.length,
+    users: userRows.map((u) => u.email),
+  };
 }
 
 async function main() {
@@ -108,13 +116,14 @@ async function main() {
     const perCategory = await db.execute(sql`SELECT c.key, count(*)::int AS count FROM products p
       JOIN categories c ON c.id = p.category_id GROUP BY c.key ORDER BY c.key`);
     console.log(`Seeded ${result.categories} categories, ${result.products} products`);
+    console.log(`Accounts: ${result.users.join(', ') || 'none'}`);
     for (const row of perCategory) console.log(`  ${row.key}: ${row.count}`);
   } finally {
     await client.end();
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isEntrypoint(import.meta.url)) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);

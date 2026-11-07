@@ -25,6 +25,7 @@ export interface ChatTurnDeps {
   chat: Pick<ChatService, 'loadHistory' | 'getIntent' | 'setIntent' | 'addUserMessage' | 'saveTurn'>;
   timeoutMs: number;
   logError(err: unknown, message: string): void;
+  logWarn?(data: Record<string, unknown>, message: string): void;
   /** Injected by tests. */
   runTurn?: (input: RunTurnInput, deps: RunTurnDeps) => Promise<RunTurnResult>;
 }
@@ -75,6 +76,13 @@ export async function streamChatTurn(
     );
     done ??= { type: 'done', messageId: result.messageId, mode: result.mode };
     await deps.chat.saveTurn(session.id, result, Date.now() - started);
+    const unmatched = result.priceCheck?.unmatched ?? [];
+    if (unmatched.length > 0) {
+      deps.logWarn?.(
+        { sessionId: session.id, messageId: result.messageId, unmatched },
+        'assistant quoted prices that no tool returned',
+      );
+    }
     if (result.intent) await deps.chat.setIntent(session.id, result.intent);
   } catch (err) {
     deps.logError(err, 'chat turn failed');

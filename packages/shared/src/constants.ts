@@ -65,5 +65,13 @@ export const BUILD_LABEL_TEXT: Record<BuildLabel, string> = {
 export const CHAT_MODES = ['AI', 'FALLBACK'] as const;
 export type ChatMode = (typeof CHAT_MODES)[number];
 
+export const INFEASIBLE_REASONS = [
+  'BUDGET_TOO_LOW',
+  'NO_COMPATIBLE_COMBINATION',
+  'FIXED_PART_CONFLICT',
+  'SEARCH_LIMIT',
+] as const;
+export type InfeasibleReason = (typeof INFEASIBLE_REASONS)[number];
+
 export const MIN_BUDGET = 5_000_000;
 export const MAX_BUDGET = 200_000_000;

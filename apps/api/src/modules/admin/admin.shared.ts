@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { AppError, notFound } from '../../lib/errors';
-import type { Redis } from '../../lib/redis';
 import { requireRole } from '../../middleware/auth';
 import { isGuid } from '../cart/cart.service';
 
@@ -47,15 +46,4 @@ export function slugify(text: string): string {
     .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
-
-export async function deleteKeysByPattern(redis: Redis, pattern: string): Promise<number> {
-  let cursor = '0';
-  let deleted = 0;
-  do {
-    const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 200);
-    if (keys.length > 0) deleted += await redis.del(...keys);
-    cursor = next;
-  } while (cursor !== '0');
-  return deleted;
 }

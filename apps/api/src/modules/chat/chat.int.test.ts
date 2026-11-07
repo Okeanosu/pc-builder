@@ -202,6 +202,7 @@ describe('POST /api/chat/sessions/:id/messages — AI mode with a scripted LLM',
       content: 'Đây là các cấu hình phù hợp.',
       buildIds: ids,
       mode: 'AI',
+      priceCheck: { mentions: 0, unmatched: [] },
     });
     expect(assistantRow!.latencyMs).toBeGreaterThanOrEqual(0);
     const [s] = await db.select().from(chatSessions).where(eq(chatSessions.id, session.id));
@@ -209,6 +210,18 @@ describe('POST /api/chat/sessions/:id/messages — AI mode with a scripted LLM',
     const saved = await db.select().from(builds).where(inArray(builds.id, ids));
     expect(saved.every((b) => b.source === 'CHAT' && b.userId === null)).toBe(true);
     expect(await redis.get(intentKey(session.id))).toContain('"budget":25000000');
+  });
+
+  it('records amounts the model quoted that no tool returned on the assistant row, leaving the text as is', async () => {
+    const other = await newSession(guest);
+    const reply = 'Dạ, card RTX 4090 bên em chỉ 9.990.000₫ thôi ạ.';
+    llm.steps = [[text(reply)]];
+    await send(guest, other.id, { text: 'card mạnh nhất giá bao nhiêu' });
+    const assistantRow = (await rowsOf(other.id)).find((r) => r.role === 'assistant');
+    expect(assistantRow).toMatchObject({
+      content: reply,
+      priceCheck: { mentions: 1, unmatched: [{ text: '9.990.000₫', amount: 9_990_000 }] },
+    });
   });
 
   it('rebuilds the conversation from the stored rows on the next turn', async () => {
@@ -393,7 +406,7 @@ describe('POST /api/chat/sessions/:id/messages — fallback mode (no LLM)', () =
     expect(reply).toMatch(/₫/);
     const rows = await rowsOf(session.id);
     expect(rows.map((r) => r.role)).toEqual(['user', 'tool', 'assistant']);
-    expect(rows[2]).toMatchObject({ mode: 'FALLBACK', content: reply });
+    expect(rows[2]).toMatchObject({ mode: 'FALLBACK', content: reply, priceCheck: null });
     const [s] = await db.select().from(chatSessions).where(eq(chatSessions.id, session.id));
     expect(s!.mode).toBe('FALLBACK');
   });

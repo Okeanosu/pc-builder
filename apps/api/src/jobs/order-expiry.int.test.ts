@@ -35,7 +35,6 @@ describe('order expiry job', () => {
     expect(await statusOf(code)).toBe('CANCELLED');
     const after = await h.getProduct(gpu.id);
     expect(after).toMatchObject({ stock: 2, reserved: 0 });
-    expect(await h.deps.redis.exists(`hold:order:${code}`)).toBe(0);
 
     expect(await expirePendingOrders(h.deps, later)).toEqual([]);
     expect((await h.getProduct(gpu.id)).reserved).toBe(0);
@@ -86,8 +85,6 @@ describe('order expiry job', () => {
     expect(expired).toEqual([second]);
     expect(await statusOf(first)).toBe('PENDING_PAYMENT');
     expect(await statusOf(second)).toBe('CANCELLED');
-    expect(await h.deps.redis.exists(`hold:order:${second}`)).toBe(0);
-    expect(await h.deps.redis.exists(`hold:order:${first}`)).toBe(1);
     expect((await h.getProduct(cpu.id)).reserved).toBe(1);
   });
 

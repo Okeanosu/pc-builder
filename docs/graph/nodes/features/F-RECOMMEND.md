@@ -9,7 +9,7 @@ links:
   dependsOn: ["M-RECOMMENDATION", "F-ENGINE-CORE", "E-PURPOSE-WEIGHT", "E-BUILD"]
   decidedBy: ["ADR-004", "ADR-013", "ADR-015", "ADR-020"]
   shownIn: ["SCR-HOME", "SCR-ADVISOR"]
-code: ["apps/api/src/modules/recommendation/**", "apps/web/src/features/advisor/**", "apps/web/src/features/builder/**"]
+code: ["apps/api/src/modules/recommendation/**", "apps/web/src/features/advisor/**"]
 tests: ["apps/api/src/modules/recommendation/**/*.test.ts"]
 diagrams: []
 ---
@@ -22,4 +22,4 @@ diagrams: []
 
 **Điểm nhấn cho báo cáo:** các cấu hình trả về mang nhãn Hiệu năng / Cân bằng / Tiết kiệm theo hợp đồng nhãn của Engine (ADR-020); với mục đích AI hoặc đồ họa, GPU NVIDIA được ưu tiên bằng hệ số CUDA trừ khi người dùng chọn hãng khác (ADR-013).
 
-**Trạng thái:** API và giao diện web đều xong: biểu mẫu trong `/advisor` và `/builder` (`apps/web/src/features/advisor`, `apps/web/src/features/builder`) gọi cùng endpoint này, thẻ cấu hình mở được trong Customizer.
+**Trạng thái:** API xong và có test tích hợp. Giao diện: biểu mẫu gợi ý (ngân sách, mục đích, tùy chọn) trên trang `/advisor` (`apps/web/src/features/advisor`) gọi `POST /recommendations` và hiển thị 2-3 thẻ cấu hình, mở được trong Customizer. Biểu mẫu này được bổ sung ở đợt sửa cuối (2026-11-08); trước đó chatbot gọi cùng service qua tool `recommend_builds` nhưng chưa có giao diện nào gọi trực tiếp endpoint.

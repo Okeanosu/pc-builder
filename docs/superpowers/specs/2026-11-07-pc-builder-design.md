@@ -242,7 +242,7 @@ refresh tokens: Redis `rt:{userId}:{jti}` TTL 7d
 
 Truy vấn JSONB mẫu: `WHERE category_id=$1 AND specs @> '{"socket":"AM5","memoryType":["DDR5"]}'` (dùng GIN `jsonb_path_ops`).
 
-**Redis keys:** `cache:reco:{hash}` (10'), `cache:candidates:{category}` (5', xóa khi admin sửa sp), `cart:guest:{guestId}` (7d), `hold:order:{code}` (15', khi hết hạn → job nhả `reserved`), `rl:chat:{who}` (rate limit), `rt:*`.
+**Redis keys:** `cache:reco:{hash}` (10'), `cache:candidates:{category}` (5', xóa khi admin sửa sp), `cart:guest:{guestId}` (7d), ~~`hold:order:{code}`~~ (bản cài đặt dùng cột `orders.expires_at` làm đồng hồ giữ hàng, job quét cột này để nhả `reserved`; không có khóa Redis), `rl:chat:{who}` (rate limit), `rt:*`.
 
 **Đơn hàng & tồn kho:** tạo đơn trong transaction: `UPDATE products SET reserved = reserved + q WHERE id=$1 AND stock - reserved >= q` cho từng item (fail → rollback "hết hàng"); thanh toán thành công → `stock -= q, reserved -= q`, ghi `inventory_movements`; hết hạn/hủy → `reserved -= q`. Sweeper chạy mỗi 60s quét đơn `PENDING_PAYMENT` quá `expires_at`.
 
