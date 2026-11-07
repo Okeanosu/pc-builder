@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-ENGINE", "M-CATALOG", "E-PURPOSE-WEIGHT", "E-BUILD"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-015"]
 code: ["apps/api/src/modules/recommendation/**"]
 tests: ["apps/api/src/modules/recommendation/**/*.test.ts"]
 diagrams: []

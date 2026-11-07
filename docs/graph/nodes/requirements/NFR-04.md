@@ -2,7 +2,7 @@
 id: NFR-04
 type: requirement
 title: "Tính sẵn sàng: hệ thống không phụ thuộc cứng vào dịch vụ AI bên ngoài"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

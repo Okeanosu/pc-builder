@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["E-PAYMENT", "M-ORDERS"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-021"]
 code: ["apps/api/src/modules/payments/**"]
 tests: ["apps/api/src/modules/payments/**/*.test.ts"]
 diagrams: []

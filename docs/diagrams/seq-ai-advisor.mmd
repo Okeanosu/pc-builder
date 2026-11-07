@@ -1,37 +1,55 @@
 sequenceDiagram
   autonumber
   participant U as Người dùng
-  participant W as Web (Chat UI)
-  participant A as API /chat
+  participant W as Web (ChatWidget, /advisor)
+  participant A as API /chat (controller + orchestrator)
   participant G as Gemini
-  participant E as Engine
+  participant T as ToolRegistry (5 tool)
+  participant E as Engine / services
   participant DB as Postgres / Redis
   U->>W: "chơi game 2K, 25 triệu, thích AMD"
   W->>A: POST /api/chat/sessions/:id/messages (SSE)
-  A->>DB: kiểm tra quyền phiên, rate-limit (10 tin/phút, quá thì 429), nạp 20 dòng lịch sử, lưu tin nhắn user
+  A->>DB: body 422 > phiên 404/403 (chỉ chủ phiên được gửi) > rate-limit 10 tin/phút (429 + Retry-After)
+  A->>DB: nạp 20 dòng lịch sử gần nhất, lưu tin nhắn user, đọc ý định trước (chat:intent)
   A-->>W: event: session {sessionId, mode}
   alt Có GEMINI_API_KEY và Gemini phản hồi
-    A->>G: lịch sử + system prompt + tools
-    G-->>A: functionCall recommend_builds{budget, purpose, preferences}
-    A-->>W: event: tool (start)
-    A->>DB: nạp linh kiện còn hàng (cache 5 phút)
-    A->>E: solve(request, candidates, weights)
-    E-->>A: top-3 cấu hình + metrics
-    A-->>W: event: builds (BuildCard render từ dữ liệu tool)
-    A-->>W: event: tool (end)
-    A->>G: functionResponse (tóm tắt build, không kèm toàn bộ specs)
+    loop tối đa 4 vòng tool
+      A->>G: lịch sử + system prompt + khai báo tool
+      G-->>A: functionCall (recommend_builds, search_products, get_product_details, check_compatibility, modify_build)
+      A-->>W: event: tool {name, status: start, label}
+      A->>T: run(tool, args)
+      T->>E: solve / tìm kiếm catalog / check tương thích (Engine quyết định linh kiện và giá)
+      E->>DB: ứng viên còn hàng (cache cache:candidates:v{n}), kết quả gợi ý (cache:reco:v{n}:{sha1})
+      E-->>T: dữ liệu thật
+      T-->>A: forModel (tóm tắt gọn) + events + buildIds
+      A-->>W: event: builds hoặc products (thẻ render từ dữ liệu tool)
+      A-->>W: event: tool {name, status: end, label}
+      A->>G: functionResponse (không kèm toàn bộ specs)
+    end
     G-->>A: stream lời giải thích tiếng Việt
     A-->>W: event: token ...
-  else Không có key / 429 / 5xx / timeout 20 giây
-    A->>A: NLU dự phòng: tách ngân sách, mục đích, hãng, màu
+  else Không có khóa, 429, lỗi 5xx, hết 20 giây hoặc trả rỗng
+    Note over A,W: chữ đã stream giữ nguyên, phần dự phòng nối sau một dòng trống, không phát event error
+    A->>A: parseIntent: ngân sách, mục đích, độ phân giải, hãng, màu (NLU luật)
     alt Thiếu ngân sách hoặc mục đích
-      A-->>W: event: token (câu hỏi lại theo mẫu)
+      A-->>W: event: token (một câu hỏi lại theo mẫu)
+    else Ngân sách dưới mức tối thiểu hoặc vô nghiệm
+      A-->>W: event: token (lý do và ngân sách tối thiểu khả thi, theo mẫu)
     else Đủ thông tin
-      A->>E: solve(request, candidates, weights)
-      E-->>A: top-3 cấu hình + metrics
+      A-->>W: event: tool {recommend_builds, start}
+      A->>T: recommend_builds(budget, purpose, preferences)
+      T->>E: solve(request, candidates, weights)
+      E-->>T: tối đa 3 cấu hình (Hiệu năng / Cân bằng / Tiết kiệm) + stats
+      T-->>A: builds
       A-->>W: event: builds
-      A-->>W: event: token (giải thích sinh từ metrics theo mẫu)
+      A-->>W: event: tool {recommend_builds, end}
+      A-->>W: event: token (giải thích sinh từ dữ liệu tool theo mẫu, theo từng nhóm 4 từ)
     end
   end
-  A->>DB: lưu chat_messages (cả tool call), build_ids, latency_ms
-  A-->>W: event: done {messageId, mode}
+  opt Khách đóng kết nối giữa chừng
+    W--xA: close
+    A->>A: AbortController hủy lượt, không chuyển sang dự phòng
+  end
+  A->>DB: một transaction: mỗi tool call một dòng chat_messages (tool_args, tool_result), dòng assistant (content, build_ids, mode, latency_ms), cập nhật chat_sessions.mode
+  A-->>W: event: done {messageId, mode: AI hoặc FALLBACK}
+  Note over A,W: lỗi không thuộc LLM: event error rồi done

@@ -2,13 +2,13 @@
 id: F-UI-DESIGN-SYSTEM
 type: feature
 title: "Hệ thống thiết kế \"Tech Workshop\" và các thành phần giao diện"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["NFR-06"]
   dependsOn: ["M-WEB"]
 code: ["apps/web/src/components/ui/**", "apps/web/src/app/globals.css"]
-tests: ["apps/web/src/components/ui/**/*.test.tsx"]
+tests: []
 diagrams: []
 ---
 

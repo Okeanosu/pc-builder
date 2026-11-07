@@ -2,7 +2,7 @@
 id: F-BUILD-SHARE
 type: feature
 title: "Lưu, chia sẻ và nhân bản cấu hình"
-status: in-progress
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["FR-10", "UC-06"]
@@ -17,4 +17,4 @@ diagrams: []
 
 **Mô tả:** bảng `builds` lưu danh sách linh kiện (kèm tên và giá tại thời điểm lưu), điểm, phân bổ, công suất ước tính và cảnh báo; `user_id` có thể trống cho khách vãng lai. Cấu hình đến từ chat, form gợi ý hoặc Customizer (`POST /builds`, bị từ chối nếu vi phạm luật cứng). `GET /builds/:id` công khai để chia sẻ qua liên kết; khi xem lại, linh kiện hiển thị giá và tồn kho hiện tại, còn tổng giá và điểm giữ nguyên như lúc lưu. Trang `/builds/[id]` render SSR, xem được qua liên kết.
 
-**Trạng thái:** phần API đã xong (M-BUILDS, API-BUILDS); trang chia sẻ trên web chưa làm.
+**Trạng thái:** API và trang chia sẻ web `/builds/[id]` đã xong (SCR-BUILD-SHARE, `BuildView`), kèm hành động thêm cả cấu hình vào giỏ và xuất báo giá PDF.
