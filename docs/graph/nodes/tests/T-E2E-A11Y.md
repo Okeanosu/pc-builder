@@ -17,3 +17,5 @@ diagrams: []
 - Biểu mẫu thanh toán: Tab đi đúng thứ tự Họ và tên → Số điện thoại → Địa chỉ giao hàng → Ghi chú; ô đang focus có vòng focus nhìn thấy được (box-shadow của khung ô nhập); gửi biểu mẫu rỗng bằng phím Enter thì các ô bắt buộc có `aria-invalid="true"`, thông báo lỗi được gắn qua `aria-describedby` và focus chuyển về ô lỗi đầu tiên.
 
 **Giới hạn:** không đo độ tương phản màu và không quét tự động toàn bộ quy tắc WCAG (không có axe-core trong dự án); trang quản trị chưa được kiểm (tiêu đề trang quản trị nằm trong thanh trên, không phải thẻ `h1` — xem mục vấn đề đã biết trong `docs/testing/test-report.md`).
+
+**Kết quả (2026-11-08):** 24/24 lượt đạt (2 test × 3 lần lặp × 2 lần chạy × 2 khung nhìn).

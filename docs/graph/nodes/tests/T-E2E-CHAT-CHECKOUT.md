@@ -15,4 +15,4 @@ diagrams: []
 
 trang chủ → gõ "chơi game 25 triệu" vào ô hero → `/advisor` → luồng SSE trả 3 cấu hình (Tối ưu hiệu năng, Cân bằng, Tiết kiệm), mỗi cấu hình 8 linh kiện, trong ngân sách và được kiểm lại bằng `POST /compatibility/check` (không có lỗi) → 3 BuildCard hiện ra → "Thêm cả bộ vào giỏ" → giỏ có nhóm cấu hình "Đủ bộ, 8 linh kiện" → "Đặt lắp ráp" → nhập họ tên, số điện thoại, địa chỉ (khách vãng lai) → đơn BUILD 201, tổng = tạm tính + phí lắp ráp → trang thanh toán có ảnh VietQR với đúng số tiền và mã đơn → giả lập chuyển khoản qua `POST /payments/:code/simulate` → trang tự cập nhật "Đã nhận thanh toán" (poll 3 giây) và đơn ở trạng thái PAID.
 
-**Kết quả (2026-11-08):** xem bảng E2E trong `docs/testing/test-report.md` (số lần chạy, tỷ lệ flaky).
+**Kết quả (2026-11-08):** 18/18 lượt đạt (3 lần chạy × 3 lần lặp × 2 khung nhìn), 0 lượt chập chờn; chi tiết trong `docs/testing/test-report.md`.
