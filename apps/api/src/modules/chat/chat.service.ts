@@ -11,12 +11,12 @@ import type { RunTurnResult } from './orchestrator';
 
 export const CHAT_RATE_LIMIT = 10;
 export const SESSION_CREATE_LIMIT = 10;
+/** Per-address caps shared by everyone behind one IP, so rotating the guest cookie cannot lift the caps above. */
+export const CHAT_IP_RATE_LIMIT = 40;
+export const SESSION_CREATE_IP_LIMIT = 30;
 export const TITLE_MAX_CHARS = 60;
 export const INTENT_TTL_SECONDS = 24 * 3600;
 export const intentKey = (sessionId: string) => `chat:intent:${sessionId}`;
-export type RateLimitScope = 'chat' | 'chat-session';
-export const rateLimitKey = (scope: RateLimitScope, who: string, epochMinute: number) =>
-  `rl:${scope}:${who}:${epochMinute}`;
 
 export type ChatSessionRow = typeof chatSessions.$inferSelect;
 
@@ -36,10 +36,6 @@ export function isSessionOwner(session: ChatSessionRow, who: Requester): boolean
 export function canAccessSession(session: ChatSessionRow, who: Requester): boolean {
   return who.role === 'STAFF' || who.role === 'ADMIN' || isSessionOwner(session, who);
 }
-
-/** Message rate-limit identity: the user when logged in, otherwise the guest cookie. */
-export const requesterKey = (who: Requester) =>
-  who.userId ? `u:${who.userId}` : `g:${who.guestId ?? 'anonymous'}`;
 
 const isVisible = (r: { role: string; content: string; buildIds: string[] }) =>
   r.role === 'user' || r.content.trim() !== '' || r.buildIds.length > 0;
@@ -211,23 +207,6 @@ export function createChatService(deps: AppDeps) {
           await tx.update(chatSessions).set({ mode: result.mode }).where(eq(chatSessions.id, sessionId));
         }
       });
-    },
-
-    /** Fixed one-minute window: INCR + EXPIRE on `rl:{scope}:{who}:{epochMinute}`. */
-    async consumeRateLimit(
-      scope: RateLimitScope,
-      who: string,
-      limit: number,
-    ): Promise<{ allowed: boolean; retryAfterSeconds: number }> {
-      const nowMs = deps.now().getTime();
-      const minute = Math.floor(nowMs / 60_000);
-      const key = rateLimitKey(scope, who, minute);
-      const count = await redis.incr(key);
-      if (count === 1) await redis.expire(key, 120);
-      return {
-        allowed: count <= limit,
-        retryAfterSeconds: Math.max(1, Math.ceil(((minute + 1) * 60_000 - nowMs) / 1000)),
-      };
     },
   };
 }

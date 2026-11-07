@@ -22,14 +22,14 @@ export function useAdminRole(): { role: Role; isAdmin: boolean } {
 }
 
 /**
- * Pages render their title and top-bar actions into the shell owned by the layout. A portal keeps the
- * actions inside the page's React tree (state, queries, handlers) while they paint in the top bar.
+ * Pages render their title (the page's h1) and top-bar actions into the shell owned by the layout. A portal
+ * keeps the actions inside the page's React tree (state, queries, handlers) while they paint in the top bar.
  */
 export function AdminPageHeader({ title, actions }: { title: ReactNode; actions?: ReactNode }) {
   const ctx = useContext(ChromeContext);
   return (
     <>
-      {ctx?.titleEl && createPortal(title, ctx.titleEl)}
+      {ctx?.titleEl && createPortal(<h1 className="truncate">{title}</h1>, ctx.titleEl)}
       {ctx?.actionsEl && actions ? createPortal(actions, ctx.actionsEl) : null}
     </>
   );

@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import request from 'supertest';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CHECKOUT, createCommerceHarness, guestIdFrom } from '../../../test/test-support';
-import { cartItems, carts, products } from '../../db/schema';
+import { cartItems, carts, orderItems, orders, products } from '../../db/schema';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
@@ -304,6 +304,64 @@ describe('guest → user merge safety', () => {
     const next = await agent.get('/api/cart').set('Authorization', `Bearer ${token}`);
     expect(next.body.items).toMatchObject([{ qty: 3, product: { id: ram.id } }]);
     expect(await h.deps.redis.exists(key)).toBe(0);
+  });
+
+  describe('when clearing the guest cart fails after the merge has committed', () => {
+    const redisFailingConsume = () =>
+      new Proxy(h.deps.redis, {
+        get(target, prop, receiver) {
+          if (prop === 'eval') {
+            return (...args: unknown[]) =>
+              String(args[0]).includes('HDEL')
+                ? Promise.reject(new Error('simulated Redis failure'))
+                : (target.eval as (...a: unknown[]) => unknown)(...args);
+          }
+          const value = Reflect.get(target, prop, receiver);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      });
+
+    async function pendingGuestCart() {
+      const token = await h.tokenFor('CUSTOMER');
+      const cpu = await h.product('cpu', { stock: 10, reserved: 0 });
+      const first = await request(h.app).post('/api/cart/items').send({ productId: cpu.id, qty: 2 });
+      return { auth: `Bearer ${token}`, cpu, gid: guestIdFrom(first.headers['set-cookie']) };
+    }
+
+    it('still answers 200 with the merged cart and logs the failure', async () => {
+      const { auth, cpu, gid } = await pendingGuestCart();
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        const res = await request(h.appWith({ redis: redisFailingConsume() }))
+          .get('/api/cart')
+          .set('Cookie', `gid=${gid}`)
+          .set('Authorization', auth);
+        expect(res.status).toBe(200);
+        expect(res.body.items).toMatchObject([{ qty: 2, product: { id: cpu.id } }]);
+        expect(logged).toHaveBeenCalledWith(expect.stringContaining('[cart]'), expect.any(Error));
+      } finally {
+        logged.mockRestore();
+      }
+    });
+
+    it('still places the order of a checkout that triggered the merge', async () => {
+      const { auth, cpu, gid } = await pendingGuestCart();
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        const res = await request(h.appWith({ redis: redisFailingConsume() }))
+          .post('/api/orders')
+          .set('Cookie', `gid=${gid}`)
+          .set('Authorization', auth)
+          .send(CHECKOUT);
+        expect(res.status).toBe(201);
+        const [order] = await h.deps.db.select().from(orders).where(eq(orders.code, res.body.code));
+        expect(order).toMatchObject({ userId: await h.userId('CUSTOMER') });
+        const items = await h.deps.db.select().from(orderItems).where(eq(orderItems.orderId, order!.id));
+        expect(items).toMatchObject([{ productId: cpu.id, qty: 2 }]);
+      } finally {
+        logged.mockRestore();
+      }
+    });
   });
 
   it('a login merge racing a checkout neither deadlocks nor loses units', async () => {

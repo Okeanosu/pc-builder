@@ -32,7 +32,7 @@ export {
   RECOMMENDATION_TTL_SECONDS,
   recommendationCacheKey,
 } from './recommendation.cache';
-export { RECOMMENDATION_RATE_LIMIT, rateLimitSubject } from './recommendation.rate-limit';
+export { RECOMMENDATION_IP_RATE_LIMIT, RECOMMENDATION_RATE_LIMIT } from './recommendation.rate-limit';
 export {
   createRecommendationService,
   type RecommendationService,

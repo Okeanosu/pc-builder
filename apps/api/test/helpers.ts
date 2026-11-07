@@ -1,7 +1,7 @@
 import { loadEnv } from '../src/config/env';
 import { createDb } from '../src/db/client';
 import type { AppDeps } from '../src/deps';
-import { createRedis } from '../src/lib/redis';
+import { createRedis, type Redis } from '../src/lib/redis';
 
 /** Real Postgres (pcbuilder_test) + Redis db 1. Call `close()` in afterAll. */
 export function createTestDeps(overrides: Partial<AppDeps> = {}) {
@@ -21,4 +21,27 @@ export function createTestDeps(overrides: Partial<AppDeps> = {}) {
       await Promise.allSettled([sql.end(), redis.quit()]);
     },
   };
+}
+
+/**
+ * The same client, except that every MULTI fails on exec(): `rejects` as when Redis goes away mid-request,
+ * `reply-error` as when a queued command fails, which ioredis reports as an `[err, null]` reply.
+ */
+export function redisWithFailingMulti(redis: Redis, failure: 'rejects' | 'reply-error' = 'rejects'): Redis {
+  return new Proxy(redis, {
+    get(target, prop, receiver) {
+      if (prop === 'multi') {
+        return () => {
+          const tx = target.multi();
+          tx.exec = () =>
+            failure === 'rejects'
+              ? Promise.reject(new Error('simulated Redis outage'))
+              : Promise.resolve([[new Error('simulated command failure'), null]]);
+          return tx;
+        };
+      }
+      const value = Reflect.get(target, prop, receiver);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 }

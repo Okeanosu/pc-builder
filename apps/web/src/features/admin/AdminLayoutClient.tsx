@@ -101,7 +101,7 @@ export function AdminLayoutClient({ children }: { children: ReactNode }) {
   return (
     <AdminChromeProvider value={chrome}>
       <AdminShell
-        title={<span ref={setTitleEl} />}
+        title={<div ref={setTitleEl} />}
         actions={<div ref={setActionsEl} className="flex items-center gap-2" />}
         user={<UserCard user={user} onLogout={signOut} />}
       >
