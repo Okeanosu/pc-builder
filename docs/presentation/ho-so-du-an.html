@@ -262,9 +262,9 @@ footer { color: var(--ink-dim); font-size: 13px; text-align: center; }
             <span class="chip done">✓ Đã chọn 3 cấu hình từ 213 linh kiện còn hàng</span>
           </div>
           <div class="cards" id="hero-cards"></div>
-          <p class="explain">Bản Hiệu năng dồn 41% tiền vào card đồ họa vì game phụ thuộc GPU nhiều nhất. Nguồn 450W là đủ cho máy ăn khoảng 300W, phần tiền tiết kiệm được chuyển sang card mạnh hơn.</p>
+          <p class="explain">Bản Hiệu năng dồn 57% tiền vào card đồ họa RX 7900 GRE vì game phụ thuộc GPU nhiều nhất. CPU 6 nhân i5-12400 vẫn đủ để không nghẽn, nguồn 650W vừa cho máy ăn khoảng 400W, không mua dư.</p>
         </div>
-        <p class="caption">Kết quả thật của engine trên dữ liệu demo · gaming 25 triệu · 5 ms · 1.783 nút tìm kiếm</p>
+        <p class="caption">Kết quả thật từ API trên dữ liệu demo · gaming 25 triệu · 15 ms · 1.883 nút tìm kiếm</p>
       </div>
     </div>
     <aside class="notes"><ul>
@@ -634,22 +634,22 @@ flowchart LR
     ['storage', 'Ổ cứng'], ['psu', 'Nguồn'], ['case', 'Vỏ case'], ['cooler', 'Tản nhiệt'],
   ];
   const BUDGET = 25000000;
-  // Real output of the engine's seed smoke run (gaming, 25M).
+  // Real output of POST /api/recommendations on the seed catalog (gaming, 25M).
   const builds = [
-    { label: 'Tối ưu hiệu năng', score: 67.91, pick: true, parts: {
-      cpu: ['AMD Ryzen 5 9600X', 6190000], mainboard: ['Gigabyte A620M Gaming X', 2090000],
-      ram: ['32GB DDR5 5600', 2390000], gpu: ['Radeon RX 9060 XT 16GB', 10190000],
-      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['DeepCool PK450D 450W', 790000],
+    { label: 'Tối ưu hiệu năng', score: 75.65, pick: true, parts: {
+      cpu: ['Intel Core i5-12400', 3190000], mainboard: ['ASRock H610M-HDV/M.2', 1490000],
+      ram: ['32GB DDR4 3600', 1690000], gpu: ['Radeon RX 7900 GRE 16GB', 14190000],
+      storage: ['Kingston NV2 1TB', 1690000], psu: ['DeepCool PK650D 650W', 1290000],
       case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
-    { label: 'Cân bằng', score: 63.09, parts: {
-      cpu: ['AMD Ryzen 5 7500F', 3590000], mainboard: ['ASRock A620M-HDV/M.2', 1890000],
+    { label: 'Cân bằng', score: 70.33, parts: {
+      cpu: ['AMD Ryzen 5 7600X', 4990000], mainboard: ['ASRock A620M-HDV/M.2', 1890000],
       ram: ['32GB DDR5 5600', 2390000], gpu: ['Intel Arc B580 12GB', 6490000],
-      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['Corsair CV550 550W', 950000],
+      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['DeepCool PK650D 650W', 1290000],
       case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
-    { label: 'Tiết kiệm', score: 57.91, parts: {
+    { label: 'Tiết kiệm', score: 64.98, parts: {
       cpu: ['Intel Core i3-12100F', 1890000], mainboard: ['ASRock H610M-HDV/M.2', 1490000],
       ram: ['32GB DDR4 3200', 1590000], gpu: ['Intel Arc B580 12GB', 6490000],
-      storage: ['Kingston NV2 1TB', 1690000], psu: ['Corsair CV550 550W', 950000],
+      storage: ['Crucial P3 Plus 1TB', 1890000], psu: ['Corsair CV550 550W', 950000],
       case: ['Montech AIR 100', 990000], cooler: ['DeepCool AG400', 390000] } },
   ];
 
