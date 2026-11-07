@@ -1,11 +1,6 @@
 /**
- * Live smoke test of the Gemini path: two real tool-calling turns against the dev database.
- * Turn 1 must reach Gemini with all five tool declarations and get a recommend_builds call back;
- * turn 2 replays the stored-style history (without thought signatures) and should modify the build.
- *
+ * Live Gemini smoke test (two tool-calling turns on the dev DB); exit 0 PASS, 1 FAIL, 2 SKIP without a key.
  *   pnpm --filter @pc/api exec tsx --env-file=../../.env eval/smoke-gemini.ts
- *
- * Exit code: 0 PASS, 1 FAIL, 2 SKIP (GEMINI_API_KEY is empty).
  */
 import { randomUUID } from 'node:crypto';
 import type { ChatEvent } from '@pc/shared';
