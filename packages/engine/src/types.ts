@@ -44,6 +44,13 @@ export interface CompatibilityReport {
   recommendedPsuWattage: number;
 }
 
+/** Optional context: C13 needs `purpose: 'gaming'` + a reference `catalog` for tiers; C14 needs `budget`. */
+export interface CompatibilityContext {
+  purpose?: Purpose;
+  budget?: number;
+  catalog?: EngineProduct[];
+}
+
 export interface PurposeProfile {
   purpose: Purpose;
   weights: Record<CategoryKey, number>;
