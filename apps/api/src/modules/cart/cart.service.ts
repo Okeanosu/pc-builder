@@ -119,7 +119,13 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
         guestLines.filter((l) => sellable.has(l.productId) && (!l.buildId || knownBuilds.has(l.buildId))),
       );
       // Subtract exactly what was read (skipped lines included) so a guest add racing the merge survives.
-      await guestCartStore(redis, guestId).consume(guestLines);
+      try {
+        await guestCartStore(redis, guestId).consume(guestLines);
+      } catch (err) {
+        // The merge is committed, so answer normally. The guest lines stay behind and the next request may
+        // merge them a second time: a duplicate the user can fix in the cart beats failing this request.
+        console.error('[cart] clearing the merged guest cart failed; the merge stands', err);
+      }
     } finally {
       await lock.release();
     }
