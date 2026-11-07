@@ -84,4 +84,4 @@
 - Tool-call accuracy: the expected tool appears among the calls of the measured turn (or no tool at all when a question is expected).
 - Parameters come from the first successful call of the expected tool (for modify_build: the budget and purpose it solved with).
 - Follow-up cases run their `setup` turns first in the same conversation; only the last turn is measured.
-- Every build id any measured turn returned is reloaded and re-checked with the engine rules C01–C14 and the budget; this must stay at 100%.
+- Every build id any measured turn returned is reloaded and re-checked with the engine rules C01–C15 and the budget; this must stay at 100%.

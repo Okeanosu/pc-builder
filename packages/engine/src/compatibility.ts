@@ -25,7 +25,7 @@ const RULE_ORDER: RuleCode[] = [
   'C15',
 ];
 
-/** Runs every rule C01–C14 on a (possibly partial) build. Rules whose parts are missing are skipped. */
+/** Runs every rule C01–C15 on a (possibly partial) build. Rules whose parts are missing are skipped. */
 export function checkCompatibility(parts: PartMap, ctx: CompatibilityContext = {}): CompatibilityReport {
   const issues: CompatibilityIssue[] = [];
   for (const code of RULE_ORDER) issues.push(...RULES[code](parts, ctx));
