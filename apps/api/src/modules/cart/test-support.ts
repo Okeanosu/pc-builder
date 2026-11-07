@@ -1,6 +1,7 @@
-import type { CategoryKey, Role } from '@pc/shared';
+import type { CategoryKey, OrderDTO, Role } from '@pc/shared';
 import { eq } from 'drizzle-orm';
 import type { Express } from 'express';
+import request from 'supertest';
 import { createTestDeps } from '../../../test/helpers';
 import { createApp } from '../../app';
 import { builds, categories, products, users } from '../../db/schema';
@@ -34,6 +35,21 @@ export function createCommerceHarness(overrides: Partial<AppDeps> = {}) {
     },
     appWith(extra: Partial<AppDeps>) {
       return createApp({ ...t.deps, ...extra });
+    },
+    /** Places a guest order through the public API, optionally paying it via the simulator. */
+    async placeOrder(lines: { productId: string; qty: number }[], opts: { pay?: boolean } = {}) {
+      const agent = request.agent(app);
+      for (const line of lines) {
+        const added = await agent.post('/api/cart/items').send(line);
+        if (added.status !== 201) throw new Error(`add to cart failed: ${JSON.stringify(added.body)}`);
+      }
+      const res = await agent.post('/api/orders').send(CHECKOUT);
+      if (res.status !== 201) throw new Error(`order failed: ${JSON.stringify(res.body)}`);
+      if (opts.pay) {
+        const paid = await agent.post(`/api/payments/${res.body.code}/simulate`);
+        if (paid.status !== 200) throw new Error(`payment failed: ${JSON.stringify(paid.body)}`);
+      }
+      return res.body as OrderDTO;
     },
     async tokenFor(role: Role): Promise<string> {
       const [u] = await t.deps.db.select().from(users).where(eq(users.role, role)).limit(1);
