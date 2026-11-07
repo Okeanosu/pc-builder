@@ -149,7 +149,9 @@ Liên kết — realizes: FR-07, UC-03, NFR-02, NFR-05 · dependsOn: M-CHAT, M-C
 
 **Quyết định chính:** ADR-003 chọn Gemini free tier với function calling; ADR-004 LLM chỉ điều phối, Engine quyết định; ADR-005 chế độ dự phòng khi Gemini không dùng được. Khai báo tool chỉ dùng tập con JSON Schema mà Gemini chấp nhận (bộ lọc thông số của `search_products` là danh sách cặp `{key, value}` thay vì object tự do), có unit test kiểm tra.
 
-**Điểm nhấn cho báo cáo (CH5):** kiến trúc chống ảo giác (guardrails), so sánh với chatbot thuần LLM, kết quả golden-set 30 kịch bản (`apps/api/eval/results.md`). Lần chạy ở chế độ dự phòng (2026-11-07), chấm **nghiêm ngặt** theo kỳ vọng của trợ lý AI: gọi đúng tool **26/30**, tham số đúng 23/25, sở thích 9/10, đạt mọi tiêu chí 26/30; 4 kịch bản trượt là 2 câu chỉnh cấu hình (luật dự phòng gọi lại `recommend_builds` thay vì `modify_build`) và 2 câu hỏi sản phẩm (dự phòng hỏi lại thay vì `search_products`). Nếu chấm theo khả năng thiết kế của chế độ luật (`fallbackExpect`) thì đạt 30/30. Ở cả hai cách chấm, 69/69 cấu hình trả về đều hợp lệ khi kiểm tra lại bằng bộ luật C01–C15 và ngân sách; độ trễ p50 10 ms / p95 22 ms.
+**Kiểm tra giá phía server:** sau mỗi lượt ở chế độ AI, `price-check.ts` trích các số tiền VND trong câu trả lời và so với các số tool đã trả về; số không khớp được lưu vào `chat_messages.price_check` và log cảnh báo, văn bản giữ nguyên (giám sát, không chặn; xem NFR-05). Eval có thêm chỉ số "price-mention mismatch rate", chỉ có giá trị ở chế độ AI.
+
+**Điểm nhấn cho báo cáo (CH5):** kiến trúc chống ảo giác (guardrails: giá trên thẻ cấu hình được bảo đảm từ DB/Engine, văn bản tự do được ràng buộc bằng prompt và giám sát bằng bộ kiểm tra giá), so sánh với chatbot thuần LLM, kết quả golden-set 30 kịch bản (`apps/api/eval/results.md`). Lần chạy ở chế độ dự phòng (2026-11-07), chấm **nghiêm ngặt** theo kỳ vọng của trợ lý AI: gọi đúng tool **26/30**, tham số đúng 23/25, sở thích 9/10, đạt mọi tiêu chí 26/30; 4 kịch bản trượt là 2 câu chỉnh cấu hình (luật dự phòng gọi lại `recommend_builds` thay vì `modify_build`) và 2 câu hỏi sản phẩm (dự phòng hỏi lại thay vì `search_products`). Nếu chấm theo khả năng thiết kế của chế độ luật (`fallbackExpect`) thì đạt 30/30. Ở cả hai cách chấm, 69/69 cấu hình trả về đều hợp lệ khi kiểm tra lại bằng bộ luật C01–C15 và ngân sách; độ trễ p50 10 ms / p95 22 ms.
 
 **Sự kiện SSE và dự phòng:** luồng gồm `session` (id phiên), `token` (từng đoạn văn bản), `tool` (`start`/`end` kèm nhãn tiếng Việt, web hiện thành chip), `builds` và `products` (thẻ dữ liệu thật lấy từ kết quả tool, không từ lời model), `error` và `done` (kèm `messageId` và `mode`). Gemini hết quota (429), quá thời gian (20 giây), thiếu khóa hoặc trả rỗng thì orchestrator chuyển sang NLU luật (ADR-005, ADR-018) ngay trong cùng lượt: chữ đã phát vẫn giữ, phần dự phòng nối thêm sau một dòng trống, kết thúc `done{mode:'FALLBACK'}`; không phát `error`. Khách đóng kết nối thì hủy cả lượt (không chuyển dự phòng). Chỉ chủ phiên được gửi tin (STAFF/ADMIN chỉ đọc, nhật ký ở SCR-ADMIN-CHATLOGS); 10 tin/phút và 10 phiên mới/phút.
 
@@ -228,7 +230,9 @@ Liên kết — realizes: FR-03, UC-02, NFR-03 · dependsOn: M-AUTH, M-API-CORE,
 
 **Mục đích:** nhận diện người dùng và chặn truy cập trái quyền vào API quản trị.
 
-**Mô tả:** đăng ký/đăng nhập bằng email và mật khẩu (bcrypt, cost 10). Access token JWT sống 15 phút, gửi qua header `Authorization: Bearer` hoặc cookie httpOnly `access_token`; refresh token sống 7 ngày, lưu trong cookie httpOnly `refresh_token` (path `/api/auth`) và đăng ký ở Redis theo khóa `rt:{userId}:{jti}`. Mỗi lần refresh, `jti` cũ bị xóa và cấp `jti` mới (xoay vòng), nên token cũ bị đánh cắp không dùng lại được; đăng xuất xóa khóa nên có hiệu lực ngay. Middleware `optionalAuth` gắn `req.user` nếu có token hợp lệ, `requireAuth` và `requireRole` bảo vệ route. Giới hạn đăng nhập 5 lần/phút/IP; sai email hay sai mật khẩu đều trả cùng thông báo để không lộ email nào đã đăng ký.
+**Mô tả:** đăng ký/đăng nhập bằng email và mật khẩu (bcrypt, cost 10). Access token JWT sống 15 phút, gửi qua header `Authorization: Bearer` hoặc cookie httpOnly `access_token`; refresh token sống 7 ngày, lưu trong cookie httpOnly `refresh_token` (path `/api/auth`) và đăng ký ở Redis theo khóa `rt:{userId}:{jti}`. Mỗi lần refresh, `jti` cũ bị xóa và cấp `jti` mới (xoay vòng), nên token cũ bị đánh cắp không dùng lại được; đăng xuất xóa khóa nên có hiệu lực ngay. Middleware `optionalAuth` gắn `req.user` nếu có token hợp lệ, `requireAuth` và `requireRole` bảo vệ route. Giới hạn đăng nhập 5 lần/phút/IP và đăng ký 5 lần/phút/IP; sai email hay sai mật khẩu đều trả cùng thông báo để không lộ email nào đã đăng ký.
+
+**Đổi mật khẩu và token hết hạn (rà soát cuối):** `POST /api/auth/password` kiểm tra mật khẩu hiện tại (sai → 400 `INVALID_CURRENT_PASSWORD`), lưu hash mới, thu hồi mọi refresh token của người dùng (`rt:{userId}:*`) rồi cấp phiên mới; thiết bị khác bị đăng xuất khi access token (tối đa 15 phút) hết hạn. Access token `Bearer` hết hạn ngoài `/api/auth/*` nhận 401 `TOKEN_EXPIRED` để web làm mới phiên thay vì lặng lẽ coi người dùng là khách.
 
 **Củng cố sau rà soát (ADR-016):** JWT mang trường `typ` (`access` hoặc `refresh`) nên token sai loại bị từ chối ở cả hai đầu; khi hai tab cùng refresh, tab thua nhận `401 INVALID_REFRESH_TOKEN` nhưng cookie được giữ nguyên để không đăng xuất oan phiên mà tab thắng vừa làm mới; chỉ token thiếu, giả, hết hạn, sai `typ` hoặc người dùng bị xóa mới bị xóa cookie. Phía web refresh theo kiểu single-flight (`apps/web/src/stores/auth.ts`).
 
@@ -358,11 +362,11 @@ Liên kết — realizes: NFR-07 · dependsOn: M-INFRA
 **Mục đích:** đưa hệ thống lên máy chủ thật để người dùng và kỹ thuật viên dùng thử (nội dung 6 của phiếu), bằng một lệnh và không cần cài Node hay Postgres trên máy chủ.
 
 **Mô tả (theo `infra/docker-compose.prod.yml`, dự án `pcbuilder-prod`):** năm dịch vụ trên một mạng nội bộ `internal`.
-- **caddy** (`caddy:2-alpine`) là dịch vụ duy nhất mở cổng 80 và 443; tự xin và gia hạn chứng chỉ HTTPS Let's Encrypt cho `DOMAIN`. `Caddyfile` chuyển `/api/*` tới `api:4000` với `flush_interval -1` (để luồng SSE của chatbot không bị đệm) và mọi đường dẫn khác tới `web:3000`. Web và API dùng chung một tên miền nên cookie `Secure; SameSite=Lax` hoạt động như cùng một site.
+- **caddy** (`caddy:2-alpine`) là dịch vụ duy nhất mở cổng 80 và 443; tự xin và gia hạn chứng chỉ HTTPS Let's Encrypt cho `DOMAIN`. `Caddyfile` chuyển `/api/*` tới `api:4000` với `flush_interval -1` (để luồng SSE của chatbot không bị đệm) và mọi đường dẫn khác tới `web:3000`. Nén `zstd/gzip` chỉ áp cho JSON ở nhánh `/api/*` (nén `text/event-stream` khiến bộ nén đệm luồng SSE) và cho toàn bộ nhánh web. Web và API dùng chung một tên miền nên cookie `Secure; SameSite=Lax` hoạt động như cùng một site.
 - **api** (Node 22 alpine, build nhiều giai đoạn bằng `pnpm deploy --prod`, 257 MB) chạy bằng người dùng `node`, có HEALTHCHECK `/api/health`, tự chạy migration (`src/db/migrate.ts`) rồi mới mở server. Migrator không có advisory lock nên chỉ chạy đúng 1 replica.
-- **web** (Next.js `standalone`, 223 MB, người dùng không phải root) với `NEXT_PUBLIC_API_URL` được nhúng lúc build từ `DOMAIN`, nên đổi tên miền phải build lại web.
+- **web** (Next.js `standalone`, 223 MB, người dùng không phải root) với `NEXT_PUBLIC_API_URL` được nhúng lúc build từ `DOMAIN`, nên đổi tên miền phải build lại web. Khi render phía server, web gọi API qua mạng nội bộ (`API_INTERNAL_URL=http://api:4000/api`) vì từ trong container không với tới URL công khai.
 - **postgres:16** và **redis:7** (bật AOF) chỉ nằm trong mạng nội bộ, không mở cổng ra ngoài; dữ liệu ở volume `pgdata`, `redisdata`.
-- Cấu hình qua `infra/.env.prod` (mẫu `.env.prod.example`, bị gitignore). API production từ chối khởi động nếu JWT secret hoặc `SEPAY_API_KEY` còn là giá trị dev. Bản dev chỉ chạy postgres và redis bằng `infra/docker-compose.yml`.
+- Cấu hình qua `infra/.env.prod` (mẫu `.env.prod.example`, bị gitignore). API production từ chối khởi động (fail-closed) nếu `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` hoặc `SEPAY_API_KEY` ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`, hoặc `VIETQR_ACCOUNT_NO` còn là `0000000000`. Seed ở production bắt buộc `SEED_ADMIN_PASSWORD` (≥ 12 ký tự) cho `admin@pcbuilder.vn` và chỉ tạo tài khoản demo nhân viên/khách khi `SEED_DEMO_USERS=1`; đổi mật khẩu qua trang Tài khoản (`POST /api/auth/password`). Bản dev chỉ chạy postgres và redis bằng `infra/docker-compose.yml`.
 - `docs/deploy.md` (tiếng Việt) hướng dẫn trên Ubuntu 22.04/24.04: yêu cầu VPS, secret, khởi chạy, nạp seed thủ công một lần (seed xóa dữ liệu cũ), xin khóa Gemini, cấu hình webhook SePay `https://<DOMAIN>/api/payments/webhook/sepay` với `Authorization: Apikey <khóa>`, sao lưu `pg_dump` bằng cron.
 
 **Kiểm chứng đã làm (báo cáo task 12):** chạy toàn bộ stack production trên máy dev ở cổng 8081/8443: cả năm dịch vụ khỏe, `GET /api/health` qua Caddy trả `{"status":"ok","db":"up","redis":"up","ai":"fallback"}`, cookie đặt `Secure; SameSite=Lax`, trang chủ trả 200, đăng nhập tài khoản mẫu qua Caddy 200, các container chạy uid 1000.
@@ -424,13 +428,13 @@ Liên kết — realizes: FR-08, FR-09, NFR-01, NFR-08 · dependsOn: M-ENGINE, A
 **Số liệu cho báo cáo (nguồn: báo cáo task 3 §3 và §5, `bench/results.md`; Apple M3, Node 22, hạt giống 7):**
 - **175 test, phủ nhánh 98,85%** (691/699), phủ câu lệnh 99,51%, hàm 99,44%, dòng 99,63%. NFR-08 yêu cầu tối thiểu 90%.
 - **Hiệu năng `full`:** p95 **11,5 ms** ở catalog 250 sản phẩm (221 còn hàng) và **40,3 ms** ở 500 sản phẩm (NFR-01: 300 ms). Mean nút duyệt 8.937 và 16.775.
-- **So sánh 4 chiến lược** (kịch bản văn phòng 20 triệu, game 25 triệu, đồ họa 40 triệu, AI 60 triệu; 25 lần chạy cho `full`, 3 lần cho mỗi chiến lược vét cạn; trần 2.000.000 nút): ở 250 và 500 sản phẩm brute force, backtracking và forward checking đều chạm trần và không lần nào tìm được cấu hình tối ưu (0/12), còn `full` tối ưu 100/100. Ở 50 sản phẩm cả bốn đều giải được (p95: brute force 57,1 ms, BT 5,9 ms, FC 9,9 ms, full 1,2 ms).
-- **Kiểm tra tương đương:** `bench:equivalence` so `full` với forward checking vét cạn trên 1.502 ca ngẫu nhiên (1.080 + 422), **0 sai khác**, 0 vi phạm hợp đồng nhãn.
+- **So sánh 4 chiến lược** (kịch bản văn phòng 20 triệu, game 25 triệu, đồ họa 40 triệu, AI 60 triệu; 25 lần chạy cho `full`, 3 lần cho mỗi chiến lược vét cạn; trần 2.000.000 nút): ở 250 và 500 sản phẩm brute force, backtracking và forward checking đều chạm trần và không lần nào tìm được cấu hình có điểm bằng `full` (0/12). Cột "tối ưu" của bench lấy chính `full` làm mốc, nên dòng `full` không tự chứng minh được tính tối ưu; bằng chứng là phép kiểm tra tương đương bên dưới. Ở 50 sản phẩm cả bốn đều giải được (p95: brute force 57,1 ms, BT 5,9 ms, FC 9,9 ms, full 1,2 ms).
+- **Kiểm tra tương đương (bằng chứng tối ưu):** `pnpm --filter @pc/engine bench:equivalence` so `full` với forward checking vét cạn (không giới hạn nút) trên catalog ngẫu nhiên đủ nhỏ để vét cạn chạy hết. Chạy lại ngày 2026-11-08: 1.080 ca (48 sản phẩm, 30 hạt giống) + 432 ca (72 sản phẩm, 12 hạt giống) = **1.512 ca, 0 sai khác**, 0 vi phạm hợp đồng nhãn (lần chạy ở task 3: 1.502 ca, 0 sai khác).
 - **Seed thật** (240 sản phẩm, 213 còn hàng): mọi cấu hình đều tương thích, mỗi lần giải 2-14 ms.
 - **Trung thực về AC-3:** AC-3 loại **gần như 0** giá trị trên dữ liệu tổng hợp (2 ở 50 sản phẩm, 0 ở 100 trở lên); mức tăng tốc đến từ cận LP của MCKP cùng thứ tự biến theo mục tiêu, không phải AC-3 (ADR-020). Ablation MRV: p95 1.896 ms so với 11,8 ms ở 250 sản phẩm.
 - Không gian tìm kiếm của vét cạn: 1,69e8 (100 sản phẩm), 3,16e11 (250), 8,09e13 (500) tổ hợp.
 
-**Hạn chế đã biết (cần nêu trong báo cáo):** dữ liệu benchmark và thông số của seed là giá trị tham chiếu gần đúng; TDP CPU Intel lấy công suất cơ sở nên cỡ nguồn hơi lạc quan; `commercialBoost` nhân thay vì cộng như công thức spec; điểm văn phòng không nhạy giá; cache điểm theo định danh mảng catalog nên không được sửa catalog tại chỗ.
+**Hạn chế đã biết (cần nêu trong báo cáo):** dữ liệu benchmark và thông số của seed là giá trị tham chiếu gần đúng; `tdpW` của CPU là TDP cơ sở nên luật C08 cỡ nguồn theo công suất cơ sở + 30% dự phòng, hơi lạc quan với CPU có công suất đỉnh (PL2) cao như Intel thế hệ 12-14 (thêm trường công suất đỉnh là hướng phát triển, xem R-C08); `commercialBoost` nhân thay vì cộng như công thức spec; điểm văn phòng không nhạy giá; cache điểm theo định danh mảng catalog nên không được sửa catalog tại chỗ.
 
 **Code:** `packages/engine/src/**`
 
@@ -639,7 +643,7 @@ Liên kết — realizes: FR-18, UC-09 · dependsOn: M-ORDERS, E-PRODUCT, E-INVE
 
 **Mục đích:** hai khách cùng đặt chiếc cuối cùng thì chỉ một người đặt được, không âm kho.
 
-**Mô tả:** khi tạo đơn, trong một transaction chạy `UPDATE products SET reserved = reserved + q WHERE id = $1 AND status = 'ACTIVE' AND stock - reserved >= q` cho từng sản phẩm; nếu một câu không cập nhật được dòng nào thì rollback toàn bộ và trả `409 OUT_OF_STOCK` kèm tên sản phẩm, số yêu cầu và số còn lại. Các dòng được khóa theo thứ tự `product_id` tăng dần (cả khi tạo đơn lẫn khi đổi trạng thái) nên hai đơn chứa cùng sản phẩm theo thứ tự khác nhau không gây deadlock. Sau khi thanh toán: `stock -= q, reserved -= q` và ghi `inventory_movements`. Hủy hoặc quá hạn: `reserved -= q`. Khóa Redis `hold:order:{code}` (TTL = `ORDER_HOLD_MINUTES`) làm đồng hồ giữ hàng; nguồn sự thật là `orders.expires_at`, được job `startOrderExpiryJob` quét mỗi 60 giây (`expirePendingOrders`), mỗi đơn hủy bằng một câu UPDATE có điều kiện trạng thái nên thanh toán đến cùng lúc vẫn thắng.
+**Mô tả:** khi tạo đơn, trong một transaction chạy `UPDATE products SET reserved = reserved + q WHERE id = $1 AND status = 'ACTIVE' AND stock - reserved >= q` cho từng sản phẩm; nếu một câu không cập nhật được dòng nào thì rollback toàn bộ và trả `409 OUT_OF_STOCK` kèm tên sản phẩm, số yêu cầu và số còn lại. Các dòng được khóa theo thứ tự `product_id` tăng dần (cả khi tạo đơn lẫn khi đổi trạng thái) nên hai đơn chứa cùng sản phẩm theo thứ tự khác nhau không gây deadlock. Sau khi thanh toán: `stock -= q, reserved -= q` và ghi `inventory_movements`. Hủy hoặc quá hạn: `reserved -= q`. Đồng hồ giữ hàng là cột `orders.expires_at` (= lúc tạo + `ORDER_HOLD_MINUTES`), không nhân bản sang Redis (bản cũ ghi khóa `hold:order:{code}` nhưng không nơi nào đọc nên đã bỏ); cột này được job `startOrderExpiryJob` quét mỗi 60 giây (`expirePendingOrders`), mỗi đơn hủy bằng một câu UPDATE có điều kiện trạng thái nên thanh toán đến cùng lúc vẫn thắng.
 
 Bấm đặt hàng trùng của cùng một người mua được chặn riêng (khóa dòng `carts` với tài khoản, khóa Redis `lock:checkout:{gid}` với khách vãng lai), nên không có hai đơn cùng giữ hàng cho một giỏ.
 
@@ -745,7 +749,7 @@ sequenceDiagram
     end
     A->>DB: INSERT orders (PENDING_PAYMENT, guest_id, expires_at = now + 15 phút), order_items (snapshot tên và giá), xóa dòng giỏ đã đặt
   end
-  A->>R: afterCommit (lỗi chỉ ghi log): SET hold:order:{code} EX 15 phút, trừ giỏ khách theo số lượng đã đọc, nhả khóa checkout, INCR catalog:version
+  A->>R: afterCommit (lỗi chỉ ghi log): trừ giỏ khách theo số lượng đã đọc, nhả khóa checkout, INCR catalog:version
   A-->>W: 201 {code}
   W->>A: GET /api/orders/:code/payment
   A-->>W: PaymentInfoDTO (qrImageUrl chỉ khi PENDING_PAYMENT, ngược lại null) + expiresAt
@@ -777,7 +781,7 @@ sequenceDiagram
         A->>DB: payments.status = MANUAL_REVIEW, đơn giữ nguyên
       end
     end
-    A->>R: DEL hold:order:{code}, INCR catalog:version
+    A->>R: INCR catalog:version
     A-->>B: 200 {success: true}
   end
   W->>A: GET /api/orders/:code/payment
@@ -786,7 +790,7 @@ sequenceDiagram
   opt Quá hạn 15 phút không thanh toán
     J->>DB: mỗi đơn PENDING_PAYMENT có expires_at < now: UPDATE CANCELLED WHERE status = PENDING_PAYMENT, reserved = reserved - q
     Note over J,DB: chạy đua với webhook thì chỉ một bên thắng nhờ điều kiện trạng thái
-    J->>R: DEL hold:order:{code}, INCR catalog:version
+    J->>R: INCR catalog:version
   end
   opt Môi trường dev hoặc ADMIN
     W->>A: POST /api/payments/:orderCode/simulate (cùng đường xử lý, provider SIMULATOR)
@@ -825,9 +829,9 @@ Liên kết — realizes: FR-08, UC-04, NFR-01 · dependsOn: M-RECOMMENDATION, F
 
 **Điểm nhấn cho báo cáo:** các cấu hình trả về mang nhãn Hiệu năng / Cân bằng / Tiết kiệm theo hợp đồng nhãn của Engine (ADR-020); với mục đích AI hoặc đồ họa, GPU NVIDIA được ưu tiên bằng hệ số CUDA trừ khi người dùng chọn hãng khác (ADR-013).
 
-**Trạng thái:** API và giao diện web đều xong: biểu mẫu trong `/advisor` và `/builder` (`apps/web/src/features/advisor`, `apps/web/src/features/builder`) gọi cùng endpoint này, thẻ cấu hình mở được trong Customizer.
+**Trạng thái:** API xong và có test tích hợp. Giao diện: biểu mẫu gợi ý (ngân sách, mục đích, tùy chọn) trên trang `/advisor` (`apps/web/src/features/advisor`) gọi `POST /recommendations` và hiển thị 2-3 thẻ cấu hình, mở được trong Customizer. Biểu mẫu này được bổ sung ở đợt sửa cuối (2026-11-08); trước đó chatbot gọi cùng service qua tool `recommend_builds` nhưng chưa có giao diện nào gọi trực tiếp endpoint.
 
-**Code:** `apps/api/src/modules/recommendation/**`, `apps/web/src/features/advisor/**`, `apps/web/src/features/builder/**`
+**Code:** `apps/api/src/modules/recommendation/**`, `apps/web/src/features/advisor/**`
 
 **Test:** `apps/api/src/modules/recommendation/**/*.test.ts`
 
@@ -1013,7 +1017,8 @@ Sơ đồ ERD (`erd.mmd`) được sinh từ đúng file `schema.ts` này.
 **Sơ đồ:** `docs/diagrams/erd.mmd`
 
 ```mermaid
-%% Mirrors apps/api/src/db/schema.ts (migrations 0000_init, 0001_commerce_hardening); update this diagram whenever the schema changes
+%% Mirrors apps/api/src/db/schema.ts (migrations 0000_init, 0001_commerce_hardening, 0002_chat_price_check); update this diagram whenever the schema changes
+%% INDEXES below is not a table: it is the index note block, so the indexes also show up in the rendered diagram
 %% Indexes: products_specs_gin = GIN(specs jsonb_path_ops); products_category_price_idx(category_id, price); products_name_search_idx = GIN(to_tsvector(simple, name))
 %% Indexes: inventory_movements_product_idx(product_id, created_at); builds_user_idx(user_id); orders_user_idx(user_id, created_at); orders_status_expires_idx(status, expires_at)
 %% Indexes: payments_status_created_idx(status, created_at); chat_messages_session_idx(session_id, created_at)
@@ -1174,7 +1179,20 @@ erDiagram
     jsonb build_ids "default []"
     chat_mode mode "AI|FALLBACK; nullable"
     int latency_ms "nullable"
+    jsonb price_check "nullable; AI replies: mentions + unmatched amounts from the server price check"
     timestamptz created_at "default now"
+  }
+  INDEXES {
+    gin products_specs_gin "products(specs jsonb_path_ops): JSONB containment filters on specs"
+    gin products_name_search_idx "products(to_tsvector simple, name): name full-text search"
+    btree products_category_price_idx "products(category_id, price): category listing by price"
+    unique cart_items_cart_product_build_uq "cart_items(cart_id, product_id, build_id) UNIQUE NULLS NOT DISTINCT"
+    btree payments_status_created_idx "payments(status, created_at): admin payment list by status"
+    btree orders_status_expires_idx "orders(status, expires_at): expiry job scan"
+    btree orders_user_idx "orders(user_id, created_at): order history"
+    btree inventory_movements_product_idx "inventory_movements(product_id, created_at): stock audit"
+    btree builds_user_idx "builds(user_id)"
+    btree chat_messages_session_idx "chat_messages(session_id, created_at): conversation replay"
   }
   categories ||--o{ products : "category_id"
   brands ||--o{ products : "brand_id"
@@ -1397,7 +1415,7 @@ Liên kết — realizes: F-ADMIN-PRODUCTS · dependsOn: M-ADMIN
 - `DELETE /api/admin/products/:id` (ẩn mềm, `status = HIDDEN`)
 - `PUT /api/admin/categories/:id/schema` (chỉ ADMIN, mảng `SpecField`)
 
-Chỉ ADMIN/STAFF. Trả `AdminProductDTO` (thêm `stockOnHand`, `reserved`, `status`). Thông số được kiểm tra theo `specSchema` của danh mục và schema có kiểu của Engine; lỗi trả 422 kèm chi tiết từng trường (`specs.socket`), trùng SKU/slug trả `409 DUPLICATE`.
+Chỉ ADMIN/STAFF. Trả `AdminProductDTO` (thêm `stockOnHand`, `reserved`, `status`). Thông số được kiểm tra theo `specSchema` của danh mục và schema có kiểu của Engine; lỗi trả 422 kèm chi tiết từng trường (`specs.socket`), trùng SKU/slug trả `409 DUPLICATE`. `commercialBoost` (mức ưu tiên trong bộ máy gợi ý) chỉ ADMIN được đặt, vì nó lái kết quả gợi ý như trọng số mục đích: STAFF gửi trường này trong `PATCH` nhận `403 FORBIDDEN_FIELD` (`details.fields = ['commercialBoost']`); khi tạo mới, STAFF chỉ được gửi giá trị trung tính `0`. Các trường khác STAFF vẫn sửa được.
 
 **Code:** `apps/api/src/modules/admin/products/**`
 
@@ -1440,13 +1458,16 @@ Trạng thái: **done**
 Liên kết — realizes: F-AUTH · dependsOn: M-AUTH
 
 **Endpoint:**
-- `POST /api/auth/register` → 201 `{ accessToken, user: UserDTO }`
+- `POST /api/auth/register` → 201 `{ accessToken, user: UserDTO }` (giới hạn 5 lần/phút/IP, đếm bằng Redis)
 - `POST /api/auth/login` → 200 `{ accessToken, user: UserDTO }` (giới hạn 5 lần/phút/IP)
 - `POST /api/auth/refresh` → 200 `{ accessToken, user }`, đọc cookie `refresh_token` và xoay vòng token
 - `POST /api/auth/logout` → 204, thu hồi refresh token và xóa cookie
+- `POST /api/auth/password` (cần đăng nhập) body `{ currentPassword, newPassword (8..72 ký tự) }` → 200 `{ accessToken, user }` kèm cookie phiên mới như đăng nhập; mọi refresh token `rt:{userId}:*` của người dùng bị thu hồi. Sai mật khẩu hiện tại → 400 `INVALID_CURRENT_PASSWORD`.
 - `GET /api/auth/me` → `UserDTO` (cần access token qua `Authorization: Bearer` hoặc cookie `access_token`)
 
-Đăng ký/đăng nhập/refresh đặt cookie httpOnly `access_token` (15 phút) và `refresh_token` (7 ngày, path `/api/auth`). Lỗi: 401 `INVALID_CREDENTIALS` (dùng chung cho sai email và sai mật khẩu), 401 `INVALID_REFRESH_TOKEN`, 401 `UNAUTHORIZED`, 403 `FORBIDDEN` (sai vai trò), 409 `EMAIL_TAKEN`, 422 `VALIDATION_ERROR`, 429 `TOO_MANY_REQUESTS`.
+**Access token hết hạn:** token `Bearer` hết hạn gửi tới bất kỳ route nào ngoài `/api/auth/*` nhận `401 { error: { code: 'TOKEN_EXPIRED' } }` thay vì bị coi là khách (trước đây giỏ hàng trả rỗng, đơn hàng trả 404 cho người đã đăng nhập). Client gọi `/auth/refresh` rồi thử lại. Token hết hạn chỉ nằm trong cookie vẫn được coi là khách như cũ, vì trình duyệt tự bỏ cookie hết hạn; token không phải của hệ thống (sai chữ ký, rác) cũng như cũ.
+
+Đăng ký/đăng nhập/refresh đặt cookie httpOnly `access_token` (15 phút) và `refresh_token` (7 ngày, path `/api/auth`). Lỗi: 400 `INVALID_CURRENT_PASSWORD`, 401 `INVALID_CREDENTIALS` (dùng chung cho sai email và sai mật khẩu), 401 `INVALID_REFRESH_TOKEN`, 401 `TOKEN_EXPIRED`, 401 `UNAUTHORIZED`, 403 `FORBIDDEN` (sai vai trò), 409 `EMAIL_TAKEN`, 422 `VALIDATION_ERROR`, 429 `TOO_MANY_REQUESTS` (đăng nhập), 429 `RATE_LIMITED` (đăng ký, kèm `Retry-After`).
 
 **Code:** `apps/api/src/modules/auth/**`
 
@@ -1480,7 +1501,7 @@ Liên kết — realizes: F-CART · dependsOn: M-CART
 - `DELETE /api/cart/items/:id`
 - `POST /api/cart/builds/:buildId` (201)
 
-Trả `CartDTO` (dòng hàng, tạm tính, số lượng). Khách vãng lai nhận diện qua cookie `gid`; id dòng của khách là `{productId}:{buildId|-}`, của tài khoản là id `cart_items`. Lỗi: `404` sản phẩm/cấu hình không tồn tại, `409 INSUFFICIENT_STOCK` (kèm `productId`, `name`, `requested`, `available`), `422` số lượng ngoài 1..20.
+Trả `CartDTO` (dòng hàng, tạm tính, số lượng, `assemblyFee` = phí lắp ráp lấy từ `ASSEMBLY_FEE` của server, áp cho đơn đặt lắp ráp cả bộ và không cộng vào `subtotal`; web hiển thị đúng phí mà checkout sẽ tính). Khách vãng lai nhận diện qua cookie `gid`; id dòng của khách là `{productId}:{buildId|-}`, của tài khoản là id `cart_items`. Lỗi: `404` sản phẩm/cấu hình không tồn tại, `409 INSUFFICIENT_STOCK` (kèm `productId`, `name`, `requested`, `available`), `422` số lượng ngoài 1..20.
 
 **Code:** `apps/api/src/modules/cart/**`
 
@@ -1686,7 +1707,7 @@ Liên kết — refines: M-DB
 
 **Bảng:** `chat_messages`
 
-Vai trò user/assistant/tool, nội dung, và với tool call: tên tool, tham số và kết quả (JSONB); `build_ids` các cấu hình sinh ra, chế độ, độ trễ (`latency_ms`). Phục vụ xem lại và đánh giá chất lượng AI.
+Vai trò user/assistant/tool, nội dung, và với tool call: tên tool, tham số và kết quả (JSONB); `build_ids` các cấu hình sinh ra, chế độ, độ trễ (`latency_ms`). Với câu trả lời ở chế độ AI, `price_check` (JSONB, migration `0002_chat_price_check`) ghi kết quả kiểm tra giá phía server: số lượng số tiền VND trong câu trả lời và các số không khớp dữ liệu tool (`{mentions, unmatched: [{text, amount}]}`); NULL khi không kiểm tra (chế độ dự phòng). Phục vụ xem lại và đánh giá chất lượng AI.
 
 **Code:** `apps/api/src/db/schema.ts`
 
@@ -1817,7 +1838,7 @@ Liên kết — refines: F-ENGINE-CORE · dependsOn: ALG-CSP, ALG-MCKP, ALG-SCOR
 
 **Dùng cho top-3 có nhãn:** `full` giải mỗi vai trò (Hiệu năng, Tiết kiệm, Cân bằng) bằng một lượt B&B có ràng buộc (ADR-020); tỉ số điểm/giá được giải bằng phương pháp Dinkelbach (tối đa hóa `điểm − λ·giá` rồi cập nhật λ, thường 2 vòng, vòng hai khởi đầu từ nghiệm đã có).
 
-**Số liệu (báo cáo task 3, bench Apple M3, Node 22, hạt giống 7):** biến thể `full` p95 **11,5 ms** ở 250 sản phẩm và **40,3 ms** ở 500 sản phẩm (NFR-01: 300 ms), số nút trung bình 8.937 và 16.775, đều tìm đúng nghiệm tối ưu 100/100 lần. Kiểm tra tương đương ngẫu nhiên: `full` so với duyệt vét cạn có forward checking trên 1.502 ca (1.080 + 422) không sai khác nào và không vi phạm hợp đồng nhãn.
+**Số liệu (báo cáo task 3, bench Apple M3, Node 22, hạt giống 7):** biến thể `full` p95 **11,5 ms** ở 250 sản phẩm và **40,3 ms** ở 500 sản phẩm (NFR-01: 300 ms), số nút trung bình 8.937 và 16.775. Tính tối ưu không lấy từ cột "tối ưu" của bench (cột đó dùng chính `full` làm mốc) mà từ kiểm tra tương đương ngẫu nhiên `pnpm --filter @pc/engine bench:equivalence`: `full` so với duyệt vét cạn có forward checking, chạy lại ngày 2026-11-08 trên 1.512 ca (1.080 ca catalog 48 sản phẩm + 432 ca catalog 72 sản phẩm), 0 sai khác, 0 vi phạm hợp đồng nhãn (lần chạy task 3: 1.502 ca, 0 sai khác).
 
 **Code:** `packages/engine/src/search.ts`
 
@@ -2103,6 +2124,8 @@ Liên kết — refines: F-COMPAT-CHECK · dependsOn: ALG-CSP
 **Điều kiện:** `psu.wattage ≥ ceil((cpu.tdp + gpu.tgp + 75) × 1.3); khuyến nghị ≥ ×1.5`
 
 **Giải thích:** Công suất tiêu thụ ước tính = TDP CPU + TGP GPU + 75 W cho phần còn lại; hệ số 1.3 là dự phòng đỉnh tải, mức ×1.5 là khuyến nghị để nguồn chạy hiệu suất cao và bền.
+
+**Giả định và hạn chế (nêu trong báo cáo):** `cpu.tdpW` trong dữ liệu là **TDP cơ sở** (base power: Intel PBP, AMD TDP), không phải công suất đỉnh. Vì vậy cỡ nguồn được tính theo công suất cơ sở cộng 30% dự phòng. Với CPU có công suất đỉnh cao hơn nhiều so với mức cơ sở (ví dụ Intel Core thế hệ 12-14 có PL2 tới khoảng 250 W), nguồn đạt C08 có thể hơi lạc quan khi máy chạy tải đỉnh kéo dài; mức khuyến nghị ×1.5 (cảnh báo) bù một phần. Bổ sung trường công suất đỉnh (PL2/PPT) vào thông số CPU và dùng nó trong C08 là hướng phát triển.
 
 Luật là một hàm thuần trả `CompatibilityIssue` (mã, mức độ, thông điệp tiếng Việt, danh mục liên quan) khi bị vi phạm; cùng hàm được dùng ở server, trong Engine và ở client (Customizer). Test: đúng, sai và các giá trị biên.
 
@@ -2638,7 +2661,7 @@ Liên kết — verifies: NFR-01, ALG-CSP, ALG-BNB
 
 **Lệnh:** `pnpm --filter @pc/engine bench`. Chạy brute force giới hạn, backtracking, +FC và bản đầy đủ (AC-3 + FC + B&B) trên catalog tổng hợp 50/100/250/500 sản phẩm; xuất `packages/engine/bench/results.md` gồm thời gian p50/p95, số nút duyệt, số nhánh bị cắt theo từng kỹ thuật và tỷ lệ tìm được lời giải tối ưu.
 
-**Kết quả (2026-11-07, Apple M3, Node v22.20.0):** bản đầy đủ p95 = 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms) và 100/100 lần tối ưu; ba biến thể kia chạm giới hạn 2.000.000 nút từ catalog 100 sản phẩm trở lên. Bảng tóm tắt được chép lại (ghi nguồn) trong `docs/testing/test-report.md`. **Đưa vào chương 4.**
+**Kết quả (2026-11-07, Apple M3, Node v22.20.0):** bản đầy đủ p95 = 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms); ba biến thể kia chạm giới hạn 2.000.000 nút từ catalog 100 sản phẩm trở lên. Cột "tối ưu" lấy chính bản đầy đủ làm mốc nên không tự chứng minh tối ưu; bằng chứng là `bench:equivalence` (chạy lại 2026-11-08: 1.080 + 432 = 1.512 ca, 0 sai khác so với vét cạn có forward checking). Bảng tóm tắt được chép lại (ghi nguồn) trong `docs/testing/test-report.md`. **Đưa vào chương 4.**
 
 **Test:** `packages/engine/bench/**`
 
@@ -2750,7 +2773,7 @@ Chạy trên Postgres và Redis thật; mỗi người mua là một agent super
 - Tồn kho 1, 5 đơn song song → đúng một `201`, bốn `409 OUT_OF_STOCK` (kèm tên sản phẩm), cuối cùng `reserved = 1`, `stock = 1`.
 - N = 8 yêu cầu cho M = 3 sản phẩm → đúng 3 đơn thành công, `stock - reserved = 0`.
 - 6 đơn khóa hai sản phẩm theo thứ tự ngược nhau → chỉ có 201/409, không deadlock, mỗi sản phẩm `reserved = 2`.
-- Hết hạn giữ hàng: `expirePendingOrders` hủy đơn quá `expires_at`, nhả `reserved`, xóa `hold:order:{code}`, chạy lại không nhả hai lần; đơn đã thanh toán không bị hủy; một đơn lỗi không chặn các đơn khác; job định kỳ chạy theo chu kỳ và dừng được.
+- Hết hạn giữ hàng: `expirePendingOrders` hủy đơn quá `expires_at`, nhả `reserved`, chạy lại không nhả hai lần; đơn đã thanh toán không bị hủy; một đơn lỗi không chặn các đơn khác; job định kỳ chạy theo chu kỳ và dừng được.
 - Bấm đặt hàng trùng song song (khách vãng lai và tài khoản) → đúng một đơn, `reserved` chỉ tăng một lần.
 - Webhook trùng gửi song song → một lần PAID, một dòng `payments`; sweeper hết hạn chạy đua với webhook (lặp nhiều vòng) → mỗi đơn hoặc PAID đúng một lần hoặc được nhả đúng một lần, `reserved` cuối cùng bằng 0.
 - Thêm vào giỏ song song → không mất số lượng, không vượt tồn khả dụng (Redis và DB).
@@ -2830,13 +2853,18 @@ Trạng thái: **done**
 
 **Bối cảnh:** mô hình ngôn ngữ có thể "bịa" linh kiện, giá hoặc đề xuất bộ không tương thích - các lỗi coi như làm hỏng sản phẩm dù hệ thống chạy được.
 
-**Quyết định:** Gemini chỉ hiểu ý định và gọi tool; việc chọn linh kiện, kiểm tra tương thích và tính giá do Engine và cơ sở dữ liệu thực hiện. System prompt bắt buộc gọi tool trước khi nêu bất kỳ linh kiện/giá nào; thẻ cấu hình (BuildCard) được dựng từ dữ liệu tool, không từ văn bản LLM; hội thoại tóm tắt gửi lại cho model không chứa toàn bộ specs.
+**Quyết định:** Gemini chỉ hiểu ý định và gọi tool; việc chọn linh kiện, kiểm tra tương thích và tính giá do Engine và cơ sở dữ liệu thực hiện. Thẻ cấu hình (BuildCard) được dựng từ dữ liệu tool, không từ văn bản LLM; hội thoại tóm tắt gửi lại cho model không chứa toàn bộ specs. System prompt bắt buộc gọi tool trước khi nêu bất kỳ linh kiện/giá nào. Văn bản tự do của model được giám sát bằng bộ kiểm tra giá phía server: số tiền VND trong câu trả lời không khớp số nào do tool trả về (±1% hoặc làm tròn tới triệu) được ghi vào `chat_messages.price_check` và log cảnh báo, không sửa văn bản.
 
 **Lý do:** chống ảo giác, đảm bảo tính đúng đắn (NFR-05) và tương thích 100% bằng thuật toán có thể chứng minh được.
 
-**Hệ quả:** mọi khả năng mới của chatbot phải đi qua tool; chất lượng cấu hình độc lập với chất lượng LLM.
+**Hệ quả:**
+- Thẻ cấu hình và giá trên thẻ được **bảo đảm** đúng với DB/Engine; mọi khả năng mới của chatbot phải đi qua tool; chất lượng cấu hình độc lập với chất lượng LLM.
+- Văn bản tự do chỉ được **ràng buộc** bằng prompt và **giám sát** bằng bộ kiểm tra giá (không chặn), nên câu chữ sai vẫn có thể đến tay khách; tỷ lệ này được đo bằng chỉ số "price-mention mismatch rate" của eval.
+- Chế độ AI chưa được đánh giá trực tiếp (chưa có khóa Gemini); số liệu hiện có đều ở chế độ dự phòng.
 
-**Code:** `packages/engine/package.json`, `packages/shared/src/chat-events.ts`
+**Code:** `packages/engine/package.json`, `packages/shared/src/chat-events.ts`, `apps/api/src/modules/chat/price-check.ts`
+
+**Test:** `apps/api/src/modules/chat/price-check.test.ts`
 
 ### ADR-005 — Chế độ dự phòng rule-based khi không có khóa, lỗi 429 hoặc hết thời gian chờ
 

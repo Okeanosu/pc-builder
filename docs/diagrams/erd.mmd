@@ -1,4 +1,5 @@
-%% Mirrors apps/api/src/db/schema.ts (migrations 0000_init, 0001_commerce_hardening); update this diagram whenever the schema changes
+%% Mirrors apps/api/src/db/schema.ts (migrations 0000_init, 0001_commerce_hardening, 0002_chat_price_check); update this diagram whenever the schema changes
+%% INDEXES below is not a table: it is the index note block, so the indexes also show up in the rendered diagram
 %% Indexes: products_specs_gin = GIN(specs jsonb_path_ops); products_category_price_idx(category_id, price); products_name_search_idx = GIN(to_tsvector(simple, name))
 %% Indexes: inventory_movements_product_idx(product_id, created_at); builds_user_idx(user_id); orders_user_idx(user_id, created_at); orders_status_expires_idx(status, expires_at)
 %% Indexes: payments_status_created_idx(status, created_at); chat_messages_session_idx(session_id, created_at)
@@ -159,7 +160,20 @@ erDiagram
     jsonb build_ids "default []"
     chat_mode mode "AI|FALLBACK; nullable"
     int latency_ms "nullable"
+    jsonb price_check "nullable; AI replies: mentions + unmatched amounts from the server price check"
     timestamptz created_at "default now"
+  }
+  INDEXES {
+    gin products_specs_gin "products(specs jsonb_path_ops): JSONB containment filters on specs"
+    gin products_name_search_idx "products(to_tsvector simple, name): name full-text search"
+    btree products_category_price_idx "products(category_id, price): category listing by price"
+    unique cart_items_cart_product_build_uq "cart_items(cart_id, product_id, build_id) UNIQUE NULLS NOT DISTINCT"
+    btree payments_status_created_idx "payments(status, created_at): admin payment list by status"
+    btree orders_status_expires_idx "orders(status, expires_at): expiry job scan"
+    btree orders_user_idx "orders(user_id, created_at): order history"
+    btree inventory_movements_product_idx "inventory_movements(product_id, created_at): stock audit"
+    btree builds_user_idx "builds(user_id)"
+    btree chat_messages_session_idx "chat_messages(session_id, created_at): conversation replay"
   }
   categories ||--o{ products : "category_id"
   brands ||--o{ products : "brand_id"
