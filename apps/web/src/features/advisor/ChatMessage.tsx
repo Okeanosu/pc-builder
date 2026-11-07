@@ -1,8 +1,9 @@
 'use client';
 
 import { type BuildDTO, formatVndShort } from '@pc/shared';
-import { ArrowRight, OctagonX, RotateCcw, Square } from 'lucide-react';
+import { ArrowRight, LogIn, OctagonX, RotateCcw, Square } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ProductCard } from '@/components/domain/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
@@ -93,8 +94,9 @@ function AssistantBody({
   onShowBuilds,
   onRetry,
 }: Omit<ChatMessageProps, 'message' | 'className'> & { message: AssistantMessage }) {
-  const { text, tools, streaming, builds, products, error, stopped } = message;
+  const { text, tools, streaming, builds, products, error, needsLogin, stopped } = message;
   const { shown, revealing } = useSmoothText(text, streaming);
+  const pathname = usePathname() ?? '/advisor';
   const thinking = streaming && !text && tools.every((t) => t.status === 'done') && builds.length === 0;
   return (
     <div className="flex min-w-0 flex-col gap-3">
@@ -166,6 +168,14 @@ function AssistantBody({
         >
           <OctagonX className="size-4 shrink-0 text-danger-ink" aria-hidden />
           <span className="min-w-0 flex-1">{error}</span>
+          {needsLogin && (
+            <Button asChild size="sm">
+              <Link href={`/login?redirect=${encodeURIComponent(pathname)}`}>
+                <LogIn aria-hidden />
+                Đăng nhập lại
+              </Link>
+            </Button>
+          )}
           {onRetry && !streaming && (
             <Button size="sm" variant="secondary" onClick={() => onRetry(message.id)}>
               <RotateCcw aria-hidden />

@@ -2,7 +2,7 @@
 
 import type { BuildDTO, ChatEvent, ChatMode, ChatSessionDTO, ProductSummaryDTO } from '@pc/shared';
 import { create } from 'zustand';
-import { ChatStreamError } from '@/features/advisor/sse';
+import { CHAT_ERROR_TEXT, ChatStreamError } from '@/features/advisor/sse';
 import { type ChatTransport, httpChatTransport } from '@/features/advisor/transport';
 import { ApiError } from '@/lib/api';
 import { useAuthStore } from './auth';
@@ -33,6 +33,8 @@ export interface AssistantMessage {
   /** Mode reported by the `done` event; null for history rows and unfinished turns. */
   mode: ChatMode | null;
   error: string | null;
+  /** The error is an expired sign-in: offer a login link instead of only "Gửi lại". */
+  needsLogin?: boolean;
   stopped: boolean;
 }
 
@@ -187,6 +189,20 @@ const isGone = (err: unknown) =>
 
 const isAbort = (err: unknown) => err instanceof DOMException && err.name === 'AbortError';
 
+/** A 401 that survived the transport's one refresh attempt: the sign-in is over. */
+const isAuthExpired = (err: unknown) =>
+  (err instanceof ChatStreamError && err.code === 'AUTH_EXPIRED') ||
+  (err instanceof ApiError && err.status === 401);
+
+/**
+ * Set when a sign-in expired mid-conversation. While the user stays signed out the stored session still
+ * belongs to their account, so its 403 must not be read as "gone" and swapped for a fresh guest session.
+ */
+let authLost = false;
+useAuthStore.subscribe((s, prev) => {
+  if (s.user && !prev.user) authLost = false;
+});
+
 interface ChatState {
   sessionId: string | null;
   /** Mode of the latest finished turn (or the stored session); drives the "Chế độ dự phòng" badge. */
@@ -265,6 +281,9 @@ export const useChatStore = create<ChatState>((set, get) => {
       await sendOnce();
     } catch (err) {
       if (!isGone(err) || signal.aborted) throw err;
+      if (authLost && !useAuthStore.getState().user) {
+        throw new ChatStreamError('AUTH_EXPIRED', CHAT_ERROR_TEXT.authExpired, 401);
+      }
       adoptSession(null);
       await sendOnce();
     }
@@ -313,14 +332,18 @@ export const useChatStore = create<ChatState>((set, get) => {
         if (controller === own) set({ status: 'idle' });
         return;
       }
-      const message =
-        err instanceof ChatStreamError || err instanceof ApiError
+      const needsLogin = isAuthExpired(err);
+      if (needsLogin) authLost = true;
+      const message = needsLogin
+        ? CHAT_ERROR_TEXT.authExpired
+        : err instanceof ChatStreamError || err instanceof ApiError
           ? err.message
           : 'Trợ lý chưa trả lời được. Gửi lại tin nhắn để thử lần nữa.';
       patchAssistant(assistantId, (m) => ({
         ...m,
         streaming: false,
         error: message,
+        needsLogin,
         tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
       }));
       if (controller === own) set({ status: 'error' });
@@ -386,6 +409,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     reset() {
       controller?.abort();
       controller = null;
+      authLost = false;
       storage.set(null);
       set({ sessionId: null, mode: null, messages: [], status: 'idle', selectedBuildId: null });
     },

@@ -2,7 +2,13 @@ import type { ApiErrorBody, ChatEvent } from '@pc/shared';
 import { API_URL, getAccessToken } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 
-export type ChatStreamErrorCode = 'RATE_LIMITED' | 'SESSION_NOT_FOUND' | 'NETWORK' | 'HTTP' | 'BAD_STREAM';
+export type ChatStreamErrorCode =
+  | 'RATE_LIMITED'
+  | 'SESSION_NOT_FOUND'
+  | 'AUTH_EXPIRED'
+  | 'NETWORK'
+  | 'HTTP'
+  | 'BAD_STREAM';
 
 export class ChatStreamError extends Error {
   constructor(
@@ -20,6 +26,7 @@ export const CHAT_ERROR_TEXT = {
   network: 'Không kết nối được máy chủ tư vấn. Kiểm tra mạng rồi thử lại.',
   server: 'Máy chủ tư vấn đang bận. Thử gửi lại sau ít giây.',
   badStream: 'Kết nối tới trợ lý bị gián đoạn. Gửi lại tin nhắn để tiếp tục.',
+  authExpired: 'Phiên đăng nhập đã hết hạn. Đăng nhập lại để tiếp tục cuộc trò chuyện này.',
 } as const;
 
 function isChatEvent(value: unknown): value is ChatEvent {
@@ -99,6 +106,7 @@ export async function readSseStream(
 async function errorFromResponse(res: Response): Promise<ChatStreamError> {
   const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
   if (res.status === 429) return new ChatStreamError('RATE_LIMITED', CHAT_ERROR_TEXT.rateLimited, 429);
+  if (res.status === 401) return new ChatStreamError('AUTH_EXPIRED', CHAT_ERROR_TEXT.authExpired, 401);
   if (res.status === 404 || res.status === 403) {
     return new ChatStreamError(
       'SESSION_NOT_FOUND',
@@ -136,7 +144,8 @@ async function post(sessionId: string, text: string, signal?: AbortSignal): Prom
 /** Sends one message and resolves when the server closes the event stream. Rejects with ChatStreamError. */
 export async function streamChat(sessionId: string, text: string, { signal, onEvent }: StreamChatOptions) {
   let res = await post(sessionId, text, signal);
-  if (res.status === 401 && getAccessToken()) {
+  // The refresh cookie may outlive the in-memory token (e.g. after a reload), so try even without one.
+  if (res.status === 401) {
     const token = await useAuthStore.getState().refresh();
     if (token) res = await post(sessionId, text, signal);
   }

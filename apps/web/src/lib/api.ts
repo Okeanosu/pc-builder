@@ -26,11 +26,17 @@ export const registerRefresh = (fn: RefreshFn) => {
   refreshAccessToken = fn;
 };
 
-export async function api<T>(
+type ApiInit = RequestInit & { json?: unknown };
+
+/**
+ * Like `api`, plus the response headers (e.g. X-Cache). Any 401 outside /auth/ — TOKEN_EXPIRED included —
+ * triggers one refresh and one retry.
+ */
+export async function apiWithHeaders<T>(
   path: string,
-  init: RequestInit & { json?: unknown } = {},
+  init: ApiInit = {},
   retried = false,
-): Promise<T> {
+): Promise<{ data: T; headers: Headers }> {
   const headers = new Headers(init.headers);
   if (init.json !== undefined) headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
@@ -42,7 +48,7 @@ export async function api<T>(
   });
   if (res.status === 401 && !retried && refreshAccessToken && !path.startsWith('/auth/')) {
     const token = await refreshAccessToken();
-    if (token) return api<T>(path, init, true);
+    if (token) return apiWithHeaders<T>(path, init, true);
   }
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
@@ -53,7 +59,12 @@ export async function api<T>(
       body?.error.details,
     );
   }
-  if (res.status === 204) return undefined as T;
+  if (res.status === 204) return { data: undefined as T, headers: res.headers };
   const type = res.headers.get('content-type') ?? '';
-  return (type.includes('application/json') ? res.json() : res.text()) as Promise<T>;
+  const data = (await (type.includes('application/json') ? res.json() : res.text())) as T;
+  return { data, headers: res.headers };
+}
+
+export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
+  return (await apiWithHeaders<T>(path, init)).data;
 }
