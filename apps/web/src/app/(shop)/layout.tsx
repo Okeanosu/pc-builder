@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ChatWidget } from '@/components/ChatWidget';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { AuthCacheSync } from '@/features/auth/AuthCacheSync';
 import { ShopHeader } from '@/features/catalog/ShopHeader';
@@ -13,7 +14,7 @@ export default async function ShopLayout({ children }: { children: ReactNode }) 
       <main id="noi-dung" className="flex flex-1 flex-col">
         {children}
       </main>
-      {/* ChatWidget mounts here */}
+      <ChatWidget />
       <SiteFooter categories={categories} />
     </>
   );

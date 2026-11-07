@@ -309,14 +309,20 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
           <div className="grid gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start">
             {/* Always on white so banking apps can scan it, even in dark mode. */}
             <div className="mx-auto w-full max-w-64 rounded-md border border-border bg-white p-3">
-              {/* biome-ignore lint/performance/noImgElement: VietQR returns a ready PNG; optimising it adds nothing */}
-              <img
-                src={info.qrImageUrl}
-                alt={`Mã VietQR chuyển ${formatVnd(info.amount)} cho đơn ${info.orderCode}`}
-                className="block h-auto w-full"
-                width={540}
-                height={640}
-              />
+              {info.qrImageUrl ? (
+                // biome-ignore lint/performance/noImgElement: VietQR returns a ready PNG; optimising it adds nothing
+                <img
+                  src={info.qrImageUrl}
+                  alt={`Mã VietQR chuyển ${formatVnd(info.amount)} cho đơn ${info.orderCode}`}
+                  className="block h-auto w-full"
+                  width={540}
+                  height={640}
+                />
+              ) : (
+                <p className="py-10 text-center text-sm text-graphite-950">
+                  Đơn này không còn nhận chuyển khoản.
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-4">
               <dl className="flex flex-col">
