@@ -1,6 +1,6 @@
-import { pathToFileURL } from 'node:url';
 import { CATEGORY_KEYS } from '@pc/shared';
 import { sql } from 'drizzle-orm';
+import { isEntrypoint } from '../../lib/entrypoint';
 import { createDb, type Db } from '../client';
 import {
   benchmarks,
@@ -123,7 +123,7 @@ async function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isEntrypoint(import.meta.url)) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);

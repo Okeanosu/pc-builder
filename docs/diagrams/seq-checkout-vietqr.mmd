@@ -24,7 +24,7 @@ sequenceDiagram
     end
     A->>DB: INSERT orders (PENDING_PAYMENT, guest_id, expires_at = now + 15 phút), order_items (snapshot tên và giá), xóa dòng giỏ đã đặt
   end
-  A->>R: afterCommit (lỗi chỉ ghi log): SET hold:order:{code} EX 15 phút, trừ giỏ khách theo số lượng đã đọc, nhả khóa checkout, INCR catalog:version
+  A->>R: afterCommit (lỗi chỉ ghi log): trừ giỏ khách theo số lượng đã đọc, nhả khóa checkout, INCR catalog:version
   A-->>W: 201 {code}
   W->>A: GET /api/orders/:code/payment
   A-->>W: PaymentInfoDTO (qrImageUrl chỉ khi PENDING_PAYMENT, ngược lại null) + expiresAt
@@ -56,7 +56,7 @@ sequenceDiagram
         A->>DB: payments.status = MANUAL_REVIEW, đơn giữ nguyên
       end
     end
-    A->>R: DEL hold:order:{code}, INCR catalog:version
+    A->>R: INCR catalog:version
     A-->>B: 200 {success: true}
   end
   W->>A: GET /api/orders/:code/payment
@@ -65,7 +65,7 @@ sequenceDiagram
   opt Quá hạn 15 phút không thanh toán
     J->>DB: mỗi đơn PENDING_PAYMENT có expires_at < now: UPDATE CANCELLED WHERE status = PENDING_PAYMENT, reserved = reserved - q
     Note over J,DB: chạy đua với webhook thì chỉ một bên thắng nhờ điều kiện trạng thái
-    J->>R: DEL hold:order:{code}, INCR catalog:version
+    J->>R: INCR catalog:version
   end
   opt Môi trường dev hoặc ADMIN
     W->>A: POST /api/payments/:orderCode/simulate (cùng đường xử lý, provider SIMULATOR)

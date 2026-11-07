@@ -4,7 +4,6 @@ export {
   afterCommit,
   afterTransitions,
   createOrdersService,
-  holdKey,
   type OrderRow,
   type OrdersService,
   toOrderDTO,

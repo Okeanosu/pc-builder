@@ -50,9 +50,8 @@ describe('POST /api/orders', () => {
 
     expect((await h.getProduct(cpu.id)).reserved).toBe(1);
     expect((await h.getProduct(ram.id)).reserved).toBe(3);
-    const ttl = await h.deps.redis.ttl(`hold:order:${order.code}`);
-    expect(ttl).toBeGreaterThan(holdMs / 1000 - 5);
-    expect(ttl).toBeLessThanOrEqual(holdMs / 1000);
+    // The hold lives in orders.expires_at (read by the expiry job); nothing is mirrored into Redis.
+    expect(await h.deps.redis.keys('hold:order:*')).toEqual([]);
     expect((await agent.get('/api/cart')).body.items).toEqual([]);
     expect(await getCatalogVersion(h.deps.redis)).toBeGreaterThan(versionBefore);
   });
@@ -182,7 +181,6 @@ describe('reading and cancelling orders', () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('CANCELLED');
     expect((await h.getProduct(cpu.id)).reserved).toBe(0);
-    expect(await h.deps.redis.exists(`hold:order:${code}`)).toBe(0);
 
     const again = await agent.post(`/api/orders/${code}/cancel`);
     expect(again.status).toBe(409);
