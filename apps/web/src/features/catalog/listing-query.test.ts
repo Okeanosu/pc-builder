@@ -6,6 +6,7 @@ import {
   pageWindow,
   parseListingParams,
   queryString,
+  setCategory,
   setPage,
   setPriceRange,
   setSpecRange,
@@ -41,6 +42,11 @@ describe('parseListingParams', () => {
     expect(q.specs).toEqual({ socket: ['AM5', 'AM4'] });
     expect(q.brand).toEqual(['AMD']);
     expect(q.page).toBe(1);
+  });
+
+  it('reads a known category only', () => {
+    expect(parseListingParams(new URLSearchParams('category=gpu')).category).toBe('gpu');
+    expect(parseListingParams(new URLSearchParams('category=phone')).category).toBeUndefined();
   });
 
   it('drops malformed values instead of throwing', () => {
@@ -100,6 +106,11 @@ describe('toApiSearch', () => {
     const s = toApiSearch(setSpecRange(EMPTY_QUERY, 'vramGB', 8, undefined), 'gpu');
     expect(new URLSearchParams(s).get('specsMin[vramGB]')).toBe('8');
   });
+
+  it('lets the path category override a category filter', () => {
+    const s = new URLSearchParams(toApiSearch({ ...EMPTY_QUERY, category: 'ram' }, 'gpu'));
+    expect(s.getAll('category')).toEqual(['gpu']);
+  });
 });
 
 describe('filter updates', () => {
@@ -135,6 +146,7 @@ describe('filter updates', () => {
     q = toggleBrand(q, 'AMD');
     q = { ...q, inStock: true, q: 'ryzen', sort: 'name' };
     expect(countActiveFilters(q)).toBe(5);
+    expect(countActiveFilters(setCategory(q, 'cpu'))).toBe(6);
     const cleared = clearFilters(q);
     expect(countActiveFilters(cleared)).toBe(0);
     expect(cleared).toMatchObject({ q: 'ryzen', sort: 'name', page: 1 });

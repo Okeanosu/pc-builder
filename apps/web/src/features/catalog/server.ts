@@ -12,6 +12,7 @@ import {
 import { cacheLife } from 'next/cache';
 import { DEFAULT_NAV_CATEGORIES, type NavCategory } from '@/components/layout/SiteHeader';
 import { API_URL } from '@/lib/api';
+import type { BrandCount } from './filters';
 
 /** Server-to-server base URL; inside Docker the API is not reachable through the browser's hostname. */
 const SERVER_API_URL = process.env.API_INTERNAL_URL ?? API_URL;
@@ -54,11 +55,6 @@ export async function getFacets(category: CategoryKey): Promise<FacetDTO[]> {
   'use cache';
   cacheLife('minutes');
   return (await getJson<FacetDTO[]>(`/categories/${category}/facets`)) ?? [];
-}
-
-export interface BrandCount {
-  name: string;
-  count: number;
 }
 
 /** The products API has no brand facet, so brands are counted from the category's listing (≤ 120 products). */

@@ -1,4 +1,4 @@
-import type { CategoryKey, ProductQuery } from '@pc/shared';
+import { CATEGORY_KEYS, type CategoryKey, type ProductQuery } from '@pc/shared';
 
 export type SortKey = ProductQuery['sort'];
 
@@ -17,6 +17,8 @@ export const PAGE_SIZE = 24;
 /** Filter state of a product listing. Field names mirror the backend query parameters. */
 export interface ListingQuery {
   q?: string;
+  /** Only used on /search; category pages take it from the path. */
+  category?: CategoryKey;
   brand: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -93,6 +95,9 @@ export function parseListingParams(raw: RawParams): ListingQuery {
         if (q) out.q = q;
         break;
       }
+      case 'category':
+        if ((CATEGORY_KEYS as readonly string[]).includes(value)) out.category = value as CategoryKey;
+        break;
       case 'brand':
         out.brand = uniq([...out.brand, ...splitList(value)]);
         break;
@@ -126,6 +131,7 @@ const sortedKeys = (o: object) => Object.keys(o).sort();
 export function toSearchParams(query: ListingQuery): URLSearchParams {
   const p = new URLSearchParams();
   if (query.q) p.set('q', query.q);
+  if (query.category) p.set('category', query.category);
   if (query.brand.length > 0) p.set('brand', [...query.brand].sort().join(','));
   if (query.minPrice !== undefined) p.set('minPrice', String(query.minPrice));
   if (query.maxPrice !== undefined) p.set('maxPrice', String(query.maxPrice));
@@ -159,6 +165,7 @@ export function queryString(query: ListingQuery): string {
 /** Number of active filter groups (sort, page and the search text are not filters). */
 export function countActiveFilters(query: ListingQuery): number {
   let n = 0;
+  if (query.category) n++;
   if (query.brand.length > 0) n++;
   if (query.minPrice !== undefined || query.maxPrice !== undefined) n++;
   if (query.inStock) n++;
@@ -217,6 +224,10 @@ export function setInStock(query: ListingQuery, inStock: boolean): ListingQuery 
 
 export function setSort(query: ListingQuery, sort: SortKey): ListingQuery {
   return reset(query, { sort });
+}
+
+export function setCategory(query: ListingQuery, category: CategoryKey | undefined): ListingQuery {
+  return reset(query, { category });
 }
 
 export function setPage(query: ListingQuery, page: number): ListingQuery {
