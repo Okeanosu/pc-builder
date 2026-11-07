@@ -274,3 +274,151 @@ describe('login rate limit', () => {
     }
   });
 });
+
+describe('POST /api/auth/password', () => {
+  const email = 'doi.mat.khau@example.com';
+  const oldPassword = 'MatKhauCu@123';
+  const newPassword = 'MatKhauMoi@456';
+  let userId: string;
+
+  beforeAll(async () => {
+    const reg = await request(app)
+      .post('/api/auth/register')
+      .send({ email, password: oldPassword, fullName: 'Người Đổi Mật Khẩu' });
+    userId = reg.body.user.id;
+  });
+
+  const login = (password: string) => request(app).post('/api/auth/login').send({ email, password });
+
+  it('requires a signed-in user and validates the body', async () => {
+    const anonymous = await request(app)
+      .post('/api/auth/password')
+      .send({ currentPassword: oldPassword, newPassword });
+    expect(anonymous.status).toBe(401);
+    const token = (await login(oldPassword)).body.accessToken as string;
+    const short = await request(app)
+      .post('/api/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: oldPassword, newPassword: 'ngan' });
+    expect(short.status).toBe(422);
+    expect(short.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('answers a wrong current password with 400 INVALID_CURRENT_PASSWORD and keeps the old one', async () => {
+    const token = (await login(oldPassword)).body.accessToken as string;
+    const res = await request(app)
+      .post('/api/auth/password')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ currentPassword: 'sai-mat-khau', newPassword });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('INVALID_CURRENT_PASSWORD');
+    expect((await login(oldPassword)).status).toBe(200);
+  });
+
+  it('changes the password, revokes every refresh token of the user and starts a fresh session', async () => {
+    const first = await login(oldPassword);
+    const second = await login(oldPassword);
+    expect((await t.deps.redis.keys(`rt:${userId}:*`)).length).toBeGreaterThanOrEqual(2);
+
+    const res = await request(app)
+      .post('/api/auth/password')
+      .set('Authorization', `Bearer ${first.body.accessToken}`)
+      .send({ currentPassword: oldPassword, newPassword });
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toEqual(expect.any(String));
+    expect(res.body.user).toMatchObject({ id: userId, email });
+    expect(cookie(res, 'access_token')).toMatch(/HttpOnly/);
+    expect(cookie(res, 'refresh_token')).toMatch(/Path=\/api\/auth/);
+
+    expect(await t.deps.redis.keys(`rt:${userId}:*`)).toHaveLength(1);
+    for (const old of [first, second]) {
+      const refreshed = await request(app)
+        .post('/api/auth/refresh')
+        .set('Cookie', cookiePair(old, 'refresh_token'));
+      expect(refreshed.status).toBe(401);
+    }
+    const fresh = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', cookiePair(res, 'refresh_token'));
+    expect(fresh.status).toBe(200);
+
+    expect((await login(oldPassword)).status).toBe(401);
+    expect((await login(newPassword)).status).toBe(200);
+  });
+});
+
+describe('expired access tokens', () => {
+  const expiredFor = (user: { id: string; email: string; role: string }) =>
+    jwt.sign(
+      {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        typ: 'access',
+        exp: Math.floor(Date.now() / 1000) - 10,
+      },
+      t.deps.env.JWT_ACCESS_SECRET,
+    );
+  const signIn = () => {
+    const c = seedUser('CUSTOMER');
+    return request(app).post('/api/auth/login').send({ email: c.email, password: c.password });
+  };
+
+  it('answers an expired Bearer token with 401 TOKEN_EXPIRED instead of serving the request as a guest', async () => {
+    const expired = expiredFor((await signIn()).body.user);
+    const res = await request(app).get('/api/cart').set('Authorization', `Bearer ${expired}`);
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('TOKEN_EXPIRED');
+  });
+
+  it('lets /api/auth/* through so the client can still refresh', async () => {
+    const session = await signIn();
+    const expired = expiredFor(session.body.user);
+    const res = await request(app)
+      .post('/api/auth/refresh')
+      .set('Authorization', `Bearer ${expired}`)
+      .set('Cookie', cookiePair(session, 'refresh_token'));
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toEqual(expect.any(String));
+  });
+
+  it('keeps the anonymous behaviour for an expired cookie token and for tokens that are not ours', async () => {
+    const expired = expiredFor((await signIn()).body.user);
+    const byCookie = await request(app).get('/api/cart').set('Cookie', `access_token=${expired}`);
+    expect(byCookie.status).toBe(200);
+    const forged = jwt.sign(
+      { sub: 'x', typ: 'access', exp: Math.floor(Date.now() / 1000) - 10 },
+      'not-our-secret',
+    );
+    for (const token of ['garbage', forged]) {
+      const res = await request(app).get('/api/cart').set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+    }
+  });
+});
+
+describe('register rate limit', () => {
+  const invalid = { email: 'x', password: '1', fullName: '' };
+
+  it('allows 5 registrations per minute per IP, then answers 429', async () => {
+    await t.deps.redis.flushdb();
+    const limited = express();
+    limited.use(express.json());
+    limited.use(cookieParser());
+    limited.use('/api', createAuthRouter(t.deps, { registerRateLimit: true }));
+    limited.use(errorHandler);
+
+    const statuses: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      statuses.push((await request(limited).post('/api/auth/register').send(invalid)).status);
+    }
+    expect(statuses.slice(0, 5)).toEqual([422, 422, 422, 422, 422]);
+    expect(statuses[5]).toBe(429);
+  });
+
+  it('is off in the test environment by default', async () => {
+    for (let i = 0; i < 7; i++) {
+      expect((await request(app).post('/api/auth/register').send(invalid)).status).toBe(422);
+    }
+  });
+});

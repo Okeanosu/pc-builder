@@ -69,7 +69,7 @@ function throwIfRejected(result: CartWriteResult, row: ProductWithRefs): void {
   throw insufficientStock(row, result.total);
 }
 
-export function toCartDTO(lines: PricedCartLine[]): CartDTO {
+export function toCartDTO(lines: PricedCartLine[], assemblyFee: number): CartDTO {
   const items: CartItemDTO[] = lines.map((l) => ({
     id: l.id,
     product: toProductSummary(l.row),
@@ -81,13 +81,14 @@ export function toCartDTO(lines: PricedCartLine[]): CartDTO {
     items,
     subtotal: items.reduce((s, i) => s + i.lineTotal, 0),
     itemCount: items.reduce((s, i) => s + i.qty, 0),
+    assemblyFee,
   };
 }
 
 const MERGE_LOCK_MS = 10_000;
 
-export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
-  const { db, redis } = deps;
+export function createCartService(deps: Pick<AppDeps, 'db' | 'redis' | 'env'>) {
+  const { db, redis, env } = deps;
 
   /**
    * Moves a pending guest cart into the user's DB cart. The DB upsert runs first and the guest hash is
@@ -160,7 +161,7 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
   }
 
   async function view(store: CartStore): Promise<CartDTO> {
-    return toCartDTO(await price(await store.list()));
+    return toCartDTO(await price(await store.list()), env.ASSEMBLY_FEE);
   }
 
   return {

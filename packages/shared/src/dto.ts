@@ -3,6 +3,7 @@ import type {
   BuildSource,
   CategoryKey,
   ChatMode,
+  InfeasibleReason,
   OrderStatus,
   OrderType,
   PaymentStatus,
@@ -112,7 +113,7 @@ export interface RecommendationResultDTO {
     prunedByBound: number;
     timeMs: number;
   };
-  infeasibleReason?: string;
+  infeasibleReason?: InfeasibleReason;
   minFeasibleBudget?: number;
 }
 
@@ -128,6 +129,8 @@ export interface CartDTO {
   items: CartItemDTO[];
   subtotal: number;
   itemCount: number;
+  /** Fee added to an assembled-build order at checkout (server ASSEMBLY_FEE), not included in `subtotal`. */
+  assemblyFee: number;
 }
 
 export interface OrderItemDTO {

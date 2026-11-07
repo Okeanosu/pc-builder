@@ -6,7 +6,7 @@
 
 | Hạng mục | Kết quả |
 | --- | --- |
-| Kiểm thử tự động (unit + integration) | 897 ca trên 70 tệp, tất cả đạt (Engine 175, API 529, Web 166, Graph CLI 27) |
+| Kiểm thử tự động (unit + integration) | **948 ca trên 75 tệp**, tất cả đạt (Engine 175, API 579, Web 167, Graph CLI 27), đếm lại ngày 2026-11-08 sau đợt sửa cuối phía API; lúc QA đo là 897 ca trên 70 tệp |
 | Độ phủ nhánh `packages/engine` | 98,85% (mục tiêu ≥ 90%) |
 | E2E Playwright | 6 test (5 test chạy ở cả 1440 px và 390 px, smoke chạy 1 khung nhìn) + bước đăng nhập; 3 lần chạy độc lập, mỗi test lặp 3 lần/lần chạy (smoke và a11y có từ lần 2): 87 lượt thực thi, 0 lỗi, 0 lượt chập chờn |
 | Hiệu năng Engine (trích bench) | p95 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms) |
@@ -33,22 +33,22 @@
 
 ## 2. Chiến lược và tháp kiểm thử
 
-Số lượng lấy từ chính các lần chạy trong task này (bảng kết quả JSON của Vitest/Playwright), không đếm tay.
+Số lượng lấy từ chính các lần chạy (bảng kết quả của Vitest/Playwright), không đếm tay. Các dòng unit/integration dưới đây được đếm lại ngày 2026-11-08 sau đợt sửa cuối phía API (đổi mật khẩu, token hết hạn, kiểm tra giá trong chat, fail-closed khi triển khai…); thời gian chạy và số lần chạy lặp ở mục 8 vẫn là số đo của QA trên 529 ca.
 
 | Tầng | Gói / công cụ | Tệp | Ca kiểm thử | Thời gian chạy | Ghi chú |
 | --- | --- | ---: | ---: | ---: | --- |
 | Unit — Engine | `packages/engine`, Vitest | 9 | 175 | 1,6 s | luật C01–C15, AC-3, FC, B&B, top-K, vô nghiệm |
-| Unit — API (hàm thuần) | `apps/api`, Vitest | 16 | 332 | — | NLU dự phòng (113 ca), máy trạng thái đơn (75 ca), VietQR, validator specSchema, orchestrator với LLM giả… |
-| Integration — API | `apps/api`, Vitest + Supertest, Postgres + Redis thật | 21 | 197 | — | 19 tệp `*.int.test.ts` (180 ca) + `app.test.ts` (2) + `seed.test.ts` (15) |
-| (cả gói API) | | 37 | 529 | 110,4–111,7 s | 4 lần chạy, xem mục 8 |
-| Unit — Web | `apps/web`, Vitest + jsdom | 22 | 166 | 1,0 s | store, parser SSE, ánh xạ bộ lọc ↔ URL, form… |
+| Unit — API (hàm thuần) | `apps/api`, Vitest | 20 | 360 | — | NLU dự phòng (113 ca), máy trạng thái đơn (75 ca), VietQR, validator specSchema, orchestrator với LLM giả, kiểm tra giá trong câu trả lời AI, cấu hình production fail-closed… |
+| Integration — API | `apps/api`, Vitest + Supertest, Postgres + Redis thật | 21 | 219 | — | 19 tệp `*.int.test.ts` (201 ca) + `app.test.ts` (2) + `seed.test.ts` (16) |
+| (cả gói API) | | 41 | 579 | 125,8 s | lần chạy ngày 2026-11-08 sau đợt sửa cuối; 4 lần chạy QA (529 ca, 110,4–111,7 s) ở mục 8 |
+| Unit — Web | `apps/web`, Vitest + jsdom | 23 | 167 | 1,0 s | store, parser SSE, ánh xạ bộ lọc ↔ URL, form… |
 | Unit — Spec-Code Graph | `tools/graph`, Vitest | 2 | 27 | 0,2 s | |
 | E2E | `e2e/`, Playwright | 6 | 6 (+1 bước đăng nhập) | ~3 phút/lần chạy (gồm build web) | 1440 px và 390 px |
 | Hiệu năng | bench Engine, autocannon, đo SSE | — | 3 kịch bản tải + 20 lượt chat | 90 s + 2 s | mục 5 |
 | Chất lượng AI | `apps/api/eval` | — | 30 kịch bản | — | mục 6 |
 | UAT | Google Form (SUS) | — | — | — | chưa thực hiện trong task này |
 
-Tổng số ca tự động không kể E2E: 175 + 529 + 166 + 27 = **897**, tất cả đạt.
+Tổng số ca tự động không kể E2E (đếm lại 2026-11-08): 175 + 579 + 167 + 27 = **948**, tất cả đạt.
 
 ## 3. Độ phủ mã
 
@@ -131,26 +131,28 @@ Ghi chú trung thực: trong lúc viết test có một số lần đỏ do chí
 
 ### 5.1 Optimization Engine (trích dẫn)
 
-> Nguồn: `packages/engine/bench/results.md`, sinh bởi `pnpm --filter @pc/engine bench` ngày 2026-11-07 (Apple M3, Node v22.20.0). Task QA không chạy lại bench; bảng dưới chép nguyên số liệu. Catalog tổng hợp từ PRNG có hạt giống cố định, 4 kịch bản (office 20M, gaming 25M, graphics 40M, ai 60M), giới hạn 2.000.000 nút. † = có lần chạm giới hạn nút (kết quả có thể không tối ưu).
+> Nguồn: `packages/engine/bench/results.md`, sinh bởi `pnpm --filter @pc/engine bench` ngày 2026-11-07 (Apple M3, Node v22.20.0). Task QA không chạy lại bench; bảng dưới chép nguyên số liệu, trừ cột "tối ưu" của các dòng đầy đủ (xem ‡). Catalog tổng hợp từ PRNG có hạt giống cố định, 4 kịch bản (office 20M, gaming 25M, graphics 40M, ai 60M), giới hạn 2.000.000 nút. † = có lần chạm giới hạn nút (kết quả có thể không tối ưu).
 
 | Catalog (còn hàng) | Biến thể | p50 ms | p95 ms | số nút TB | tối ưu |
 | --- | --- | ---: | ---: | ---: | --- |
 | 50 (47) | vét cạn | 38,4 | 57,09 | 1.581.865 | 12/12 |
 | 50 (47) | backtracking | 3,09 | 5,87 | 35.315 | 12/12 |
 | 50 (47) | + forward checking | 1,55 | 9,9 | 29.034 | 12/12 |
-| 50 (47) | đầy đủ (AC-3 + FC + B&B) | 0,45 | 1,19 | 300 | 100/100 |
+| 50 (47) | đầy đủ (AC-3 + FC + B&B) | 0,45 | 1,19 | 300 | mốc so sánh ‡ |
 | 100 (87) | vét cạn | 48,39 | 76,37 | 2.000.000† | 0/12 |
 | 100 (87) | backtracking | 127,12 | 184,15 | 1.757.769† | 6/12 |
 | 100 (87) | + forward checking | 245,36 | 272,19 | 1.531.640† | 6/12 |
-| 100 (87) | đầy đủ | 1,02 | 1,98 | 973 | 100/100 |
+| 100 (87) | đầy đủ | 1,02 | 1,98 | 973 | mốc so sánh ‡ |
 | 250 (221) | vét cạn | 44,56 | 52,42 | 2.000.000† | 0/12 |
 | 250 (221) | backtracking | 171,2 | 193,89 | 2.000.000† | 0/12 |
 | 250 (221) | + forward checking | 232,01 | 243,38 | 2.000.000† | 0/12 |
-| **250 (221)** | **đầy đủ** | **6,77** | **11,5** | 8.937 | 100/100 |
+| **250 (221)** | **đầy đủ** | **6,77** | **11,5** | 8.937 | mốc so sánh ‡ |
 | 500 (443) | vét cạn | 52,77 | 69,11 | 2.000.000† | 0/12 |
 | 500 (443) | backtracking | 167,49 | 188,08 | 2.000.000† | 0/12 |
 | 500 (443) | + forward checking | 228,83 | 260,32 | 2.000.000† | 0/12 |
-| 500 (443) | đầy đủ | 10,84 | 40,29 | 16.775 | 100/100 |
+| 500 (443) | đầy đủ | 10,84 | 40,29 | 16.775 | mốc so sánh ‡ |
+
+‡ Cột "tối ưu" so điểm của cấu hình tốt nhất mỗi chiến lược với **chính bản đầy đủ**, nên ở dòng đầy đủ nó luôn là 100/100 theo định nghĩa (tự so với mình) và không phải bằng chứng tối ưu. Bằng chứng tối ưu của bản đầy đủ là phép kiểm tra tương đương `pnpm --filter @pc/engine bench:equivalence`: so bản đầy đủ với forward checking **vét cạn** (không giới hạn nút) trên catalog ngẫu nhiên đủ nhỏ để vét cạn chạy hết. Chạy lại ngày 2026-11-08: **1.080 ca** (catalog 48 sản phẩm, 30 hạt giống × 4 mục đích × 3 ngân sách × 3 biến thể yêu cầu) và **432 ca** (catalog 72 sản phẩm, 12 hạt giống), tổng **1.512 ca, 0 sai khác** (cùng cấu hình, nhãn, điểm, tổng giá và chẩn đoán vô nghiệm), 0 vi phạm hợp đồng nhãn, 0 ca bị bỏ vì chạm trần; mỗi lần chạy dưới 10 giây. Ở catalog 100–500 sản phẩm, vét cạn chạm trần 2.000.000 nút nên không có mốc độc lập; kết luận tối ưu ở các cỡ đó dựa trên tính đúng của thuật toán cộng với phép tương đương ở cỡ nhỏ.
 
 Không gian vét cạn của kịch bản gaming 25M trên catalog 250 sản phẩm là 3,16·10¹¹ tổ hợp (≈ 2,1 giờ ở tốc độ đo được), trong khi bản đầy đủ duyệt trung bình 8.937 nút. NFR-01 (p95 < 300 ms trên ~250 sản phẩm) **đạt** ở mức Engine.
 
@@ -250,14 +252,14 @@ Ba biến thể của tệp thăm dò: (a) `request(app)` — mỗi yêu cầu m
 
 ### 8.2 Phân tích và giả thuyết
 
-1. **Bản vá keep-alive chỉ phủ 12/19 tệp dùng Supertest.** `test/test-support.ts` đặt `http.globalAgent = new http.Agent({ keepAlive: false })`, nhưng Vitest cô lập module theo từng tệp, nên dòng này chỉ có hiệu lực ở các tệp import `test-support.ts`. Bảy tệp không import: `app.test.ts`, `auth.int.test.ts`, `builds.int.test.ts`, `catalog.int.test.ts`, `chat.int.test.ts`, `compatibility.int.test.ts`, `recommendation.int.test.ts` — **trùng đúng hai tệp từng báo lỗi**. Bằng chứng gián tiếp: log pino của các tệp đã vá cho thấy header `connection: close`; các tệp chưa vá chạy với keep-alive mặc định (Node 22: `keepAlive: true`, `timeout: 5000`). Tuy vậy, Lead ghi rằng thăm dò của Lead vẫn thấy reset khi đã `keepAlive=false`, nên keep-alive không giải thích được toàn bộ.
+1. **Bản vá keep-alive lúc đo chỉ phủ 12/19 tệp dùng Supertest (nay đã phủ mọi tệp, xem 8.3).** `test/test-support.ts` khi đó đặt `http.globalAgent = new http.Agent({ keepAlive: false })`, nhưng Vitest cô lập module theo từng tệp, nên dòng này chỉ có hiệu lực ở các tệp import `test-support.ts`. Bảy tệp không import: `app.test.ts`, `auth.int.test.ts`, `builds.int.test.ts`, `catalog.int.test.ts`, `chat.int.test.ts`, `compatibility.int.test.ts`, `recommendation.int.test.ts` — **trùng đúng hai tệp từng báo lỗi**. Bằng chứng gián tiếp: log pino của các tệp đã vá cho thấy header `connection: close`; các tệp chưa vá chạy với keep-alive mặc định (Node 22: `keepAlive: true`, `timeout: 5000`). Tuy vậy, Lead ghi rằng thăm dò của Lead vẫn thấy reset khi đã `keepAlive=false`, nên keep-alive không giải thích được toàn bộ.
 2. **Không phải do tái sử dụng cổng trên macOS.** macOS cấp cổng cho `listen(0)` tuần tự: 3.000 server liên tiếp nhận 3.000 cổng khác nhau, 2.997 cặp liền kề tăng đúng 1 (`port-reuse` trong scratchpad), nên kịch bản "socket keep-alive cũ trỏ tới cổng vừa được cấp lại cho server mới" gần như không xảy ra trong một tiến trình.
 3. **Giả thuyết còn lại (môi trường, chưa kiểm chứng):** mỗi yêu cầu `request(app)` tiêu tốn 2 cổng tạm (server + client) trong dải dùng chung 49152–65535 (16.384 cổng), và kết nối đã đóng giữ trạng thái TIME_WAIT 30 s (`net.inet.tcp.msl` = 15 s). Khi 5 agent cùng chạy bộ test (mỗi bộ hàng nghìn yêu cầu), dải cổng có thể quay vòng trong vài phút và va chạm với kết nối cũ của tiến trình khác. Điều này khớp với việc tỷ lệ lỗi dao động theo số agent chạy song song, còn tải CPU đơn thuần (phép thử 8.1) thì không gây lỗi.
 4. **bcrypt chặn CPU:** đăng nhập chậm hơn (bcryptjs cost 10) nên là nơi lộ lỗi nhiều nhất, nhưng thăm dò 900 lần đăng nhập dưới tải 133 không lỗi, nên bcrypt tự nó không phải nguyên nhân.
 
-### 8.3 Đề xuất (chưa áp dụng, vì không tái hiện được)
+### 8.3 Bản vá đã áp dụng
 
-Không thêm retry (sẽ che lỗi). Sửa tối thiểu, chỉ trong harness `apps/api/test`, không đụng code ứng dụng:
+**Trạng thái (cập nhật 2026-11-08): đã áp dụng.** `apps/api/test/setup-env.ts` (là `setupFiles` của Vitest, chạy trước mọi tệp test) đặt `http.globalAgent = new http.Agent({ keepAlive: false })`, và dòng tương ứng trong `test-support.ts` đã bỏ, nên cả 19 tệp dùng Supertest chạy cùng một điều kiện. Không thêm retry (sẽ che lỗi). Bản sửa tối thiểu, chỉ trong harness `apps/api/test`, không đụng code ứng dụng:
 
 ```diff
 --- a/apps/api/test/setup-env.ts

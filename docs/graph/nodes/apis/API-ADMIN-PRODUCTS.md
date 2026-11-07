@@ -20,4 +20,4 @@ diagrams: []
 - `DELETE /api/admin/products/:id` (ẩn mềm, `status = HIDDEN`)
 - `PUT /api/admin/categories/:id/schema` (chỉ ADMIN, mảng `SpecField`)
 
-Chỉ ADMIN/STAFF. Trả `AdminProductDTO` (thêm `stockOnHand`, `reserved`, `status`). Thông số được kiểm tra theo `specSchema` của danh mục và schema có kiểu của Engine; lỗi trả 422 kèm chi tiết từng trường (`specs.socket`), trùng SKU/slug trả `409 DUPLICATE`.
+Chỉ ADMIN/STAFF. Trả `AdminProductDTO` (thêm `stockOnHand`, `reserved`, `status`). Thông số được kiểm tra theo `specSchema` của danh mục và schema có kiểu của Engine; lỗi trả 422 kèm chi tiết từng trường (`specs.socket`), trùng SKU/slug trả `409 DUPLICATE`. `commercialBoost` (mức ưu tiên trong bộ máy gợi ý) chỉ ADMIN được đặt, vì nó lái kết quả gợi ý như trọng số mục đích: STAFF gửi trường này trong `PATCH` nhận `403 FORBIDDEN_FIELD` (`details.fields = ['commercialBoost']`); khi tạo mới, STAFF chỉ được gửi giá trị trung tính `0`. Các trường khác STAFF vẫn sửa được.

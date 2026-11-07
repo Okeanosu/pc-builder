@@ -272,6 +272,27 @@ describe('runTurn — AI mode', () => {
     expect(res.assistantText).toMatch(/Xin lỗi/);
     expect(h.tokens()).toBe(res.assistantText);
     expect(h.done()?.mode).toBe('AI');
+    // The canned apology quotes "25 triệu" as an example; only text the model wrote is price-checked.
+    expect(res.priceCheck).toEqual({ mentions: 0, unmatched: [] });
+  });
+
+  it('checks the amounts the model wrote against tool data, without changing the reply', async () => {
+    const reply = 'Bộ cân bằng 24.850.000₫, GPU chiếm khoảng 10,4 triệu; bộ tiết kiệm chỉ 19.000.000₫.';
+    const llm = fakeLlm([
+      [call('recommend_builds', { budget: 25_000_000, purpose: 'gaming' })],
+      [text(reply)],
+    ]);
+    const h = harness();
+    const res = await runTurn(
+      { ...base, userText: 'chơi game 25 triệu' },
+      { llm, tools: registry(recommendTool()), emit: h.emit },
+    );
+    expect(res.assistantText).toBe(reply);
+    expect(h.tokens()).toBe(reply);
+    expect(res.priceCheck).toEqual({
+      mentions: 3,
+      unmatched: [{ text: '19.000.000₫', amount: 19_000_000 }],
+    });
   });
 
   it('tells the model when a tool fails and keeps going', async () => {
@@ -354,6 +375,7 @@ describe('runTurn — fallback mode', () => {
     expect(res.assistantText).toContain('Nguồn chỉ dư 15% công suất');
     expect(res.buildIds).toEqual(['b1', 'b2']);
     expect(res.intent).toMatchObject({ budget: 25_000_000, purpose: 'gaming' });
+    expect(res.priceCheck).toBeUndefined();
   });
 
   it('falls back on 429 after a partial stream without duplicating the partial text', async () => {

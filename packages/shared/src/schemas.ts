@@ -55,6 +55,11 @@ export const registerSchema = z.object({
     .optional(),
 });
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1) });
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(72),
+});
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
 export const addCartItemSchema = z.object({
   productId: z.string(),

@@ -29,24 +29,27 @@ git clone <repo-url> pc-builder && cd pc-builder
 cp infra/.env.prod.example infra/.env.prod
 ```
 
-Sinh các secret ngẫu nhiên:
+Sinh các secret ngẫu nhiên (mỗi biến một giá trị riêng):
 
 ```bash
 openssl rand -hex 32   # dùng cho JWT_ACCESS_SECRET
 openssl rand -hex 32   # dùng cho JWT_REFRESH_SECRET (khác giá trị trên)
-openssl rand -hex 16   # dùng cho POSTGRES_PASSWORD và SEPAY_API_KEY
+openssl rand -hex 32   # dùng cho SEPAY_API_KEY
+openssl rand -hex 16   # dùng cho POSTGRES_PASSWORD
 ```
 
-Sửa `infra/.env.prod`:
+Sửa `infra/.env.prod` (thay mọi giá trị dạng `<...>`):
 
 | Biến | Ý nghĩa |
 | --- | --- |
 | `DOMAIN` | Tên miền công khai, ví dụ `shop.example.com` |
 | `POSTGRES_PASSWORD` | Mật khẩu Postgres (bắt buộc) |
-| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | Secret ký JWT. API từ chối khởi động ở môi trường production nếu còn giá trị `dev-...` |
-| `SEPAY_API_KEY` | Khoá xác thực webhook SePay |
+| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | Secret ký JWT (hai giá trị khác nhau) |
+| `SEPAY_API_KEY` | Khoá xác thực webhook SePay; ai biết khoá này có thể đánh dấu đơn đã thanh toán |
 | `GEMINI_API_KEY` | Khoá Gemini (xem mục 5); để trống thì chatbot chạy chế độ rule-based |
-| `VIETQR_*` | Thông tin tài khoản ngân hàng nhận tiền |
+| `VIETQR_*` | Thông tin tài khoản ngân hàng nhận tiền; `VIETQR_ACCOUNT_NO` bắt buộc là số tài khoản thật |
+
+**API từ chối khởi động ở production** (fail-closed) khi `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` hoặc `SEPAY_API_KEY` ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`, hoặc khi `VIETQR_ACCOUNT_NO` vẫn là `0000000000`. Mục đích: không bao giờ chạy công khai với secret mặc định (secret JWT bị lộ cho phép giả token admin).
 
 Để trống `PUBLIC_PORT_SUFFIX`, giữ `HTTP_PORT=80`, `HTTPS_PORT=443` trên VPS thật.
 
@@ -73,14 +76,18 @@ Caddy tự xin và gia hạn chứng chỉ HTTPS ngay lần truy cập đầu ti
 
 ## 4. Nạp dữ liệu mẫu (thủ công, một lần)
 
-Seed **không** chạy tự động. Lệnh này **xoá toàn bộ** sản phẩm, đơn hàng, người dùng hiện có rồi nạp lại, vì vậy chỉ chạy ở lần triển khai đầu tiên:
+Seed **không** chạy tự động. Lệnh này **xoá toàn bộ** sản phẩm, đơn hàng, người dùng hiện có rồi nạp lại, vì vậy chỉ chạy ở lần triển khai đầu tiên.
+
+Ở production, seed **bắt buộc** có `SEED_ADMIN_PASSWORD` (tối thiểu 12 ký tự): đây là mật khẩu của tài khoản quản trị `admin@pcbuilder.vn`. Thiếu biến này (hoặc quá ngắn) thì seed dừng **trước khi** xoá dữ liệu. Nên truyền biến ngay trong lệnh bằng `-e` thay vì lưu trong `.env.prod`:
 
 ```bash
 docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod \
-  exec api node --import tsx src/db/seed/index.ts
+  exec -e SEED_ADMIN_PASSWORD='<mật-khẩu-mạnh-tối-thiểu-12-ký-tự>' api node --import tsx src/db/seed/index.ts
 ```
 
-Tài khoản mẫu: `admin@pcbuilder.vn / Admin@123`, `staff@pcbuilder.vn / Staff@123`, `khach@pcbuilder.vn / Khach@123`. **Hãy đổi mật khẩu admin ngay** sau khi seed nếu máy chủ mở công khai.
+- Production chỉ tạo **một** tài khoản: `admin@pcbuilder.vn` với mật khẩu vừa đặt. Hai tài khoản demo (nhân viên `staff@pcbuilder.vn`, khách `khach@pcbuilder.vn`) có mật khẩu công khai trong mã nguồn nên **không** được tạo, trừ khi thêm `-e SEED_DEMO_USERS=1` (chỉ dùng cho máy demo không mở công khai).
+- Môi trường phát triển (`NODE_ENV` khác `production`) vẫn tạo đủ ba tài khoản demo như trước.
+- Đổi mật khẩu bất cứ lúc nào: đăng nhập → trang **Tài khoản** (`/account`) → **Đổi mật khẩu** (API `POST /api/auth/password`, cần mật khẩu hiện tại). Sau khi đổi, mọi phiên đăng nhập khác của tài khoản bị thu hồi refresh token, nên các thiết bị khác phải đăng nhập lại khi access token (tối đa 15 phút) hết hạn.
 
 Kiểm tra: `curl "https://<DOMAIN>/api/products?category=cpu"` trả về danh sách sản phẩm.
 
@@ -148,9 +155,12 @@ cp infra/.env.prod.example infra/.env.prod
 #   PUBLIC_PORT_SUFFIX=:8443
 #   HTTP_PORT=8081
 #   HTTPS_PORT=8443
-#   và điền POSTGRES_PASSWORD, JWT_*_SECRET, SEPAY_API_KEY (openssl rand -hex 32)
+#   và điền POSTGRES_PASSWORD, JWT_*_SECRET, SEPAY_API_KEY (openssl rand -hex 32),
+#   VIETQR_ACCOUNT_NO (số tài khoản nhận tiền; khác 0000000000)
 docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d --build
-docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod exec api node --import tsx src/db/seed/index.ts
+docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod \
+  exec -e SEED_ADMIN_PASSWORD='<mật-khẩu-tối-thiểu-12-ký-tự>' -e SEED_DEMO_USERS=1 \
+  api node --import tsx src/db/seed/index.ts
 ```
 
 Mở https://localhost:8443 (trình duyệt cảnh báo chứng chỉ tự ký: chọn tiếp tục; hoặc `curl -k`). Kiểm tra nhanh: `curl -k https://localhost:8443/api/health`. Dọn dẹp hoàn toàn (xoá cả dữ liệu): `docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod down -v`.
@@ -159,7 +169,9 @@ Mở https://localhost:8443 (trình duyệt cảnh báo chứng chỉ tự ký: 
 
 | Triệu chứng | Nguyên nhân / cách xử lý |
 | --- | --- |
-| `api` thoát ngay với "JWT secrets must be set in production" | `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` còn rỗng hoặc bắt đầu bằng `dev-`. Đặt giá trị `openssl rand -hex 32`. |
+| `api` thoát ngay với "JWT_ACCESS_SECRET must be set in production…" (hoặc `JWT_REFRESH_SECRET`, `SEPAY_API_KEY`) | Biến còn rỗng, ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`. Đặt giá trị `openssl rand -hex 32`. |
+| `api` thoát ngay với "VIETQR_ACCOUNT_NO must be set in production…" | Còn số tài khoản giữ chỗ `0000000000`. Điền số tài khoản nhận tiền thật. |
+| Seed báo "SEED_ADMIN_PASSWORD … is required to seed in production" | Thêm `-e SEED_ADMIN_PASSWORD='…'` (tối thiểu 12 ký tự) vào lệnh seed. Dữ liệu cũ chưa bị xoá. |
 | Compose báo `set POSTGRES_PASSWORD` / `set DOMAIN` | Thiếu `--env-file infra/.env.prod` hoặc chưa điền biến. |
 | Caddy không lấy được chứng chỉ | DNS chưa trỏ về VPS, hoặc cổng 80/443 bị chặn. Xem `logs caddy`. |
 | Web gọi API sai địa chỉ / lỗi CORS | `DOMAIN` thay đổi sau khi build. Chạy lại `up -d --build web`. |

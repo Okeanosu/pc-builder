@@ -73,7 +73,6 @@ describe('POST /api/payments/webhook/sepay', () => {
       transferContent: body.content,
     });
     expect(pay!.raw).toMatchObject({ id: body.id, referenceCode: 'MBVCB.3278907687' });
-    expect(await h.deps.redis.exists(`hold:order:${order.code}`)).toBe(0);
   });
 
   it('is idempotent on provider_txn_id: a replayed webhook is a 200 no-op', async () => {
