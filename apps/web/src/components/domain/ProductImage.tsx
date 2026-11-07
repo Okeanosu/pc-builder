@@ -1,6 +1,7 @@
 import { CATEGORY_LABELS, type CategoryKey } from '@pc/shared';
 import Image from 'next/image';
 import { cn } from '@/lib/cn';
+import { viaImageOptimizer } from '@/lib/images';
 import { CategoryIllustration } from './CategoryIllustration';
 import { CATEGORY_COLOR, CATEGORY_DESIGNATOR } from './category';
 
@@ -35,7 +36,15 @@ export function ProductImage({
       )}
     >
       {src ? (
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-contain p-[8%]" />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          unoptimized={!viaImageOptimizer(src)}
+          className="object-contain p-[8%]"
+        />
       ) : (
         <div
           role="img"
