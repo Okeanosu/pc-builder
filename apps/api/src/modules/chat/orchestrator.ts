@@ -11,6 +11,7 @@ import {
   LlmUnavailableError,
   type LlmUnavailableReason,
 } from './llm/types';
+import { checkPriceMentions, type PriceCheck, referenceAmounts } from './price-check';
 import { SYSTEM_PROMPT } from './prompts';
 import { executeTool, type ToolCallRecord } from './tools/execute';
 import type { RecommendToolOutput, ToolContext, ToolRegistry } from './tools/types';
@@ -53,10 +54,14 @@ export interface RunTurnResult {
   fallbackReason?: LlmUnavailableReason;
   /** True when `deps.signal` aborted the turn; `assistantText` then holds only what was streamed so far. */
   cancelled?: boolean;
+  /** AI mode only: VND amounts the model wrote, compared with what its tools returned. Monitoring, never a filter. */
+  priceCheck?: PriceCheck;
 }
 
 interface TurnState {
   text: string;
+  /** The part of `text` the model wrote, without canned notices. */
+  modelText: string;
   buildIds: string[];
   toolCalls: ToolCallRecord[];
   recommendation?: {
@@ -185,7 +190,10 @@ async function runAiLoop(
       llm,
       { system: SYSTEM_PROMPT, history: messages, tools },
       timeoutMs,
-      emitText,
+      (chunk) => {
+        state.modelText += chunk;
+        emitText(chunk);
+      },
       deps.signal,
     );
     if (calls.length === 0) {
@@ -231,7 +239,7 @@ async function runAiLoop(
  */
 export async function runTurn(input: RunTurnInput, deps: RunTurnDeps): Promise<RunTurnResult> {
   const messageId = input.messageId ?? randomUUID();
-  const state: TurnState = { text: '', buildIds: [], toolCalls: [] };
+  const state: TurnState = { text: '', modelText: '', buildIds: [], toolCalls: [] };
   const emitText = (text: string) => {
     if (!text) return;
     state.text += text;
@@ -272,6 +280,14 @@ export async function runTurn(input: RunTurnInput, deps: RunTurnDeps): Promise<R
     for (const chunk of chunkText(separatorAfter(state.text) + reply.text)) emitText(chunk);
   }
 
+  const priceCheck =
+    mode === 'AI'
+      ? checkPriceMentions(
+          state.modelText,
+          referenceAmounts({ toolCalls: state.toolCalls, history: input.history, userText: input.userText }),
+        )
+      : undefined;
+
   deps.emit({ type: 'done', messageId, mode });
   return {
     mode,
@@ -282,5 +298,6 @@ export async function runTurn(input: RunTurnInput, deps: RunTurnDeps): Promise<R
     toolCalls: state.toolCalls,
     ...(unavailable ? { fallbackReason: unavailable.reason } : {}),
     ...(cancelled ? { cancelled } : {}),
+    ...(priceCheck ? { priceCheck } : {}),
   };
 }

@@ -100,6 +100,10 @@ export function createChatRouter(deps: AppDeps): Router {
           if (req.log) req.log.error({ err, sessionId: session.id }, message);
           else if (deps.env.NODE_ENV !== 'test') console.error(message, err);
         },
+        logWarn: (data, message) => {
+          if (req.log) req.log.warn(data, message);
+          else if (deps.env.NODE_ENV !== 'test') console.warn(message, data);
+        },
       });
     }),
   );
