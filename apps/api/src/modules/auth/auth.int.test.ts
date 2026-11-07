@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDeps } from '../../../test/helpers';
@@ -131,6 +133,84 @@ describe('auth flow', () => {
     expect((await request(app).post('/api/auth/refresh').set('Cookie', 'refresh_token=garbage')).status).toBe(
       401,
     );
+  });
+});
+
+describe('refresh failures and cookies', () => {
+  const customer = () => seedUser('CUSTOMER');
+  const login = () =>
+    request(app).post('/api/auth/login').send({ email: customer().email, password: customer().password });
+  const cleared = (res: request.Response, name: string) =>
+    /Expires=Thu, 01 Jan 1970/.test(cookie(res, name) ?? '');
+
+  it('keeps the cookies when the refresh token was already rotated by another tab', async () => {
+    const first = cookiePair(await login(), 'refresh_token');
+    const winner = await request(app).post('/api/auth/refresh').set('Cookie', first);
+    expect(winner.status).toBe(200);
+
+    const loser = await request(app).post('/api/auth/refresh').set('Cookie', first);
+    expect(loser.status).toBe(401);
+    expect(loser.body.error.code).toBe('INVALID_REFRESH_TOKEN');
+    expect(cookie(loser, 'refresh_token')).toBeUndefined();
+    expect(cookie(loser, 'access_token')).toBeUndefined();
+
+    const next = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', cookiePair(winner, 'refresh_token'));
+    expect(next.status).toBe(200);
+  });
+
+  it('clears the cookies for a missing, forged or expired refresh token', async () => {
+    const { id } = (await login()).body.user;
+    const expired = jwt.sign(
+      { sub: id, jti: randomUUID(), typ: 'refresh', exp: Math.floor(Date.now() / 1000) - 10 },
+      t.deps.env.JWT_REFRESH_SECRET,
+    );
+    const forged = jwt.sign({ sub: id, jti: randomUUID(), typ: 'refresh' }, 'not-our-secret');
+    for (const value of [undefined, 'garbage', forged, expired]) {
+      const req = request(app).post('/api/auth/refresh');
+      const res = value ? await req.set('Cookie', `refresh_token=${value}`) : await req;
+      expect(res.status).toBe(401);
+      expect(cleared(res, 'refresh_token')).toBe(true);
+      expect(cleared(res, 'access_token')).toBe(true);
+    }
+  });
+});
+
+describe('token types', () => {
+  it('does not accept a refresh-typed or untyped token as an access token', async () => {
+    const { id, email, role } = (
+      await request(app)
+        .post('/api/auth/login')
+        .send({ email: seedUser('CUSTOMER').email, password: seedUser('CUSTOMER').password })
+    ).body.user;
+    const secret = t.deps.env.JWT_ACCESS_SECRET;
+    const asRefresh = jwt.sign({ sub: id, email, role, typ: 'refresh' }, secret, { expiresIn: 60 });
+    const untyped = jwt.sign({ sub: id, email, role }, secret, { expiresIn: 60 });
+    for (const token of [asRefresh, untyped]) {
+      const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(401);
+    }
+    const proper = jwt.sign({ sub: id, email, role, typ: 'access' }, secret, { expiresIn: 60 });
+    expect((await request(app).get('/api/auth/me').set('Authorization', `Bearer ${proper}`)).status).toBe(
+      200,
+    );
+  });
+
+  it('does not accept an access-typed token as a refresh token, even with a live jti', async () => {
+    const { id } = (
+      await request(app)
+        .post('/api/auth/login')
+        .send({ email: seedUser('CUSTOMER').email, password: seedUser('CUSTOMER').password })
+    ).body.user;
+    const jti = randomUUID();
+    await t.deps.redis.set(`rt:${id}:${jti}`, '1', 'EX', 60);
+    const asAccess = jwt.sign({ sub: id, jti, typ: 'access' }, t.deps.env.JWT_REFRESH_SECRET, {
+      expiresIn: 60,
+    });
+    const res = await request(app).post('/api/auth/refresh').set('Cookie', `refresh_token=${asAccess}`);
+    expect(res.status).toBe(401);
+    expect(await t.deps.redis.exists(`rt:${id}:${jti}`)).toBe(1);
   });
 });
 

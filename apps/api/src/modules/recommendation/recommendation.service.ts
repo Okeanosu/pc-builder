@@ -6,7 +6,7 @@ import type { Redis } from '../../lib/redis';
 import { createBuildsService } from '../builds';
 import { createCatalogService } from '../catalog';
 import { loadPurposeProfile } from './profile';
-import { RECOMMENDATION_TTL_SECONDS, recommendationCacheKey } from './recommendation.cache';
+import { isCacheable, RECOMMENDATION_TTL_SECONDS, recommendationCacheKey } from './recommendation.cache';
 
 export interface RecommendMeta {
   /** FORM for the HTTP endpoint, CHAT for the chatbot tool. */
@@ -80,7 +80,9 @@ export function createRecommendationService(deps: { db: Db; redis: Redis }) {
       const cached: CachedRecommendation = { buildIds: builds.map((b) => b.id), stats: result.stats };
       if (result.infeasibleReason) cached.infeasibleReason = result.infeasibleReason;
       if (result.minFeasibleBudget !== undefined) cached.minFeasibleBudget = result.minFeasibleBudget;
-      await redis.set(key, JSON.stringify(cached), 'EX', RECOMMENDATION_TTL_SECONDS);
+      if (isCacheable(result)) {
+        await redis.set(key, JSON.stringify(cached), 'EX', RECOMMENDATION_TTL_SECONDS);
+      }
 
       const { buildIds: _ids, ...rest } = cached;
       return { ...rest, builds, cache: 'MISS' };

@@ -15,7 +15,7 @@ export function createApp(deps: AppDeps): express.Express {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.use(cors({ origin: deps.env.WEB_ORIGIN.split(','), credentials: true }));
+  app.use(cors({ origin: deps.env.WEB_ORIGIN.split(','), credentials: true, exposedHeaders: ['X-Cache'] }));
   if (deps.env.NODE_ENV !== 'test') {
     app.use(pinoHttp({ redact: ['req.headers.authorization', 'req.headers.cookie'] }));
   }

@@ -99,6 +99,52 @@ describe('POST /api/recommendations', () => {
     expect(cached.body).toEqual(res.body);
   });
 
+  it('exposes X-Cache to the browser through CORS', async () => {
+    const origin = t.deps.env.WEB_ORIGIN.split(',')[0]!;
+    const res = await request(app).post('/api/recommendations').set('Origin', origin).send(body);
+    expect(res.headers['access-control-expose-headers']).toMatch(/X-Cache/i);
+  });
+
+  it('rate-limits each guest to 20 requests per minute', async () => {
+    const guest = 'gid=guest-rate-limit-aaaaa';
+    for (let i = 0; i < 20; i++) {
+      const res = await request(app).post('/api/recommendations').set('Cookie', guest).send(body);
+      expect(res.status).toBe(200);
+    }
+    const limited = await request(app).post('/api/recommendations').set('Cookie', guest).send(body);
+    expect(limited.status).toBe(429);
+    expect(limited.body.error.code).toBe('RATE_LIMITED');
+    expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
+    expect(await redis.ttl('rl:reco:g:guest-rate-limit-aaaaa')).toBeGreaterThan(0);
+
+    const other = await request(app)
+      .post('/api/recommendations')
+      .set('Cookie', 'gid=another-guest-bbbbbbb')
+      .send(body);
+    expect(other.status).toBe(200);
+  });
+
+  it('rate-limits a signed-in user by account, whatever guest cookie is sent', async () => {
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'khach@pcbuilder.vn', password: 'Khach@123' });
+    const auth = `Bearer ${login.body.accessToken}`;
+    for (let i = 0; i < 20; i++) {
+      const res = await request(app)
+        .post('/api/recommendations')
+        .set('Authorization', auth)
+        .set('Cookie', `gid=rotating-guest-${i}-xxxxxxx`)
+        .send(body);
+      expect(res.status).toBe(200);
+    }
+    const limited = await request(app)
+      .post('/api/recommendations')
+      .set('Authorization', auth)
+      .set('Cookie', 'gid=rotating-guest-new-xxxxxxx')
+      .send(body);
+    expect(limited.status).toBe(429);
+  });
+
   it('validates the request', async () => {
     const res = await request(app).post('/api/recommendations').send({ budget: 1_000, purpose: 'gaming' });
     expect(res.status).toBe(422);

@@ -100,6 +100,19 @@ describe('GET /api/products', () => {
     }
   });
 
+  it('never answers 500 for a malformed specs parameter', async () => {
+    const mixed = await request(app).get(
+      '/api/products?category=cpu&specs=foo&specs[socket]=AM5&pageSize=60',
+    );
+    expect(mixed.status).toBe(200);
+    expect((mixed.body.items as ProductSummaryDTO[]).every((p) => p.keySpecs.socket === 'AM5')).toBe(true);
+    const reversed = await request(app).get('/api/products?category=cpu&specs[socket]=AM5&specs=foo');
+    expect(reversed.status).toBe(200);
+    const bare = await request(app).get('/api/products?specs=foo');
+    expect(bare.status).toBe(422);
+    expect(bare.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
   it('answers 422 for a value that does not fit the field type', async () => {
     const res = await request(app).get('/api/products?category=cpu&specs[cores]=many');
     expect(res.status).toBe(422);
@@ -274,11 +287,8 @@ describe('JSONB containment index', () => {
     const compiled = items.toSQL();
     expect(compiled.sql).toContain('@>');
 
-    const plan = await t.sql.begin(async (tx) => {
-      await tx`SET LOCAL enable_seqscan = off`;
-      const rows = await tx.unsafe(`EXPLAIN ${compiled.sql}`, compiled.params as never[]);
-      return rows.map((r) => String(r['QUERY PLAN'])).join('\n');
-    });
+    const rows = await t.sql.unsafe(`EXPLAIN ${compiled.sql}`, compiled.params as never[]);
+    const plan = rows.map((r) => String(r['QUERY PLAN'])).join('\n');
     expect(plan).toContain('products_specs_gin');
 
     const res = await request(app).get('/api/products?category=cpu&specs[socket]=AM5&pageSize=60');
