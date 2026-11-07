@@ -18,8 +18,13 @@ export const queryKeys = {
     summary: ['admin', 'summary'] as const,
     revenue: (range: string) => ['admin', 'revenue', range] as const,
     products: (q: unknown) => ['admin', 'products', q] as const,
+    product: (id: string) => ['admin', 'product', id] as const,
+    movements: (productId: string, page: number) => ['admin', 'movements', productId, page] as const,
+    benchmarks: (category: string) => ['admin', 'benchmarks', category] as const,
     orders: (q: unknown) => ['admin', 'orders', q] as const,
+    order: (code: string) => ['admin', 'order', code] as const,
     weights: ['admin', 'weights'] as const,
     chats: (q: unknown) => ['admin', 'chats', q] as const,
+    chat: (id: string) => ['admin', 'chat', id] as const,
   },
 };
