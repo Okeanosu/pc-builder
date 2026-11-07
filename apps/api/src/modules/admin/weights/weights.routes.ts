@@ -12,7 +12,8 @@ import type { AppDeps } from '../../../deps';
 import { bumpCatalogVersion } from '../../../lib/catalog-version';
 import { notFound } from '../../../lib/errors';
 import { handler, parseBody } from '../../../lib/http';
-import { adminOnly, deleteKeysByPattern, type FieldIssue, validationError } from '../admin.shared';
+import { deleteKeysByPattern } from '../../../lib/redis';
+import { adminOnly, type FieldIssue, validationError } from '../admin.shared';
 
 const SUM_TOLERANCE = 0.001;
 

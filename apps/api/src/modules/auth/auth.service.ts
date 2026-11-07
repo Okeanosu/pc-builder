@@ -5,7 +5,7 @@ import type { Env } from '../../config/env';
 import type { Db } from '../../db/client';
 import { users } from '../../db/schema';
 import { AppError } from '../../lib/errors';
-import type { Redis } from '../../lib/redis';
+import { deleteKeysByPattern, type Redis } from '../../lib/redis';
 import { signAccessToken } from '../../middleware/auth';
 import { REFRESH_TOKEN_TTL_SECONDS, refreshKey, signRefreshToken, verifyRefreshToken } from './auth.tokens';
 
@@ -47,6 +47,8 @@ export class InvalidRefreshError extends AppError {
   }
 }
 const emailTaken = () => new AppError(409, 'EMAIL_TAKEN', 'Email đã được sử dụng');
+const wrongCurrentPassword = () =>
+  new AppError(400, 'INVALID_CURRENT_PASSWORD', 'Mật khẩu hiện tại không đúng');
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -121,6 +123,20 @@ export function createAuthService(deps: { db: Db; redis: Redis; env: Env }) {
     async logout(refreshToken: string | undefined): Promise<void> {
       const claims = refreshToken ? verifyRefreshToken(refreshToken, env.JWT_REFRESH_SECRET) : null;
       if (claims) await redis.del(refreshKey(claims.userId, claims.jti));
+    },
+
+    /**
+     * Every refresh token of the user is revoked, so other devices are signed out once their access token
+     * (at most 15 minutes) runs out; the caller gets a fresh session.
+     */
+    async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<AuthSession> {
+      const user = await findById(userId);
+      if (!user) throw new AppError(401, 'UNAUTHORIZED', 'Vui lòng đăng nhập');
+      if (!(await bcrypt.compare(currentPassword, user.passwordHash))) throw wrongCurrentPassword();
+      const passwordHash = await bcrypt.hash(newPassword, BCRYPT_COST);
+      const [updated] = await db.update(users).set({ passwordHash }).where(eq(users.id, userId)).returning();
+      await deleteKeysByPattern(redis, refreshKey(userId, '*'));
+      return issueSession(updated as UserRow);
     },
 
     async me(userId: string): Promise<UserDTO> {
