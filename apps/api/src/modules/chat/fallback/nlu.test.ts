@@ -264,4 +264,67 @@ describe('parseIntent — follow-ups with a previous intent', () => {
     expect(r.budget).toBe(30_000_000);
     expect(r.budgetRange).toBeUndefined();
   });
+
+  it('a bare number does not replace a previous budget', () => {
+    expect(parseIntent('khoảng 16', prev()).budget).toBe(25_000_000);
+    expect(parseIntent('16', prev()).budget).toBe(25_000_000);
+  });
+
+  it('"mạnh hơn bản trước 5 triệu" adds to the previous budget', () => {
+    const r = parseIntent('mạnh hơn bản trước 5 triệu', prev());
+    expect(r.budget).toBe(30_000_000);
+    expect(r.wantsChange).toBe('stronger');
+  });
+
+  it('"rẻ hơn so với lúc nãy 2 triệu" subtracts from the previous budget', () => {
+    const r = parseIntent('rẻ hơn so với lúc nãy 2 triệu', prev());
+    expect(r.budget).toBe(23_000_000);
+    expect(r.wantsChange).toBe('cheaper');
+  });
+
+  it('"mạnh hơn, tầm 30 triệu" is still an absolute target', () => {
+    const r = parseIntent('mạnh hơn, tầm 30 triệu', prev());
+    expect(r.budget).toBe(30_000_000);
+    expect(r.wantsChange).toBe('stronger');
+  });
+});
+
+describe('parseIntent — product model numbers and "cũ" are not money', () => {
+  it.each([
+    'chơi game với i5 13600K',
+    'i7 14700K',
+    'i5 12600KF',
+    'ryzen 7 7800X3D',
+    'dùng lại card 1080 cũ',
+    'main B650M',
+    'card 1080 cu',
+  ])('%s → no budget', (text) => {
+    expect(parseIntent(text).budget).toBeUndefined();
+  });
+
+  it('"đang có card 3060 cũ, chơi game 20 triệu" → 20 triệu', () => {
+    const r = parseIntent('đang có card 3060 cũ, chơi game 20 triệu');
+    expect(r.budget).toBe(20_000_000);
+    expect(r.purpose).toBe('gaming');
+  });
+
+  it('"muốn dùng lại ram 16 cũ" keeps the previous budget', () => {
+    expect(parseIntent('muốn dùng lại ram 16 cũ', prev()).budget).toBe(25_000_000);
+    expect(parseIntent('muon dung lai ram 16 cu', prev()).budget).toBe(25_000_000);
+  });
+
+  it('"card RTX 4060 - 25 triệu" → budget 25 triệu, no range', () => {
+    const r = parseIntent('card RTX 4060 - 25 triệu');
+    expect(r.budget).toBe(25_000_000);
+    expect(r.budgetRange).toBeUndefined();
+  });
+
+  it('mainboard model suffixes do not hide the real budget', () => {
+    expect(parseIntent('main B650M, 25 triệu').budget).toBe(25_000_000);
+  });
+
+  it('still reads "củ" with diacritics and bare "cu" at the end of a clause', () => {
+    expect(parseIntent('30 củ chơi game').budget).toBe(30_000_000);
+    expect(parseIntent('tầm 20 cu, chơi game').budget).toBe(20_000_000);
+  });
 });

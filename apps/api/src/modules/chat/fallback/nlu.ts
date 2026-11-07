@@ -15,7 +15,9 @@ type GpuBrand = NonNullable<Preferences['gpuBrand']>;
 
 const MILLION = 1_000_000;
 const STEP = 500_000;
-const NUM = String.raw`\d+(?:[.,]\d+)?`;
+const MAX_MILLIONS = MAX_BUDGET / MILLION;
+/** A number not glued to a preceding letter/digit, so "B650M" or "RTX4060" never start an amount. */
+const NUM = String.raw`(?<![a-z\d.,#])\d+(?:[.,]\d+)?`;
 
 /** Lower-cased NFC text (keeps diacritics) and an ASCII-folded copy used by most patterns. */
 interface Prepared {
@@ -25,14 +27,28 @@ interface Prepared {
 }
 
 export function foldVietnamese(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+  return s.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd');
+}
+
+/**
+ * Folding merges "củ" (slang for a million) with "cũ" (used), "cụ", "cừ"…, so only "củ" — or a bare "cu" that
+ * ends a clause — survives as the money unit; every other form becomes "cux".
+ */
+function disambiguateCu(low: string): string {
+  return low.replace(/(?<!\p{L})c[uùúủũụưừứửữự](?!\p{L})/gu, (word, offset: number) => {
+    if (word === 'củ') return 'cu';
+    if (word === 'cu' && /^\s*(?:$|[,.;!?])/.test(low.slice(offset + 2))) return 'cu';
+    return 'cux';
+  });
 }
 
 function prepare(text: string): Prepared {
-  const low = text
-    .toLowerCase()
-    .normalize('NFC')
-    .replace(/(?<![\p{L}\d])t[ỷỉ](?!\p{L})/gu, 'ty');
+  const low = disambiguateCu(
+    text
+      .toLowerCase()
+      .normalize('NFC')
+      .replace(/(?<![\p{L}\d])t[ỷỉ](?!\p{L})/gu, 'ty'),
+  );
   return { raw: text, low, norm: foldVietnamese(low).replace(/\s+/g, ' ').trim() };
 }
 
@@ -46,6 +62,10 @@ interface Amount {
   value: number;
   start: number;
   sign: -1 | 0 | 1;
+  /** Preceded by "lên/xuống/còn/thành/tối đa": an explicit target, never reinterpreted as a delta. */
+  anchored: boolean;
+  /** A unit-less number read as millions ("ngân sách 25", "25"). */
+  bare?: boolean;
 }
 
 const UNIT_MULT: Record<string, number> = {
@@ -119,20 +139,30 @@ export function parseVietnameseNumber(words: string[]): number | undefined {
 
 const APPROX = String.raw`(?:\s+(?:tam|khoang|chung|co))?\s*$`;
 const ABSOLUTE_BEFORE = new RegExp(String.raw`\b(len|xuong|con|thanh|toi da)${APPROX}`);
-const MINUS_BEFORE = new RegExp(String.raw`\b(bot|giam|tru|re hon)(?:\s+(?:di|bot|them))?${APPROX}`);
-const PLUS_BEFORE = new RegExp(String.raw`\b(them|tang|cong|dat hon)(?:\s+them)?${APPROX}`);
+const MINUS_BEFORE = new RegExp(
+  String.raw`\b(bot|giam|tru|re hon|tiet kiem hon)(?:\s+(?:di|bot|them))?${APPROX}`,
+);
+const PLUS_BEFORE = new RegExp(
+  String.raw`\b(them|tang|cong|dat hon|manh hon|khoe hon|xin hon|tot hon|cao hon)(?:\s+them)?${APPROX}`,
+);
+/** A component/model word right before a number means it is a model or spec, not money ("ram 16 cu"). */
+const PRODUCT_BEFORE =
+  /\b(card|vga|gpu|rtx|gtx|rx|radeon|geforce|arc|ram|cpu|chip|ssd|hdd|nvme|main|mainboard|nguon|psu|case|man|monitor|i[3579]|ryzen|core|ultra)\s*$/;
 
-function deltaSign(norm: string, start: number): -1 | 0 | 1 {
+function amountContext(norm: string, start: number): Pick<Amount, 'sign' | 'anchored'> {
   const before = norm.slice(Math.max(0, start - 24), start);
-  if (ABSOLUTE_BEFORE.test(before)) return 0;
-  if (MINUS_BEFORE.test(before)) return -1;
-  if (PLUS_BEFORE.test(before)) return 1;
-  return 0;
+  if (ABSOLUTE_BEFORE.test(before)) return { sign: 0, anchored: true };
+  if (MINUS_BEFORE.test(before)) return { sign: -1, anchored: false };
+  if (PLUS_BEFORE.test(before)) return { sign: 1, anchored: false };
+  return { sign: 0, anchored: false };
 }
 
 function mask(s: string, start: number, end: number): string {
   return s.slice(0, start) + '#'.repeat(end - start) + s.slice(end);
 }
+
+/** 4+ digit integers in front of a million unit are GPU/CPU model numbers (3060, 4060, 1080, 7800), not budgets. */
+const isModelNumber = (digits: string) => /^\d{4,}$/.test(digits);
 
 interface Money {
   range?: [number, number];
@@ -142,9 +172,12 @@ interface Money {
 function extractMoney(norm: string): Money {
   let text = norm;
   const amounts: Amount[] = [];
-  const push = (value: number, start: number, end: number) => {
-    amounts.push({ value, start, sign: deltaSign(norm, start) });
+  const consume = (start: number, end: number) => {
     text = mask(text, start, end);
+  };
+  const push = (value: number, start: number, end: number, bare = false) => {
+    consume(start, end);
+    amounts.push({ value, start, ...amountContext(norm, start), ...(bare ? { bare } : {}) });
   };
 
   for (const m of norm.matchAll(/(?<![\d.,])\d{1,3}([.,])\d{3}(?:\1\d{3})+(?!\d)/g)) {
@@ -158,24 +191,35 @@ function extractMoney(norm: string): Money {
     String.raw`(${NUM})\s*(?:trieu|tr|cu|m)?\s*(?:-|–|—|~|den|toi)\s*(${NUM})\s*(trieu|tr|cu|m)(?![a-z])`,
   ).exec(text);
   if (range) {
-    const mult = UNIT_MULT[range[3] ?? 'tr'] ?? MILLION;
-    const a = toNum(range[1] ?? '0') * mult;
-    const b = toNum(range[2] ?? '0') * mult;
-    return { range: [Math.min(a, b), Math.max(a, b)], amounts };
+    const a = toNum(range[1] ?? '0');
+    const b = toNum(range[2] ?? '0');
+    if (a > 0 && b > 0 && a <= MAX_MILLIONS && b <= MAX_MILLIONS) {
+      return { range: [Math.min(a, b) * MILLION, Math.max(a, b) * MILLION], amounts };
+    }
   }
 
   const unitRe = new RegExp(String.raw`(${NUM})\s*(trieu|tr|cu|ty)(\d{1,3})?(?![a-z\d])(\s+ruoi)?`, 'g');
   for (const m of text.matchAll(unitRe)) {
-    const mult = UNIT_MULT[m[2] ?? 'tr'] ?? MILLION;
+    const digits = m[1] ?? '0';
+    const unit = m[2] ?? 'tr';
+    const end = m.index + m[0].length;
+    const productBefore = PRODUCT_BEFORE.test(norm.slice(Math.max(0, m.index - 16), m.index));
+    if ((unit !== 'ty' && isModelNumber(digits)) || (unit === 'cu' && productBefore)) {
+      consume(m.index, end);
+      continue;
+    }
     const frac = m[3] ? Number.parseFloat(`0.${m[3]}`) : 0;
     const half = m[4] ? 0.5 : 0;
-    push((toNum(m[1] ?? '0') + frac + half) * mult, m.index, m.index + m[0].length);
+    push((toNum(digits) + frac + half) * (UNIT_MULT[unit] ?? MILLION), m.index, end);
   }
   for (const m of text.matchAll(new RegExp(String.raw`(${NUM})m(?![a-z\d.])`, 'g'))) {
-    push(toNum(m[1] ?? '0') * MILLION, m.index, m.index + m[0].length);
-  }
-  for (const m of text.matchAll(/(\d{4,})\s*k(?![a-z\d])/g)) {
-    push(Number(m[1]) * 1_000, m.index, m.index + m[0].length);
+    const digits = m[1] ?? '0';
+    const end = m.index + m[0].length;
+    if (isModelNumber(digits) || PRODUCT_BEFORE.test(norm.slice(Math.max(0, m.index - 16), m.index))) {
+      consume(m.index, end);
+      continue;
+    }
+    push(toNum(digits) * MILLION, m.index, end);
   }
   for (const m of text.matchAll(new RegExp(String.raw`(${NUM})\s*(nghin|ngan)(?![a-z])`, 'g'))) {
     push(toNum(m[1] ?? '0') * 1_000, m.index, m.index + m[0].length);
@@ -194,7 +238,7 @@ function extractMoney(norm: string): Money {
       amounts.push({
         value: (n + half) * (UNIT_MULT[tok.t] ?? MILLION),
         start,
-        sign: deltaSign(norm, start),
+        ...amountContext(norm, start),
       });
       return;
     }
@@ -207,8 +251,8 @@ function extractMoney(norm: string): Money {
     const whole = /^(\d{1,3}(?:[.,]\d+)?)$/.exec(text);
     const hit = bare ?? whole;
     const n = hit ? toNum(hit[1] ?? '0') : 0;
-    if (hit && n >= 3 && n <= MAX_BUDGET / MILLION) {
-      amounts.push({ value: n * MILLION, start: hit.index, sign: deltaSign(norm, hit.index) });
+    if (hit && n >= 3 && n <= MAX_MILLIONS) {
+      push(n * MILLION, hit.index, hit.index + hit[0].length, true);
     }
   }
   return { amounts };
@@ -409,6 +453,13 @@ const STRONGER_RE =
   /\b(manh hon|khoe hon|xin hon|tot hon|ngon hon|cao cap hon|nang cap|manh nhat|tang ngan sach|them ngan sach|them tien|tang tien|cao hon)\b/;
 const BUDGET_VERB_RE = /\b(giam|bot|ha|xuong|tang|len|nang|them|re hon|dat hon)\b/;
 
+function comparativeDirection(norm: string): 'cheaper' | 'stronger' | undefined {
+  const cheaper = CHEAPER_RE.exec(norm)?.index ?? Number.POSITIVE_INFINITY;
+  const stronger = STRONGER_RE.exec(norm)?.index ?? Number.POSITIVE_INFINITY;
+  if (cheaper === stronger) return undefined;
+  return cheaper < stronger ? 'cheaper' : 'stronger';
+}
+
 function detectSwapTarget(p: Prepared, tokens: string[], brands: BrandMention[]): 'cpu' | 'gpu' | undefined {
   const verbLow = /đổi|chuyển|thay thế/.test(p.low);
   const verbNorm = /\b(doi|chuyen|thay) (sang|qua|bang|card|vga|gpu|cpu|chip|hang)\b/.test(p.norm);
@@ -450,11 +501,21 @@ export function parseIntent(text: string, previous?: ParsedIntent): ParsedIntent
     else current.gpuBrand = b.negated ? otherGpu(b.brand as GpuBrand) : (b.brand as GpuBrand);
   }
 
-  let budget = previous?.budget;
+  const prevBudget = previous?.budget;
+  let budget = prevBudget;
   let budgetRange = previous?.budgetRange;
   let direction: 'cheaper' | 'stronger' | undefined;
-  const absolute = money.amounts.filter((a) => a.sign === 0);
-  const deltas = money.amounts.filter((a) => a.sign !== 0);
+  const phrase = comparativeDirection(p.norm);
+  // "mạnh hơn bản trước 5 triệu": with a comparative and an amount far below the current budget, it is a delta.
+  const amounts = money.amounts
+    .filter((a) => !(a.bare && prevBudget !== undefined))
+    .map((a): Amount => {
+      const isDelta =
+        a.sign === 0 && !a.anchored && phrase && prevBudget !== undefined && a.value < prevBudget / 2;
+      return isDelta ? { ...a, sign: phrase === 'cheaper' ? -1 : 1 } : a;
+    });
+  const absolute = amounts.filter((a) => a.sign === 0);
+  const deltas = amounts.filter((a) => a.sign !== 0);
 
   if (money.range) {
     budgetRange = [Math.min(money.range[0], MAX_BUDGET), Math.min(money.range[1], MAX_BUDGET)];
@@ -462,20 +523,20 @@ export function parseIntent(text: string, previous?: ParsedIntent): ParsedIntent
   } else if (absolute.length > 0) {
     budget = Math.min(MAX_BUDGET, Math.max(...absolute.map((a) => a.value)));
     budgetRange = undefined;
-    if (previous?.budget && BUDGET_VERB_RE.test(p.norm) && budget !== previous.budget) {
-      direction = budget < previous.budget ? 'cheaper' : 'stronger';
+    if (prevBudget && (phrase || BUDGET_VERB_RE.test(p.norm)) && budget !== prevBudget) {
+      direction = budget < prevBudget ? 'cheaper' : 'stronger';
     }
   } else if (deltas.length > 0) {
     const delta = deltas.reduce((sum, a) => sum + a.sign * a.value, 0);
     direction = delta < 0 ? 'cheaper' : 'stronger';
-    if (previous?.budget) {
-      budget = clamp(previous.budget + delta);
+    if (prevBudget) {
+      budget = clamp(prevBudget + delta);
       budgetRange = undefined;
     }
-  } else if (CHEAPER_RE.test(p.norm) || STRONGER_RE.test(p.norm)) {
-    direction = CHEAPER_RE.test(p.norm) ? 'cheaper' : 'stronger';
-    if (previous?.budget) {
-      budget = clamp(roundStep(previous.budget * (direction === 'cheaper' ? 0.9 : 1.1)));
+  } else if (phrase) {
+    direction = phrase;
+    if (prevBudget) {
+      budget = clamp(roundStep(prevBudget * (direction === 'cheaper' ? 0.9 : 1.1)));
       budgetRange = undefined;
     }
   }
