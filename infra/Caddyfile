@@ -1,8 +1,13 @@
 {$DOMAIN:localhost} {
-	encode zstd gzip
-
 	@api path /api/*
 	handle @api {
+		# Compress JSON only. Compressing text/event-stream makes the encoder buffer the chat SSE stream,
+		# so tokens would arrive in bursts instead of as they are generated.
+		encode zstd gzip {
+			match {
+				header Content-Type application/json*
+			}
+		}
 		reverse_proxy api:4000 {
 			# SSE (/api/chat/...) must stream without buffering
 			flush_interval -1
@@ -10,6 +15,7 @@
 	}
 
 	handle {
+		encode zstd gzip
 		reverse_proxy web:3000
 	}
 }

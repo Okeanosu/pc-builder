@@ -58,6 +58,10 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://${DOMAIN:?set DOMAIN in infra/.env.prod}${PUBLIC_PORT_SUFFIX:-}/api
         NEXT_PUBLIC_SHOW_DESIGN: ${NEXT_PUBLIC_SHOW_DESIGN:-}
+    environment:
+      # Server-side rendering calls the API inside the compose network; the public URL is not reachable
+      # from the container (e.g. https://localhost:8443 in the local demo).
+      API_INTERNAL_URL: http://api:4000/api
     depends_on:
       api: { condition: service_healthy }
     networks: [internal]
