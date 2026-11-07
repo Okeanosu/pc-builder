@@ -8,7 +8,7 @@ links:
   realizes: ["FR-10", "UC-06"]
   dependsOn: ["M-BUILDS", "E-BUILD", "F-COMPAT-CHECK"]
   shownIn: ["SCR-BUILD-SHARE"]
-code: ["apps/api/src/modules/builds/**", "apps/web/src/features/builds/**"]
+code: ["apps/api/src/modules/builds/**", "apps/web/src/features/account/BuildView.tsx", "apps/web/src/features/cart/BuildActions.tsx"]
 tests: ["apps/api/src/modules/builds/**/*.test.ts"]
 diagrams: []
 ---
