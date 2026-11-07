@@ -57,7 +57,7 @@ flowchart LR
   BANK[SePay webhook / giả lập] -->|POST| MW
 ```
 
-Tổng cộng **161** node thuộc chương này.
+Tổng cộng **164** node thuộc chương này.
 
 ## Tính năng
 
@@ -79,7 +79,7 @@ Liên kết — realizes: FR-13, UC-13 · dependsOn: M-ADMIN, E-INVENTORY-MOVEME
 ### F-ADMIN-ORDERS — Quản trị đơn hàng
 
 Trạng thái: **done**
-Liên kết — realizes: FR-15, UC-15 · dependsOn: M-ADMIN, F-ORDER, F-AUTH · decidedBy: ADR-021 · shownIn: SCR-ADMIN-ORDERS
+Liên kết — realizes: FR-15, UC-15 · dependsOn: M-ADMIN, F-ORDER, F-AUTH · decidedBy: ADR-021 · shownIn: SCR-ADMIN-ORDERS, SCR-ADMIN-PAYMENTS
 
 **Mục đích:** xử lý đơn từ khi nhận tiền đến khi giao.
 
@@ -226,7 +226,7 @@ sequenceDiagram
 ### F-AUTH — Xác thực JWT và phân quyền RBAC
 
 Trạng thái: **done**
-Liên kết — realizes: FR-03, UC-02, NFR-03 · dependsOn: M-AUTH, M-API-CORE, E-USER · decidedBy: ADR-006, ADR-016 · shownIn: SCR-AUTH, SCR-ACCOUNT
+Liên kết — realizes: FR-03, UC-02, NFR-03 · dependsOn: M-AUTH, M-API-CORE, E-USER · decidedBy: ADR-006, ADR-016 · shownIn: SCR-AUTH, SCR-ACCOUNT, SCR-ACCOUNT-PASSWORD
 
 **Mục đích:** nhận diện người dùng và chặn truy cập trái quyền vào API quản trị.
 
@@ -702,7 +702,7 @@ stateDiagram-v2
 ### F-PAYMENT-VIETQR — Thanh toán VietQR động, webhook SePay và giả lập
 
 Trạng thái: **done**
-Liên kết — realizes: FR-06, UC-10 · dependsOn: M-PAYMENTS, E-PAYMENT, F-ORDER, F-INVENTORY-LOCK · decidedBy: ADR-008, ADR-021 · shownIn: SCR-PAY
+Liên kết — realizes: FR-06, UC-10 · dependsOn: M-PAYMENTS, E-PAYMENT, F-ORDER, F-INVENTORY-LOCK · decidedBy: ADR-008, ADR-021 · shownIn: SCR-PAY, SCR-ADMIN-PAYMENTS
 
 **Mục đích:** nhận tiền chuyển khoản và tự chuyển đơn sang đã thanh toán mà không cần nhân viên đối soát tay.
 
@@ -819,7 +819,7 @@ Liên kết — realizes: FR-11, UC-07 · dependsOn: M-QUOTES, E-BUILD · decide
 ### F-RECOMMEND — Gợi ý cấu hình theo form (ngân sách, mục đích, tùy chọn)
 
 Trạng thái: **done**
-Liên kết — realizes: FR-08, UC-04, NFR-01 · dependsOn: M-RECOMMENDATION, F-ENGINE-CORE, E-PURPOSE-WEIGHT, E-BUILD · decidedBy: ADR-004, ADR-013, ADR-015, ADR-020 · shownIn: SCR-HOME, SCR-ADVISOR
+Liên kết — realizes: FR-08, UC-04, NFR-01 · dependsOn: M-RECOMMENDATION, F-ENGINE-CORE, E-PURPOSE-WEIGHT, E-BUILD · decidedBy: ADR-004, ADR-013, ADR-015, ADR-020 · shownIn: SCR-HOME, SCR-ADVISOR, SCR-ADVISOR-FORM
 
 **Mục đích:** cho người dùng không muốn chat vẫn nhận 2-3 cấu hình tối ưu chỉ với một form ngắn.
 
@@ -2284,6 +2284,20 @@ Trang chi tiết đơn `/orders/[code]` dùng chung cho người dùng và khác
 
 **Test:** `apps/web/src/features/account/timeline.test.ts`
 
+### SCR-ACCOUNT-PASSWORD — Đổi mật khẩu trong tài khoản
+
+Trạng thái: **done**
+
+**Route:** `/account` (CSR), khối "Đổi mật khẩu" dưới phần hồ sơ.
+
+Ba ô: mật khẩu hiện tại, mật khẩu mới (8 đến 72 ký tự) và nhập lại. `validatePasswordChange` kiểm tra phía client; `useAuthStore.changePassword` gọi `POST /auth/password`. Nếu token truy cập vừa hết hạn, store làm mới phiên đúng một lần rồi gửi lại. Server xoay phiên khi đổi mật khẩu nên store nhận token mới (hoặc đọc lại qua refresh khi server trả 204).
+
+**Lỗi:** sai mật khẩu hiện tại hiện ngay ở ô tương ứng; 401 yêu cầu đăng nhập lại; 429 báo thử quá nhiều lần; mất mạng có câu riêng. Thành công thì xóa form và hiện toast "Đã đổi mật khẩu".
+
+**Code:** `apps/web/src/features/account/ChangePasswordForm.tsx`, `apps/web/src/features/account/password-form.ts`, `apps/web/src/stores/auth.ts`
+
+**Test:** `apps/web/src/features/account/password-form.test.ts`, `apps/web/src/stores/auth.test.ts`
+
 ### SCR-ADMIN-CHATLOGS — Admin: nhật ký chat
 
 Trạng thái: **done**
@@ -2346,6 +2360,20 @@ Chi tiết đơn: sản phẩm (nhóm theo bộ PC, liên kết `/builds/[id]`),
 
 **Test:** `apps/web/src/features/admin/orders/**/*.test.ts`
 
+### SCR-ADMIN-PAYMENTS — Admin: đối soát giao dịch thanh toán
+
+Trạng thái: **done**
+
+**Route:** `/admin/orders/payments` (CSR), chuyển qua lại với danh sách đơn bằng `OrdersSubNav`.
+
+Bảng mọi giao dịch từ `GET /admin/payments`, phân trang 20 dòng, lọc nhanh bằng các chip: Khớp (SUCCESS), Chuyển thiếu (UNDERPAID), Không khớp đơn (NO_ORDER), Cần đối soát (MANUAL_REVIEW). Mỗi dòng có thời gian, nguồn (SePay, giả lập hoặc thủ công), số tiền, nội dung chuyển khoản, mã đơn liên kết sang `/admin/orders/[code]` (giao dịch không tìm được đơn hiện nhãn rỗng) và huy hiệu trạng thái theo tông màu.
+
+Màn hình giúp quản trị viên tìm tiền nằm ngoài đơn nào (ADR-021) để xử lý tay; việc xác nhận tiền thủ công vẫn thực hiện ở trang chi tiết đơn và chỉ ADMIN được làm.
+
+**Code:** `apps/web/src/app/admin/orders/payments/**`, `apps/web/src/features/admin/orders/PaymentsPage.tsx`, `apps/web/src/features/admin/orders/payments.ts`
+
+**Test:** `apps/web/src/features/admin/orders/payments.test.ts`
+
 ### SCR-ADMIN-PRODUCTS — Admin: sản phẩm
 
 Trạng thái: **done**
@@ -2397,6 +2425,22 @@ Trạng thái: **done**
 **Code:** `apps/web/src/app/*/advisor/**`, `apps/web/src/features/advisor/**`, `apps/web/src/stores/chat.ts`, `apps/web/src/components/ChatWidget.tsx`
 
 **Test:** `apps/web/src/features/advisor/**/*.test.ts`, `apps/web/src/features/advisor/**/*.test.tsx`, `apps/web/src/stores/chat.test.ts`
+
+### SCR-ADVISOR-FORM — Form gợi ý nhanh trên /advisor
+
+Trạng thái: **done**
+
+**Route:** `/advisor` (CSR), tab/khối "Gợi ý nhanh" cạnh khung chat.
+
+Khách không cần gõ câu: chọn mục đích (Gaming, Đồ họa, AI, Văn phòng), kéo thanh ngân sách hoặc nhập số triệu đồng, tùy chọn hãng GPU, kích cỡ case (form factor) và các lựa chọn phụ rồi bấm gửi. Giao diện gọi `POST /recommendations` (gói `RecommendationRequest`) và hiện đúng ba `BuildDTO` dưới dạng thẻ so sánh giống phần chat, không qua Gemini nên nhanh và ổn định khi LLM không khả dụng.
+
+**Kiểm tra đầu vào:** hàm thuần `validateQuickForm` giới hạn ngân sách trong khoảng cho phép (`BUDGET_MIN_M` đến `BUDGET_MAX_M` triệu), `parseBudgetMillions` đọc cả dấu phẩy/chấm, lỗi hiện ngay dưới ô nhập bằng tiếng Việt.
+
+**Trường hợp không khả thi:** khi ngân sách quá thấp hoặc ràng buộc mâu thuẫn, server trả lý do có cấu trúc và `infeasibleNotice` đổi thành lời gợi ý cụ thể (tăng ngân sách tới mức nào, bỏ ràng buộc nào). Phản hồi có header `X-Cache: HIT` được nhận biết (`isCacheHit`) để hiển thị nhãn kết quả lấy từ bộ nhớ đệm.
+
+**Code:** `apps/web/src/features/advisor/QuickRecommendForm.tsx`, `apps/web/src/features/advisor/quick-form.ts`, `apps/web/src/app/*/advisor/**`
+
+**Test:** `apps/web/src/features/advisor/quick-form.test.ts`
 
 ### SCR-AUTH — Đăng nhập / Đăng ký
 

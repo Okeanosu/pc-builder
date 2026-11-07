@@ -156,13 +156,16 @@ flowchart LR
   R_C14["R-C14"]:::rule
   R_C15["R-C15"]:::rule
   SCR_ACCOUNT["SCR-ACCOUNT"]:::screen
+  SCR_ACCOUNT_PASSWORD["SCR-ACCOUNT-PASSWORD"]:::screen
   SCR_ADMIN_CHATLOGS["SCR-ADMIN-CHATLOGS"]:::screen
   SCR_ADMIN_DASH["SCR-ADMIN-DASH"]:::screen
   SCR_ADMIN_INVENTORY["SCR-ADMIN-INVENTORY"]:::screen
   SCR_ADMIN_ORDERS["SCR-ADMIN-ORDERS"]:::screen
+  SCR_ADMIN_PAYMENTS["SCR-ADMIN-PAYMENTS"]:::screen
   SCR_ADMIN_PRODUCTS["SCR-ADMIN-PRODUCTS"]:::screen
   SCR_ADMIN_WEIGHTS["SCR-ADMIN-WEIGHTS"]:::screen
   SCR_ADVISOR["SCR-ADVISOR"]:::screen
+  SCR_ADVISOR_FORM["SCR-ADVISOR-FORM"]:::screen
   SCR_AUTH["SCR-AUTH"]:::screen
   SCR_BUILD_SHARE["SCR-BUILD-SHARE"]:::screen
   SCR_BUILDER["SCR-BUILDER"]:::screen
@@ -320,6 +323,7 @@ flowchart LR
   F_ADMIN_ORDERS -->|dependsOn| F_AUTH
   F_ADMIN_ORDERS -->|decidedBy| ADR_021
   F_ADMIN_ORDERS -->|shownIn| SCR_ADMIN_ORDERS
+  F_ADMIN_ORDERS -->|shownIn| SCR_ADMIN_PAYMENTS
   F_ADMIN_PRODUCTS -->|realizes| FR_12
   F_ADMIN_PRODUCTS -->|realizes| UC_12
   F_ADMIN_PRODUCTS -->|dependsOn| M_ADMIN
@@ -373,6 +377,7 @@ flowchart LR
   F_AUTH -->|decidedBy| ADR_016
   F_AUTH -->|shownIn| SCR_AUTH
   F_AUTH -->|shownIn| SCR_ACCOUNT
+  F_AUTH -->|shownIn| SCR_ACCOUNT_PASSWORD
   F_BUILD_SHARE -->|realizes| FR_10
   F_BUILD_SHARE -->|realizes| UC_06
   F_BUILD_SHARE -->|dependsOn| M_BUILDS
@@ -469,6 +474,7 @@ flowchart LR
   F_PAYMENT_VIETQR -->|decidedBy| ADR_008
   F_PAYMENT_VIETQR -->|decidedBy| ADR_021
   F_PAYMENT_VIETQR -->|shownIn| SCR_PAY
+  F_PAYMENT_VIETQR -->|shownIn| SCR_ADMIN_PAYMENTS
   F_QUOTE_PDF -->|realizes| FR_11
   F_QUOTE_PDF -->|realizes| UC_07
   F_QUOTE_PDF -->|dependsOn| M_QUOTES
@@ -487,6 +493,7 @@ flowchart LR
   F_RECOMMEND -->|decidedBy| ADR_020
   F_RECOMMEND -->|shownIn| SCR_HOME
   F_RECOMMEND -->|shownIn| SCR_ADVISOR
+  F_RECOMMEND -->|shownIn| SCR_ADVISOR_FORM
   F_SPEC_GRAPH -->|realizes| NFR_09
   F_SPEC_GRAPH -->|dependsOn| M_GRAPH_CLI
   F_SPEC_GRAPH -->|decidedBy| ADR_010

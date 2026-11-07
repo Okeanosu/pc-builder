@@ -8,7 +8,7 @@ links:
   realizes: ["FR-06", "UC-10"]
   dependsOn: ["M-PAYMENTS", "E-PAYMENT", "F-ORDER", "F-INVENTORY-LOCK"]
   decidedBy: ["ADR-008", "ADR-021"]
-  shownIn: ["SCR-PAY"]
+  shownIn: ["SCR-PAY", "SCR-ADMIN-PAYMENTS"]
 code: ["apps/api/src/modules/payments/**", "apps/web/src/features/checkout/PaymentView.tsx", "apps/web/src/features/checkout/payment.ts"]
 tests: ["apps/api/src/modules/payments/**/*.test.ts", "apps/api/src/modules/payments/**/*.int.test.ts"]
 diagrams: ["docs/diagrams/seq-checkout-vietqr.mmd"]

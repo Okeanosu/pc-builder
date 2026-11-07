@@ -8,7 +8,7 @@ links:
   realizes: ["FR-03", "UC-02", "NFR-03"]
   dependsOn: ["M-AUTH", "M-API-CORE", "E-USER"]
   decidedBy: ["ADR-006", "ADR-016"]
-  shownIn: ["SCR-AUTH", "SCR-ACCOUNT"]
+  shownIn: ["SCR-AUTH", "SCR-ACCOUNT", "SCR-ACCOUNT-PASSWORD"]
 code: ["apps/api/src/modules/auth/**", "apps/web/src/features/auth/**", "apps/web/src/features/account/**"]
 tests: ["apps/api/src/modules/auth/**/*.int.test.ts"]
 diagrams: []

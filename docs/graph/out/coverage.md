@@ -14,7 +14,7 @@ Sinh tự động bởi `pnpm graph` — không sửa tay.
 | Thực thể dữ liệu | 0 | 0 | 15 | 15 |
 | Thuật toán | 0 | 0 | 8 | 8 |
 | Luật ràng buộc | 0 | 0 | 15 | 15 |
-| Màn hình | 0 | 0 | 17 | 17 |
+| Màn hình | 0 | 0 | 20 | 20 |
 | Kiểm thử | 1 | 0 | 24 | 25 |
 | Quyết định thiết kế | 0 | 0 | 21 | 21 |
 | Chương báo cáo | 6 | 0 | 0 | 6 |
@@ -56,6 +56,6 @@ _Không có._
 | CH1 — Chương 1 - Giới thiệu | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 4 |
 | CH2 — Chương 2 - Khảo sát và phân tích yêu cầu | 29 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 45 |
 | CH3 — Chương 3 - Công nghệ sử dụng | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 7 |
-| CH4 — Chương 4 - Thiết kế, triển khai và đánh giá | 0 | 0 | 23 | 21 | 17 | 15 | 8 | 15 | 17 | 25 | 20 | 161 |
+| CH4 — Chương 4 - Thiết kế, triển khai và đánh giá | 0 | 0 | 23 | 21 | 17 | 15 | 8 | 15 | 20 | 25 | 20 | 164 |
 | CH5 — Chương 5 - Giải pháp và đóng góp nổi bật | 0 | 0 | 11 | 0 | 0 | 0 | 8 | 1 | 2 | 2 | 14 | 38 |
 | CH6 — Chương 6 - Kết luận | 1 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 5 |
