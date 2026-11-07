@@ -1,6 +1,6 @@
 import type { CartItemDTO, ProductSummaryDTO } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
-import { assemblableBuildId, groupCartLines, isBuildComplete } from './lines';
+import { assemblableBuildId, cartAssemblyFee, groupCartLines, isBuildComplete } from './lines';
 
 const product = (id: string, price = 1_000_000): ProductSummaryDTO => ({
   id,
@@ -95,5 +95,17 @@ describe('assemblableBuildId', () => {
     expect(assemblableBuildId(one, new Map([['b1', build('a', 'z')]]))).toBeNull();
     expect(assemblableBuildId(one, new Map())).toBeNull();
     expect(assemblableBuildId(groupCartLines([line('1', 'a', null)]), new Map())).toBeNull();
+  });
+});
+
+describe('cartAssemblyFee', () => {
+  it('uses the fee the server charges, carried on the cart', () => {
+    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0, assemblyFee: 350_000 })).toBe(350_000);
+    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0, assemblyFee: 0 })).toBe(0);
+  });
+
+  it('falls back to the default fee for an older API without the field', () => {
+    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0 })).toBe(200_000);
+    expect(cartAssemblyFee(undefined)).toBe(200_000);
   });
 });

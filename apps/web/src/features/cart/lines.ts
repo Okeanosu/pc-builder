@@ -1,4 +1,4 @@
-import type { CartItemDTO } from '@pc/shared';
+import type { CartDTO, CartItemDTO } from '@pc/shared';
 
 /** The part of a BuildDTO needed to check completeness. */
 export interface BuildParts {
@@ -57,4 +57,12 @@ export function assemblableBuildId(
   const group = grouped.builds[0] as BuildGroup;
   const build = buildsById.get(group.buildId);
   return build && isBuildComplete(build, group) ? group.buildId : null;
+}
+
+/** Only for an API that predates `CartDTO.assemblyFee`; the server's value always wins. */
+export const DEFAULT_ASSEMBLY_FEE = 200_000;
+
+/** The assembly fee the server will charge for a build order, as reported with the cart. */
+export function cartAssemblyFee(cart: (CartDTO & { assemblyFee?: number }) | undefined): number {
+  return cart?.assemblyFee ?? DEFAULT_ASSEMBLY_FEE;
 }
