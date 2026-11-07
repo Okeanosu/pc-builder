@@ -21,21 +21,37 @@ import { OrderStatusBadge, OrderSummary } from '../account/OrderSummary';
 import { OrderTimeline } from '../account/OrderTimeline';
 import { apiErrorMessage } from '../auth/form-errors';
 import { ReorderButton } from '../cart/ReorderButton';
+import { clockOffset, receiptTime } from './clock';
 import { formatCountdown, remainingMs } from './countdown';
 import { bankName, isSettled, paymentPhase } from './payment';
 
 const POLL_MS = 3000;
 const SHOW_SIMULATOR = process.env.NODE_ENV !== 'production';
 
-/** Ticks every second while `active`; null until mounted so server and client markup agree. */
-function useNow(active: boolean): number | null {
+// Only the first payment view in a document can be the hard load the navigation timing entry describes.
+let documentTimingUsed = false;
+
+/** Server-minus-device clock offset, measured once against the timestamp the server rendered the page with. */
+function useClockOffset(serverTime: number | undefined): number {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    const [entry] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const nav = documentTimingUsed ? undefined : entry;
+    documentTimingUsed = true;
+    setOffset(clockOffset(serverTime, receiptTime(nav, window.location.href, Date.now(), performance.now())));
+  }, [serverTime]);
+  return offset;
+}
+
+/** Server time, ticking every second while `active`; null until mounted so server and client markup agree. */
+function useServerNow(active: boolean, offset: number): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
+    setNow(Date.now() + offset);
     if (!active) return;
-    const t = setInterval(() => setNow(Date.now()), 1000);
+    const t = setInterval(() => setNow(Date.now() + offset), 1000);
     return () => clearInterval(t);
-  }, [active]);
+  }, [active, offset]);
   return now;
 }
 
@@ -110,7 +126,7 @@ function SummaryCard({ order }: { order: OrderDTO | undefined }) {
   );
 }
 
-export function PaymentView({ code }: { code: string }) {
+export function PaymentView({ code, serverTime }: { code: string; serverTime?: number }) {
   const qc = useQueryClient();
   const authReady = useAuthStore((s) => s.status === 'ready');
   const signedIn = useAuthStore((s) => Boolean(s.user));
@@ -131,7 +147,8 @@ export function PaymentView({ code }: { code: string }) {
 
   const info = payment.data;
   const settled = info ? isSettled(paymentPhase(info, null)) : false;
-  const now = useNow(!settled);
+  const offset = useClockOffset(serverTime);
+  const now = useServerNow(!settled, offset);
   const remaining = info && now !== null ? remainingMs(info.expiresAt, now) : null;
   const phase = info ? paymentPhase(info, remaining) : 'pending';
 

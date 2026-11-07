@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { PaymentView } from '@/features/checkout/PaymentView';
@@ -7,7 +8,9 @@ export const metadata: Metadata = { title: 'Thanh toán VietQR', robots: { index
 
 async function PayContent({ params }: Pick<PageProps<'/orders/[code]/pay'>, 'params'>) {
   const { code } = await params;
-  return <PaymentView code={decodeURIComponent(code)} />;
+  await connection();
+  // Request-time server clock: the countdown follows it even when the shopper's device clock is wrong.
+  return <PaymentView code={decodeURIComponent(code)} serverTime={Date.now()} />;
 }
 
 export default function PayPage({ params }: PageProps<'/orders/[code]/pay'>) {
