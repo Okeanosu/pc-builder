@@ -50,18 +50,26 @@ function ChatWidgetInner() {
           className="h-[88dvh] sm:h-full sm:w-[min(520px,100vw)]"
         >
           {open && (
-            <ChatPanel
-              variant="widget"
-              className="flex-1"
-              actions={
-                <Button asChild size="sm" variant="ghost" className="text-muted hover:text-fg">
-                  <Link href="/advisor" onClick={() => setOpen(false)}>
-                    <Maximize2 aria-hidden />
-                    <span className="max-sm:sr-only">Mở toàn màn hình</span>
-                  </Link>
-                </Button>
-              }
-            />
+            <div
+              className="flex min-h-0 flex-1 flex-col"
+              onClickCapture={(e) => {
+                // Following a link from the chat (Customizer, product, full screen) should reveal the page.
+                if ((e.target as HTMLElement).closest('a[href]')) setOpen(false);
+              }}
+            >
+              <ChatPanel
+                variant="widget"
+                className="flex-1"
+                actions={
+                  <Button asChild size="sm" variant="ghost" className="text-muted hover:text-fg">
+                    <Link href="/advisor">
+                      <Maximize2 aria-hidden />
+                      <span className="max-sm:sr-only">Mở toàn màn hình</span>
+                    </Link>
+                  </Button>
+                }
+              />
+            </div>
           )}
         </DrawerContent>
       </Drawer>

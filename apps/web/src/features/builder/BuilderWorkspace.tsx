@@ -30,21 +30,28 @@ import { useBuilderActions } from './useBuilderActions';
 const vnd = new Intl.NumberFormat('vi-VN');
 const PURPOSE_OPTIONS = PURPOSES.map((p) => ({ value: p, label: PURPOSE_LABELS[p] }));
 
-/** Hydrates the persisted build, then applies `?build=` / `?add=` once and strips them from the URL. */
+/**
+ * Hydrates the persisted build once, then applies each new `?build=` / `?add=` (also when they change
+ * while the page stays mounted, e.g. from the chat widget) and strips them from the URL.
+ */
 function useBuilderBootstrap() {
   const params = useSearchParams();
   const router = useRouter();
   const [ready, setReady] = useState(false);
-  const started = useRef(false);
+  const hydration = useRef<Promise<void> | null>(null);
+  const handled = useRef<string | null>(null);
   const buildId = params.get('build');
   const addId = params.get('add');
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
+    const key = `${buildId ?? ''}|${addId ?? ''}`;
+    if (handled.current === key) return;
+    const firstRun = handled.current === null;
+    handled.current = key;
     void (async () => {
       const store = useBuilderStore;
-      await store.persist.rehydrate();
+      hydration.current ??= Promise.resolve(store.persist.rehydrate());
+      await hydration.current;
       if (buildId) {
         try {
           const build = await store.getState().loadBuild(buildId);
@@ -63,7 +70,7 @@ function useBuilderBootstrap() {
                 : 'Không kết nối được máy chủ. Thử tải lại trang.',
           });
         }
-      } else {
+      } else if (firstRun) {
         void store
           .getState()
           .refreshParts()
