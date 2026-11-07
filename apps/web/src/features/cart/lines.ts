@@ -1,4 +1,9 @@
-import type { BuildDTO, CartItemDTO } from '@pc/shared';
+import type { CartItemDTO } from '@pc/shared';
+
+/** The part of a BuildDTO needed to check completeness. */
+export interface BuildParts {
+  items: readonly { product: { id: string } }[];
+}
 
 export interface BuildGroup {
   buildId: string;
@@ -30,7 +35,7 @@ export function groupCartLines(items: readonly CartItemDTO[]): GroupedCart {
 }
 
 /** True when every part of the build is still in the group with at least the build's quantity. */
-export function isBuildComplete(build: Pick<BuildDTO, 'items'>, group: BuildGroup): boolean {
+export function isBuildComplete(build: BuildParts, group: BuildGroup): boolean {
   if (build.items.length === 0) return false;
   const need = new Map<string, number>();
   for (const item of build.items) need.set(item.product.id, (need.get(item.product.id) ?? 0) + 1);
@@ -46,7 +51,7 @@ export function isBuildComplete(build: Pick<BuildDTO, 'items'>, group: BuildGrou
  */
 export function assemblableBuildId(
   grouped: GroupedCart,
-  buildsById: ReadonlyMap<string, Pick<BuildDTO, 'items'>>,
+  buildsById: ReadonlyMap<string, BuildParts>,
 ): string | null {
   if (grouped.builds.length !== 1) return null;
   const group = grouped.builds[0] as BuildGroup;

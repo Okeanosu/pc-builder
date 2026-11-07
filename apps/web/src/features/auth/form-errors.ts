@@ -47,3 +47,9 @@ export const REGISTER_MESSAGES: FieldMessages = {
   },
   phone: { default: 'Số điện thoại gồm 10 chữ số và bắt đầu bằng 0' },
 };
+
+/** Server errors already carry Vietnamese copy; anything else is a network failure. */
+export function apiErrorMessage(error: unknown): string {
+  if (error instanceof Error && 'status' in error && error.message) return error.message;
+  return 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
+}
