@@ -5,6 +5,7 @@ title: "Dòng giỏ hàng"
 status: done
 chapters: ["CH4"]
 links:
+  decidedBy: ["ADR-017"]
   refines: ["M-DB"]
 code: ["apps/api/src/db/schema.ts"]
 tests: []

@@ -2,7 +2,7 @@
 id: NFR-07
 type: requirement
 title: "Đóng gói và triển khai bằng Docker trên máy chủ đám mây"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

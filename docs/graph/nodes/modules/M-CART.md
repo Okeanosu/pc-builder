@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["E-CART", "E-CART-ITEM", "M-BUILDS"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-017"]
 code: ["apps/api/src/modules/cart/**"]
 tests: ["apps/api/src/modules/cart/**/*.test.ts"]
 diagrams: []

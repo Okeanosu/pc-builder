@@ -2,9 +2,10 @@
 id: M-WEB-STATE
 type: module
 title: "Kho trạng thái phía web (Zustand) và TanStack Query"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
+  decidedBy: ["ADR-016"]
   dependsOn: ["M-SHARED", "M-ENGINE"]
 code: ["apps/web/src/stores/**"]
 tests: ["apps/web/src/stores/**/*.test.ts"]

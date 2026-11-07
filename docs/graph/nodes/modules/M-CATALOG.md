@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-API-CORE", "E-PRODUCT", "E-CATEGORY", "E-BRAND", "E-BENCHMARK"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-015"]
 code: ["apps/api/src/modules/catalog/**"]
 tests: ["apps/api/src/modules/catalog/**/*.test.ts"]
 diagrams: []

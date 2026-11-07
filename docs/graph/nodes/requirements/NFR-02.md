@@ -2,7 +2,7 @@
 id: NFR-02
 type: requirement
 title: "Độ trễ hội thoại: một câu hỏi cho ra 3 cấu hình trong tối đa 8 giây"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

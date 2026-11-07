@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["E-ORDER", "E-ORDER-ITEM", "E-PRODUCT", "E-INVENTORY-MOVEMENT", "M-CART"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-017", "ADR-021"]
 code: ["apps/api/src/modules/orders/**", "apps/api/src/jobs/**"]
 tests: ["apps/api/src/modules/orders/**/*.test.ts", "apps/api/src/jobs/**/*.test.ts"]
 diagrams: []

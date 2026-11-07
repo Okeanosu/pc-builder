@@ -1,4 +1,4 @@
-%% Data types mirror packages/engine/src/types.ts; the processing classes (<<planned>>) are the intended design
+%% Mirrors packages/engine/src (flat files). Data types come from types.ts; the module classes group the exported functions of each file.
 classDiagram
   class EngineProduct {
     +string id
@@ -19,6 +19,7 @@ classDiagram
     +string[] exclude?
     +number topK?
     +SolveStrategy strategy?
+    +number nodeLimit?
   }
   class Build {
     +BuildLabel label
@@ -40,9 +41,11 @@ classDiagram
   class SolveStats {
     +SolveStrategy strategy
     +number nodesExplored
+    +number prunedByDominance?
     +number prunedByAc3
     +number prunedByForwardChecking
     +number prunedByBound
+    +boolean capped?
     +number timeMs
   }
   class PurposeProfile {
@@ -52,7 +55,7 @@ classDiagram
   }
   class CompatibilityIssue {
     +RuleCode code
-    +severity error|warning
+    +severity error or warning
     +string message
     +CategoryKey[] categories
   }
@@ -61,35 +64,115 @@ classDiagram
     +number estimatedWattage
     +number recommendedPsuWattage
   }
-  class RuleChecker {
-    <<planned>>
-    +checkCompatibility(parts) CompatibilityReport
-    +checkRule(code, parts) CompatibilityIssue[]
+  class CompatibilityContext {
+    +Purpose purpose?
+    +number budget?
+    +EngineProduct[] catalog?
   }
-  class Ac3Propagator {
-    <<planned>>
-    +reduceDomains(domains) Domains
+  class SolveStrategy {
+    <<enumeration>>
+    bruteforce
+    backtracking
+    forwardChecking
+    full
   }
-  class CspSolver {
-    <<planned>>
-    +solve(request, candidates, profile) SolveResult
-  }
-  class Scorer {
-    <<planned>>
-    +normalizedScore(product, purpose) number
-    +itemValue(product, profile) number
+  class InfeasibleReason {
+    <<enumeration>>
+    BUDGET_TOO_LOW
+    NO_COMPATIBLE_COMBINATION
+    FIXED_PART_CONFLICT
+    SEARCH_LIMIT
   }
 
-  CspSolver ..> SolveRequest : nhận
-  CspSolver ..> EngineProduct : miền giá trị
-  CspSolver ..> PurposeProfile : trọng số MCKP
-  CspSolver --> SolveResult : trả về
-  CspSolver --> Ac3Propagator : tiền xử lý
-  CspSolver --> RuleChecker : forward checking
-  CspSolver --> Scorer : cận Branch and Bound
-  RuleChecker --> CompatibilityReport
+  class rules_ts["rules.ts"] {
+    <<module>>
+    +RULES one pure function per rule C01 to C15
+    +PAIR_RULES hard binary rules per category pair
+    +pairCompatible(codes, parts) boolean
+    +estimateWattage(tdp, tgp) number
+    +minPsuWattage(estimated) number
+    +recommendedPsuWattage(estimated) number
+    +lacksPsuHeadroom(wattage, estimated) boolean
+    +isEntryChipset(chipset) boolean
+    +isHighClassCpu(cpu, catalog) boolean
+  }
+  class compatibility_ts["compatibility.ts"] {
+    <<module>>
+    +checkCompatibility(parts, ctx) CompatibilityReport
+  }
+  class scoring_ts["scoring.ts"] {
+    <<module>>
+    +scoreProduct(product, purpose, catalog) number
+    +createScorer(catalog, purpose) Scorer
+    +ecosystemFactor(product, purpose, prefs) number
+    +cpuGpuTier(product, catalog) Tier
+    +CUDA_ECOSYSTEM_FACTOR Record
+  }
+  class profiles_ts["profiles.ts"] {
+    <<module>>
+    +DEFAULT_PROFILES Record
+    +profileForRequest(profile, prefs) PurposeProfile
+  }
+  class domains_ts["domains.ts"] {
+    <<module>>
+    +buildProblem(req, catalog, profile) Problem
+    +initialDomains(problem) number[][]
+    +compatible(problem, a, i, b, j) boolean
+    +psuSufficient(problem, cpu, gpu, psu) boolean
+    +softPenalty(problem, idx) number
+    +exactScore(problem, idx) number
+    +exactPrice(problem, idx) number
+    +pruneDominated(problem, domains) number
+  }
+  class ac3_ts["ac3.ts"] {
+    <<module>>
+    +ac3(problem, domains) Ac3Result
+  }
+  class search_ts["search.ts"] {
+    <<module>>
+    +search(problem, initial, cfg) SearchResult
+    +search uses forward checking and a MCKP LP bound
+  }
+  class bruteforce_ts["bruteforce.ts"] {
+    <<module>>
+    +bruteForce(problem, domains, onLeaf, nodeLimit) BruteForceResult
+  }
+  class topk_ts["topk.ts"] {
+    <<module>>
+    +labelRoles(candidates) LabelledCandidate[]
+    +selectDiverse(candidates) LabelledCandidate[]
+    +CandidatePool per cpu-gpu Pareto fronts
+    +BUDGET_SCORE_RATIO 0.85
+  }
+  class solver_ts["solver.ts"] {
+    <<module>>
+    +solve(req, catalog, profile) SolveResult
+    +solveWithOptions(req, catalog, profile, options) SolveResult
+    +DEFAULT_NODE_LIMIT 2000000
+  }
+
+  solver_ts ..> SolveRequest : nhận
+  solver_ts ..> EngineProduct : miền giá trị
+  solver_ts ..> PurposeProfile : trọng số MCKP
+  solver_ts --> SolveResult : trả về
+  solver_ts --> domains_ts : dựng bài toán CSP, dominance
+  solver_ts --> ac3_ts : tiền xử lý (full)
+  solver_ts --> search_ts : quay lui, FC, B&B
+  solver_ts --> bruteforce_ts : chiến lược vét cạn
+  solver_ts --> topk_ts : gán nhãn top-3
+  domains_ts --> rules_ts : ma trận tương thích từ hàm luật
+  domains_ts --> scoring_ts : giá trị MCKP, hệ số CUDA
+  domains_ts --> profiles_ts : trọng số theo mục đích
+  ac3_ts --> domains_ts
+  search_ts --> domains_ts
+  compatibility_ts --> rules_ts : chạy C01..C15
+  compatibility_ts --> CompatibilityReport
+  rules_ts --> CompatibilityIssue
   CompatibilityReport "1" o-- "*" CompatibilityIssue
+  CompatibilityContext ..> compatibility_ts : tùy chọn
   SolveResult "1" o-- "*" Build
   SolveResult "1" *-- "1" SolveStats
+  SolveResult ..> InfeasibleReason
+  SolveRequest ..> SolveStrategy
   Build "1" o-- "*" EngineProduct : parts
   Build "1" o-- "*" CompatibilityIssue : warnings

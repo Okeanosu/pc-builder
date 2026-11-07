@@ -2,7 +2,7 @@
 id: NFR-01
 type: requirement
 title: "Hiệu năng của Optimization Engine: dưới 300 ms (p95) trên catalog khoảng 250 sản phẩm"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

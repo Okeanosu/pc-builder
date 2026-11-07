@@ -2,7 +2,7 @@
 id: M-WEB
 type: module
 title: "Ứng dụng web Next.js: storefront, advisor, builder, admin"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-SHARED", "M-ENGINE", "M-WEB-STATE"]
