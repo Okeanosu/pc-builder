@@ -15,7 +15,9 @@ export function createFileMatcher(repoRoot: string) {
   return (pattern: string): string[] => {
     let files = cache.get(pattern);
     if (!files) {
-      files = fg.sync(pattern, { cwd: repoRoot, ignore: ['**/node_modules/**', '**/.next/**'], dot: false }).sort();
+      files = fg
+        .sync(pattern, { cwd: repoRoot, ignore: ['**/node_modules/**', '**/.next/**'], dot: false })
+        .sort();
       cache.set(pattern, files);
     }
     return files;
@@ -116,7 +118,12 @@ function checkPaths(node: GraphNode, match: (pattern: string) => string[], issue
   const base = { nodeId: node.id, file: node.file };
   const kinds = [
     { field: 'code', patterns: node.code, missing: 'MISSING_CODE', required: CODE_TYPES },
-    { field: 'tests', patterns: node.tests, missing: 'MISSING_TEST', required: node.type === 'test' ? ['test' as NodeType] : TEST_TYPES },
+    {
+      field: 'tests',
+      patterns: node.tests,
+      missing: 'MISSING_TEST',
+      required: node.type === 'test' ? ['test' as NodeType] : TEST_TYPES,
+    },
   ] as const;
 
   for (const { field, patterns, missing, required } of kinds) {
@@ -124,7 +131,12 @@ function checkPaths(node: GraphNode, match: (pattern: string) => string[], issue
       if (match(pattern).length > 0) continue;
       issues.push(
         done
-          ? { ...base, severity: 'error', code: missing, message: `${node.id} is done but ${field} "${pattern}" matches no file` }
+          ? {
+              ...base,
+              severity: 'error',
+              code: missing,
+              message: `${node.id} is done but ${field} "${pattern}" matches no file`,
+            }
           : {
               ...base,
               severity: 'warning',

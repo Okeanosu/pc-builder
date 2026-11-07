@@ -1,0 +1,177 @@
+%% Mirrors apps/api/src/db/schema.ts; update this diagram whenever the schema changes
+erDiagram
+  users {
+    uuid id PK "default random"
+    text email UK
+    text password_hash
+    text full_name
+    text phone "nullable"
+    role role "CUSTOMER|STAFF|ADMIN; default CUSTOMER"
+    timestamptz created_at "default now"
+  }
+  categories {
+    uuid id PK "default random"
+    text key UK
+    text slug UK
+    text name
+    int sort_order "default 0"
+    jsonb spec_schema "default []"
+  }
+  brands {
+    uuid id PK "default random"
+    text name UK
+  }
+  products {
+    uuid id PK "default random"
+    uuid category_id FK
+    uuid brand_id FK
+    text sku UK
+    text slug UK
+    text name
+    bigint price
+    bigint sale_price "nullable"
+    int stock "default 0"
+    int reserved "default 0"
+    jsonb images "default []"
+    jsonb specs
+    text description "nullable"
+    product_status status "ACTIVE|HIDDEN; default ACTIVE"
+    real commercial_boost "default 0"
+    timestamptz created_at "default now"
+    timestamptz updated_at "default now"
+  }
+  benchmarks {
+    uuid product_id PK,FK
+    int cpu_single "nullable"
+    int cpu_multi "nullable"
+    int gpu_score "nullable"
+    text source "nullable"
+    timestamptz updated_at "default now"
+  }
+  inventory_movements {
+    uuid id PK "default random"
+    uuid product_id FK
+    int delta
+    movement_reason reason "IMPORT|ORDER|CANCEL|ADJUST"
+    text ref "nullable"
+    uuid actor_id FK "nullable"
+    timestamptz created_at "default now"
+  }
+  purpose_weights {
+    text purpose PK
+    jsonb weights
+    jsonb allocation
+    uuid updated_by FK "nullable"
+    timestamptz updated_at "default now"
+  }
+  builds {
+    uuid id PK "default random"
+    uuid user_id FK "nullable"
+    text name
+    text label "nullable"
+    text purpose
+    bigint budget
+    jsonb items
+    bigint total_price
+    real score "default 0"
+    jsonb score_breakdown "default {}"
+    jsonb allocation "default {}"
+    int estimated_wattage "default 0"
+    int recommended_psu_wattage "default 0"
+    jsonb warnings "default []"
+    build_source source "CHAT|FORM|CUSTOM"
+    timestamptz created_at "default now"
+  }
+  carts {
+    uuid id PK "default random"
+    uuid user_id FK,UK
+    timestamptz updated_at "default now"
+  }
+  cart_items {
+    uuid id PK "default random"
+    uuid cart_id FK
+    uuid product_id FK
+    int qty
+    uuid build_id FK "nullable"
+  }
+  orders {
+    uuid id PK "default random"
+    text code UK
+    uuid user_id FK "nullable"
+    order_type type "RETAIL|BUILD"
+    order_status status "PENDING_PAYMENT|PAID|PROCESSING|SHIPPING|COMPLETED|CANCELLED; default PENDING_PAYMENT"
+    payment_status payment_status "UNPAID|PAID|REFUNDED; default UNPAID"
+    uuid build_id FK "nullable"
+    bigint subtotal
+    bigint assembly_fee "default 0"
+    bigint shipping_fee "default 0"
+    bigint total
+    text shipping_name
+    text phone
+    text address
+    text note "nullable"
+    timestamptz paid_at "nullable"
+    timestamptz expires_at "nullable"
+    timestamptz created_at "default now"
+    timestamptz updated_at "default now"
+  }
+  order_items {
+    uuid id PK "default random"
+    uuid order_id FK
+    uuid product_id FK
+    text name_snapshot
+    bigint price_snapshot
+    int qty
+    uuid build_id FK "nullable"
+  }
+  payments {
+    uuid id PK "default random"
+    uuid order_id FK
+    text provider
+    bigint amount
+    text transfer_content "nullable"
+    text provider_txn_id UK "nullable"
+    jsonb raw "nullable"
+    text status
+    timestamptz created_at "default now"
+  }
+  chat_sessions {
+    uuid id PK "default random"
+    uuid user_id FK "nullable"
+    text guest_id "nullable"
+    text title "nullable"
+    chat_mode mode "AI|FALLBACK; default AI"
+    timestamptz created_at "default now"
+  }
+  chat_messages {
+    uuid id PK "default random"
+    uuid session_id FK
+    chat_role role "user|assistant|tool"
+    text content "default "
+    text tool_name "nullable"
+    jsonb tool_args "nullable"
+    jsonb tool_result "nullable"
+    jsonb build_ids "default []"
+    chat_mode mode "AI|FALLBACK; nullable"
+    int latency_ms "nullable"
+    timestamptz created_at "default now"
+  }
+  categories ||--o{ products : "category_id"
+  brands ||--o{ products : "brand_id"
+  products ||--o| benchmarks : "product_id (PK)"
+  products ||--o{ inventory_movements : "product_id"
+  users ||--o{ inventory_movements : "actor_id"
+  users ||--o{ purpose_weights : "updated_by"
+  users ||--o{ builds : "user_id"
+  users ||--o| carts : "user_id (unique)"
+  carts ||--o{ cart_items : "cart_id"
+  products ||--o{ cart_items : "product_id"
+  builds ||--o{ cart_items : "build_id"
+  users ||--o{ orders : "user_id"
+  builds ||--o{ orders : "build_id"
+  orders ||--o{ order_items : "order_id"
+  products ||--o{ order_items : "product_id"
+  builds ||--o{ order_items : "build_id"
+  orders ||--o{ payments : "order_id"
+  users ||--o{ chat_sessions : "user_id"
+  chat_sessions ||--o{ chat_messages : "session_id"

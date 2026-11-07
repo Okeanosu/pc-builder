@@ -1,0 +1,30 @@
+flowchart TB
+  user([Trình duyệt người dùng])
+  bank[/Ngân hàng / SePay/]
+  vietqr[/img.vietqr.io/]
+  gemini[/Google Gemini API/]
+
+  subgraph VPS[Cloud VPS Ubuntu - Docker Compose]
+    caddy[Caddy<br/>reverse proxy, HTTPS tự động]
+    subgraph NET[Mạng nội bộ Docker]
+      web[web<br/>Next.js standalone :3000]
+      api[api<br/>Node.js + Express 5 :4000]
+      pg[(postgres:16<br/>volume pgdata)]
+      redis[(redis:7)]
+    end
+  end
+
+  user -->|HTTPS 443| caddy
+  caddy -->|/| web
+  caddy -->|/api| api
+  web -->|SSR gọi REST| api
+  api --> pg
+  api --> redis
+  api -->|function calling, HTTPS| gemini
+  bank -->|webhook POST /api/payments/webhook/sepay| caddy
+  user -.->|tải ảnh QR| vietqr
+
+  subgraph DEV[Môi trường phát triển - infra/docker-compose.yml]
+    devpg[(postgres:16 :5433)]
+    devredis[(redis:7 :6380)]
+  end

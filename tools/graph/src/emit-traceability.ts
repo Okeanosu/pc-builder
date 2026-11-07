@@ -31,7 +31,10 @@ export function emitCoverage(graph: Graph, repoRoot: string): string {
   const lines = ['# Độ phủ & tiến độ', '', 'Sinh tự động bởi `pnpm graph` — không sửa tay.', ''];
 
   lines.push('## Số node theo loại và trạng thái', '');
-  lines.push(`| Loại | ${NODE_STATUSES.join(' | ')} | Tổng |`, `| --- | ${NODE_STATUSES.map(() => '---:').join(' | ')} | ---: |`);
+  lines.push(
+    `| Loại | ${NODE_STATUSES.join(' | ')} | Tổng |`,
+    `| --- | ${NODE_STATUSES.map(() => '---:').join(' | ')} | ---: |`,
+  );
   for (const type of NODE_TYPES) {
     const nodes = graph.nodes.filter((n) => n.type === type);
     const counts = NODE_STATUSES.map((s) => nodes.filter((n) => n.status === s).length);
@@ -49,12 +52,16 @@ export function emitCoverage(graph: Graph, repoRoot: string): string {
   section(
     'Yêu cầu chưa có use case / tính năng',
     'Cần thêm node `realizes` trỏ tới yêu cầu.',
-    reqs.filter(({ trace }) => trace.usecases.length + trace.features.length + trace.others.length === 0).map(({ req }) => label(req)),
+    reqs
+      .filter(({ trace }) => trace.usecases.length + trace.features.length + trace.others.length === 0)
+      .map(({ req }) => label(req)),
   );
   section(
     'Yêu cầu chưa có test',
     'Cần thêm node `test` (`verifies`) hoặc khai báo `tests:` cho tính năng.',
-    reqs.filter(({ trace }) => trace.testNodes.length + trace.tests.length === 0).map(({ req }) => label(req)),
+    reqs
+      .filter(({ trace }) => trace.testNodes.length + trace.tests.length === 0)
+      .map(({ req }) => label(req)),
   );
   section(
     'Yêu cầu chưa có code thực tế',
@@ -74,11 +81,24 @@ export function emitCoverage(graph: Graph, repoRoot: string): string {
       .map((n) => `**${n.id}** (${n.status}) — ${n.title}`),
   );
 
-  lines.push('', '## Số node theo chương', '', `| Chương | ${NODE_TYPES.filter((t) => t !== 'chapter').map((t) => TYPE_LABELS[t]).join(' | ')} | Tổng |`);
-  lines.push(`| --- | ${NODE_TYPES.filter((t) => t !== 'chapter').map(() => '---:').join(' | ')} | ---: |`);
+  lines.push(
+    '',
+    '## Số node theo chương',
+    '',
+    `| Chương | ${NODE_TYPES.filter((t) => t !== 'chapter')
+      .map((t) => TYPE_LABELS[t])
+      .join(' | ')} | Tổng |`,
+  );
+  lines.push(
+    `| --- | ${NODE_TYPES.filter((t) => t !== 'chapter')
+      .map(() => '---:')
+      .join(' | ')} | ---: |`,
+  );
   for (const chapter of graph.nodes.filter((n) => n.type === 'chapter')) {
     const inChapter = graph.nodes.filter((n) => n.chapters.includes(chapter.id));
-    const counts = NODE_TYPES.filter((t) => t !== 'chapter').map((t) => inChapter.filter((n) => n.type === t).length);
+    const counts = NODE_TYPES.filter((t) => t !== 'chapter').map(
+      (t) => inChapter.filter((n) => n.type === t).length,
+    );
     lines.push(`| ${chapter.id} — ${chapter.title} | ${counts.join(' | ')} | ${inChapter.length} |`);
   }
   return `${lines.join('\n')}\n`;

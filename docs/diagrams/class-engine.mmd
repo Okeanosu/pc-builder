@@ -1,0 +1,95 @@
+%% Data types mirror packages/engine/src/types.ts; the processing classes (<<planned>>) are the intended design
+classDiagram
+  class EngineProduct {
+    +string id
+    +CategoryKey category
+    +string name
+    +string brand
+    +number price
+    +number stock
+    +AnySpecs specs
+    +Benchmark benchmark?
+    +number commercialBoost?
+  }
+  class SolveRequest {
+    +number budget
+    +Purpose purpose
+    +Preferences preferences?
+    +Record fixed?
+    +string[] exclude?
+    +number topK?
+    +SolveStrategy strategy?
+  }
+  class Build {
+    +BuildLabel label
+    +PartMap parts
+    +number totalPrice
+    +number score
+    +Record scoreBreakdown
+    +Record allocation
+    +number estimatedWattage
+    +number recommendedPsuWattage
+    +CompatibilityIssue[] warnings
+  }
+  class SolveResult {
+    +Build[] builds
+    +SolveStats stats
+    +InfeasibleReason infeasibleReason?
+    +number minFeasibleBudget?
+  }
+  class SolveStats {
+    +SolveStrategy strategy
+    +number nodesExplored
+    +number prunedByAc3
+    +number prunedByForwardChecking
+    +number prunedByBound
+    +number timeMs
+  }
+  class PurposeProfile {
+    +Purpose purpose
+    +Record weights
+    +Record allocation
+  }
+  class CompatibilityIssue {
+    +RuleCode code
+    +severity error|warning
+    +string message
+    +CategoryKey[] categories
+  }
+  class CompatibilityReport {
+    +CompatibilityIssue[] issues
+    +number estimatedWattage
+    +number recommendedPsuWattage
+  }
+  class RuleChecker {
+    <<planned>>
+    +checkCompatibility(parts) CompatibilityReport
+    +checkRule(code, parts) CompatibilityIssue[]
+  }
+  class Ac3Propagator {
+    <<planned>>
+    +reduceDomains(domains) Domains
+  }
+  class CspSolver {
+    <<planned>>
+    +solve(request, candidates, profile) SolveResult
+  }
+  class Scorer {
+    <<planned>>
+    +normalizedScore(product, purpose) number
+    +itemValue(product, profile) number
+  }
+
+  CspSolver ..> SolveRequest : nhận
+  CspSolver ..> EngineProduct : miền giá trị
+  CspSolver ..> PurposeProfile : trọng số MCKP
+  CspSolver --> SolveResult : trả về
+  CspSolver --> Ac3Propagator : tiền xử lý
+  CspSolver --> RuleChecker : forward checking
+  CspSolver --> Scorer : cận Branch and Bound
+  RuleChecker --> CompatibilityReport
+  CompatibilityReport "1" o-- "*" CompatibilityIssue
+  SolveResult "1" o-- "*" Build
+  SolveResult "1" *-- "1" SolveStats
+  Build "1" o-- "*" EngineProduct : parts
+  Build "1" o-- "*" CompatibilityIssue : warnings

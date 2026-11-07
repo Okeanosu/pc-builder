@@ -89,7 +89,8 @@ export function edgesOf(graph: Graph): Edge[] {
     for (const key of LINK_KEYS) {
       for (const target of node.links[key]) edges.push({ source: node.id, target, type: key });
     }
-    for (const chapter of node.chapters) edges.push({ source: node.id, target: chapter, type: 'documentedIn' });
+    for (const chapter of node.chapters)
+      edges.push({ source: node.id, target: chapter, type: 'documentedIn' });
   }
   return edges;
 }

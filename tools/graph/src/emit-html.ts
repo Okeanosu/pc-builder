@@ -22,7 +22,12 @@ const TYPE_COLORS: Record<string, string> = {
 const inlineJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 export function emitHtml(payload: GraphPayload): string {
-  const meta = { typeColors: TYPE_COLORS, typeLabels: TYPE_LABELS, types: NODE_TYPES, statuses: NODE_STATUSES };
+  const meta = {
+    typeColors: TYPE_COLORS,
+    typeLabels: TYPE_LABELS,
+    types: NODE_TYPES,
+    statuses: NODE_STATUSES,
+  };
   return TEMPLATE.replace('__CYTOSCAPE__', CYTOSCAPE_URL)
     .replace('__DATA__', () => inlineJson(payload))
     .replace('__META__', () => inlineJson(meta));

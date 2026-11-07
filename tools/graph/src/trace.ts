@@ -21,7 +21,10 @@ export function traceRequirement(graph: Graph, requirement: GraphNode): Requirem
   const direct = realizers(requirement.id);
   const usecases = direct.filter((n) => n.type === 'usecase');
   const viaUsecase = usecases.flatMap((uc) => realizers(uc.id));
-  const features = uniq([...direct.filter((n) => n.type === 'feature'), ...viaUsecase.filter((n) => n.type === 'feature')]);
+  const features = uniq([
+    ...direct.filter((n) => n.type === 'feature'),
+    ...viaUsecase.filter((n) => n.type === 'feature'),
+  ]);
   const others = direct.filter((n) => ['module', 'api', 'algorithm', 'rule', 'screen'].includes(n.type));
   const impl = uniq([...features, ...others]);
   const verifiable = new Set([requirement.id, ...usecases.map((n) => n.id), ...impl.map((n) => n.id)]);

@@ -29,12 +29,15 @@ function parseArgs(argv: string[]): Args {
 function report(issues: Issue[], verbose: boolean): void {
   const errors = issues.filter((i) => i.severity === 'error');
   const warnings = issues.filter((i) => i.severity === 'warning');
-  for (const issue of errors) console.error(`ERROR   ${issue.code}  ${issue.message}${issue.file ? `  [${issue.file}]` : ''}`);
+  for (const issue of errors)
+    console.error(`ERROR   ${issue.code}  ${issue.message}${issue.file ? `  [${issue.file}]` : ''}`);
   const summary = new Map<string, Issue[]>();
   for (const w of warnings) summary.set(w.code, [...(summary.get(w.code) ?? []), w]);
   for (const [code, list] of summary) {
     if (code === 'PLANNED_PATH_MISSING' && !verbose) {
-      console.warn(`WARNING ${code}  ${list.length} path(s) of non-done nodes match no file yet (use --verbose to list)`);
+      console.warn(
+        `WARNING ${code}  ${list.length} path(s) of non-done nodes match no file yet (use --verbose to list)`,
+      );
       continue;
     }
     for (const w of list) console.warn(`WARNING ${code}  ${w.message}`);
@@ -52,7 +55,8 @@ function build(root: string): void {
   writeFileSync(join(outDir, 'graph.mmd'), emitMermaid(graph));
   writeFileSync(join(outDir, 'traceability.md'), emitTraceability(graph));
   writeFileSync(join(outDir, 'coverage.md'), emitCoverage(graph, root));
-  for (const [name, content] of emitChapters(graph, root)) writeFileSync(join(outDir, 'chapters', name), content);
+  for (const [name, content] of emitChapters(graph, root))
+    writeFileSync(join(outDir, 'chapters', name), content);
   writeFileSync(join(outDir, 'index.html'), emitHtml(payload));
   console.log(`graph: wrote ${payload.stats.nodes} nodes, ${payload.stats.edges} edges to docs/graph/out/`);
 }

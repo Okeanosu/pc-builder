@@ -30,7 +30,9 @@ const graph = makeGraph([
   }),
   makeNode({ id: 'M-CART', type: 'module', title: 'Cart', chapters: ['CH4'], body: 'Giỏ.' }),
   makeNode({ id: 'T-CHAT', type: 'test', title: 'Chat test', links: { verifies: ['FR-01'] } as never }),
-  ...['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6'].map((id) => makeNode({ id, type: 'chapter', title: `Chương ${id}` })),
+  ...['CH1', 'CH2', 'CH3', 'CH4', 'CH5', 'CH6'].map((id) =>
+    makeNode({ id, type: 'chapter', title: `Chương ${id}` }),
+  ),
 ]);
 
 describe('emitTraceability', () => {
@@ -43,7 +45,11 @@ describe('emitTraceability', () => {
 
   it('has exactly one row per requirement', () => {
     expect(rows.slice(1)).toHaveLength(3);
-    expect(rows.slice(1).map((r) => r.split(' | ')[0])).toEqual(['| FR-01 — Chat tư vấn', '| FR-02 — Giỏ hàng', '| NFR-01 — Hiệu năng']);
+    expect(rows.slice(1).map((r) => r.split(' | ')[0])).toEqual([
+      '| FR-01 — Chat tư vấn',
+      '| FR-02 — Giỏ hàng',
+      '| NFR-01 — Hiệu năng',
+    ]);
   });
 
   it('follows requirement -> use case -> feature -> code/test', () => {

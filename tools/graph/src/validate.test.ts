@@ -16,7 +16,9 @@ describe('validate', () => {
   });
 
   it('reports BROKEN_LINK when a link target does not exist', () => {
-    const graph = makeGraph([makeNode({ id: 'F-A', type: 'feature', links: { realizes: ['FR-99'] } as never })]);
+    const graph = makeGraph([
+      makeNode({ id: 'F-A', type: 'feature', links: { realizes: ['FR-99'] } as never }),
+    ]);
     const issues = validate(graph, makeRepo());
     const broken = issues.find((i) => i.code === 'BROKEN_LINK');
     expect(broken?.severity).toBe('error');
@@ -36,7 +38,13 @@ describe('validate', () => {
 
   it('reports MISSING_TEST as an error for a done node whose tests glob matches nothing', () => {
     const graph = makeGraph([
-      makeNode({ id: 'M-A', type: 'module', status: 'done', code: ['src/a.ts'], tests: ['src/**/*.test.ts'] }),
+      makeNode({
+        id: 'M-A',
+        type: 'module',
+        status: 'done',
+        code: ['src/a.ts'],
+        tests: ['src/**/*.test.ts'],
+      }),
     ]);
     const issue = validate(graph, makeRepo({ 'src/a.ts': '' })).find((i) => i.code === 'MISSING_TEST');
     expect(issue?.severity).toBe('error');
