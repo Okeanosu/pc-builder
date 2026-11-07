@@ -265,9 +265,40 @@ describe('parseIntent — follow-ups with a previous intent', () => {
     expect(r.budgetRange).toBeUndefined();
   });
 
-  it('a bare number does not replace a previous budget', () => {
-    expect(parseIntent('khoảng 16', prev()).budget).toBe(25_000_000);
+  it('a truly bare number does not replace a previous budget', () => {
+    expect(parseIntent('có 16', prev()).budget).toBe(25_000_000);
     expect(parseIntent('16', prev()).budget).toBe(25_000_000);
+    expect(parseIntent('30', prev()).budget).toBe(25_000_000);
+  });
+
+  it.each(['ngân sách 30', 'budget 30', 'tầm 30', 'khoảng 30 thôi'])(
+    'a cued unit-less "%s" replaces the previous budget as millions',
+    (text) => {
+      expect(parseIntent(text, prev()).budget).toBe(30_000_000);
+    },
+  );
+
+  it('a cued unit-less number right after a component word is not a budget', () => {
+    expect(parseIntent('ram tầm 16 thôi', prev()).budget).toBe(25_000_000);
+  });
+
+  it.each([
+    ['mạnh hơn 30 triệu', 30_000_000, 'stronger'],
+    ['tốt hơn 30 triệu', 30_000_000, 'stronger'],
+    ['rẻ hơn 20 triệu', 20_000_000, 'cheaper'],
+    ['rẻ hơn 3 triệu', 22_000_000, 'cheaper'],
+    ['bớt 5 triệu', 20_000_000, 'cheaper'],
+    ['thêm 30 triệu', 55_000_000, 'stronger'],
+  ])('comparative vs verb with previous 25M: "%s" → %d', (text, budget, change) => {
+    const r = parseIntent(text, prev());
+    expect(r.budget).toBe(budget);
+    expect(r.wantsChange).toBe(change);
+  });
+
+  it('every amount is absolute without a previous budget', () => {
+    expect(parseIntent('mạnh hơn 30 triệu').budget).toBe(30_000_000);
+    expect(parseIntent('rẻ hơn 20 triệu').budget).toBe(20_000_000);
+    expect(parseIntent('bớt 3 triệu').budget).toBe(3_000_000);
   });
 
   it('"mạnh hơn bản trước 5 triệu" adds to the previous budget', () => {
@@ -326,5 +357,38 @@ describe('parseIntent — product model numbers and "cũ" are not money', () => 
   it('still reads "củ" with diacritics and bare "cu" at the end of a clause', () => {
     expect(parseIntent('30 củ chơi game').budget).toBe(30_000_000);
     expect(parseIntent('tầm 20 cu, chơi game').budget).toBe(20_000_000);
+  });
+
+  it.each([
+    ['25 cu choi game', 25_000_000],
+    ['tầm 25 cu nhé', 25_000_000],
+    ['25 cu thoi', 25_000_000],
+    ['dùng lại card 1080 cu', undefined],
+    ['ram 16 cu', undefined],
+    ['tan nhiet 120 cu', undefined],
+  ])('unaccented mid-sentence "cu": %s → %s', (text, budget) => {
+    expect(parseIntent(text).budget).toBe(budget);
+  });
+});
+
+describe('parseIntent — regression probes', () => {
+  it.each([
+    ['25tr', 25_000_000],
+    ['25 củ', 25_000_000],
+    ['tầm 20-25 triệu', 25_000_000],
+    ['dưới 30 củ', 30_000_000],
+    ['hai mươi lăm triệu', 25_000_000],
+    ['chơi game 2K 30tr', 30_000_000],
+    ['i5 13600K', undefined],
+    ['card 3060 cũ, chơi game 20 triệu', 20_000_000],
+  ])('%s → %s', (text, budget) => {
+    expect(parseIntent(text).budget).toBe(budget);
+  });
+
+  it.each([
+    ['mạnh hơn bản trước 5 triệu', 30_000_000],
+    ['bớt 5 triệu', 20_000_000],
+  ])('with previous 25M: %s → %d', (text, budget) => {
+    expect(parseIntent(text, prev()).budget).toBe(budget);
   });
 });

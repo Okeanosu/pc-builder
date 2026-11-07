@@ -30,15 +30,25 @@ export function foldVietnamese(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd');
 }
 
+const SHORT_NUMBER_BEFORE = /(?<![\p{L}\d.,])(\d{1,3}(?:[.,]\d+)?)\s*$/u;
+
 /**
- * Folding merges "củ" (slang for a million) with "cũ" (used), "cụ", "cừ"…, so only "củ" — or a bare "cu" that
- * ends a clause — survives as the money unit; every other form becomes "cux".
+ * Folding merges "củ" (slang for a million) with "cũ" (used), "cụ", "cừ"…. "củ" always stays the money unit; an
+ * unaccented "cu" only after a short number (≤ 200, not a model number, not after a component word) or a
+ * Vietnamese number word; every other form becomes "cux", which matches nothing.
  */
 function disambiguateCu(low: string): string {
   return low.replace(/(?<!\p{L})c[uùúủũụưừứửữự](?!\p{L})/gu, (word, offset: number) => {
     if (word === 'củ') return 'cu';
-    if (word === 'cu' && /^\s*(?:$|[,.;!?])/.test(low.slice(offset + 2))) return 'cu';
-    return 'cux';
+    if (word !== 'cu') return 'cux';
+    const before = low.slice(0, offset);
+    const number = SHORT_NUMBER_BEFORE.exec(before);
+    if (number) {
+      const afterProduct = PRODUCT_BEFORE.test(foldVietnamese(before.slice(0, number.index)));
+      return toNum(number[1] ?? '0') <= MAX_MILLIONS && !afterProduct ? 'cu' : 'cux';
+    }
+    const lastWord = /(\p{L}+)\s*$/u.exec(before)?.[1];
+    return lastWord && NUMBER_WORDS.has(foldVietnamese(lastWord)) ? 'cu' : 'cux';
   });
 }
 
@@ -61,10 +71,13 @@ const clamp = (n: number) => Math.min(MAX_BUDGET, Math.max(MIN_BUDGET, n));
 interface Amount {
   value: number;
   start: number;
+  /** Direction suggested by the word before the amount; resolved against the previous budget in parseIntent. */
   sign: -1 | 0 | 1;
+  /** "verb" (thêm/bớt…) is always a delta; "comparative" (rẻ/mạnh hơn…) only for small amounts. */
+  cue?: 'verb' | 'comparative';
   /** Preceded by "lên/xuống/còn/thành/tối đa": an explicit target, never reinterpreted as a delta. */
   anchored: boolean;
-  /** A unit-less number read as millions ("ngân sách 25", "25"). */
+  /** A unit-less number with no budget cue ("25", "có 25"): only fills an empty budget. */
   bare?: boolean;
 }
 
@@ -139,21 +152,24 @@ export function parseVietnameseNumber(words: string[]): number | undefined {
 
 const APPROX = String.raw`(?:\s+(?:tam|khoang|chung|co))?\s*$`;
 const ABSOLUTE_BEFORE = new RegExp(String.raw`\b(len|xuong|con|thanh|toi da)${APPROX}`);
-const MINUS_BEFORE = new RegExp(
-  String.raw`\b(bot|giam|tru|re hon|tiet kiem hon)(?:\s+(?:di|bot|them))?${APPROX}`,
-);
-const PLUS_BEFORE = new RegExp(
-  String.raw`\b(them|tang|cong|dat hon|manh hon|khoe hon|xin hon|tot hon|cao hon)(?:\s+them)?${APPROX}`,
+const VERB_MINUS_BEFORE = new RegExp(String.raw`\b(bot|giam|tru)(?:\s+(?:di|bot|them))?${APPROX}`);
+const VERB_PLUS_BEFORE = new RegExp(String.raw`\b(them|tang|cong)(?:\s+them)?${APPROX}`);
+const COMPARATIVE_MINUS_BEFORE = new RegExp(String.raw`\b(re hon|tiet kiem hon)${APPROX}`);
+const COMPARATIVE_PLUS_BEFORE = new RegExp(
+  String.raw`\b(manh hon|khoe hon|xin hon|tot hon|cao hon|dat hon)${APPROX}`,
 );
 /** A component/model word right before a number means it is a model or spec, not money ("ram 16 cu"). */
 const PRODUCT_BEFORE =
-  /\b(card|vga|gpu|rtx|gtx|rx|radeon|geforce|arc|ram|cpu|chip|ssd|hdd|nvme|main|mainboard|nguon|psu|case|man|monitor|i[3579]|ryzen|core|ultra)\s*$/;
+  /\b(card|vga|gpu|rtx|gtx|rx|radeon|geforce|arc|ram|cpu|chip|ssd|hdd|nvme|main|mainboard|nguon|psu|case|tan nhiet|tan|man|monitor|i[3579]|ryzen|core|ultra)\s*$/;
 
-function amountContext(norm: string, start: number): Pick<Amount, 'sign' | 'anchored'> {
+/** What sits right before an amount: an anchor ("lên/còn"), a ± verb ("thêm/bớt") or a comparative ("rẻ hơn"). */
+function amountContext(norm: string, start: number): Pick<Amount, 'sign' | 'cue' | 'anchored'> {
   const before = norm.slice(Math.max(0, start - 24), start);
   if (ABSOLUTE_BEFORE.test(before)) return { sign: 0, anchored: true };
-  if (MINUS_BEFORE.test(before)) return { sign: -1, anchored: false };
-  if (PLUS_BEFORE.test(before)) return { sign: 1, anchored: false };
+  if (VERB_MINUS_BEFORE.test(before)) return { sign: -1, cue: 'verb', anchored: false };
+  if (VERB_PLUS_BEFORE.test(before)) return { sign: 1, cue: 'verb', anchored: false };
+  if (COMPARATIVE_MINUS_BEFORE.test(before)) return { sign: -1, cue: 'comparative', anchored: false };
+  if (COMPARATIVE_PLUS_BEFORE.test(before)) return { sign: 1, cue: 'comparative', anchored: false };
   return { sign: 0, anchored: false };
 }
 
@@ -245,14 +261,17 @@ function extractMoney(norm: string): Money {
   });
 
   if (amounts.length === 0) {
-    const bare = new RegExp(
-      String.raw`\b(?:ngan sach|budget|tam|khoang|duoi|tren|toi da|max|co)\s+(${NUM})(?=\s*$|\s*[,.;!?]|\s+(?:thoi|nhe|nha|a|ha|thi|de|cho|choi|lam|dung)\b)`,
+    const tail = String.raw`(?=\s*$|\s*[,.;!?]|\s+(?:thoi|nhe|nha|a|ha|thi|de|cho|choi|lam|dung)\b)`;
+    const cuedMatch = new RegExp(
+      String.raw`\b(?:ngan sach|budget|tam|khoang|duoi|tren|toi da|max)\s+(${NUM})${tail}`,
     ).exec(text);
-    const whole = /^(\d{1,3}(?:[.,]\d+)?)$/.exec(text);
-    const hit = bare ?? whole;
+    const cued = cuedMatch && !PRODUCT_BEFORE.test(norm.slice(0, cuedMatch.index)) ? cuedMatch : null;
+    const loose =
+      new RegExp(String.raw`\bco\s+(${NUM})${tail}`).exec(text) ?? /^(\d{1,3}(?:[.,]\d+)?)$/.exec(text);
+    const hit = cued ?? loose;
     const n = hit ? toNum(hit[1] ?? '0') : 0;
     if (hit && n >= 3 && n <= MAX_MILLIONS) {
-      push(n * MILLION, hit.index, hit.index + hit[0].length, true);
+      push(n * MILLION, hit.index, hit.index + hit[0].length, hit !== cued);
     }
   }
   return { amounts };
@@ -506,14 +525,18 @@ export function parseIntent(text: string, previous?: ParsedIntent): ParsedIntent
   let budgetRange = previous?.budgetRange;
   let direction: 'cheaper' | 'stronger' | undefined;
   const phrase = comparativeDirection(p.norm);
-  // "mạnh hơn bản trước 5 triệu": with a comparative and an amount far below the current budget, it is a delta.
+  const phraseSign = phrase === 'cheaper' ? -1 : phrase === 'stronger' ? 1 : 0;
+  // Verbs (thêm/bớt) are always deltas. Comparatives (rẻ/mạnh hơn), also when separated from the amount as in
+  // "mạnh hơn bản trước 5 triệu", are deltas only for amounts below half the current budget; else a target.
+  const resolveSign = (a: Amount): -1 | 0 | 1 => {
+    if (prevBudget === undefined || a.anchored) return 0;
+    if (a.cue === 'verb') return a.sign;
+    const comparative = a.cue === 'comparative' ? a.sign : phraseSign;
+    return comparative !== 0 && a.value < prevBudget / 2 ? comparative : 0;
+  };
   const amounts = money.amounts
     .filter((a) => !(a.bare && prevBudget !== undefined))
-    .map((a): Amount => {
-      const isDelta =
-        a.sign === 0 && !a.anchored && phrase && prevBudget !== undefined && a.value < prevBudget / 2;
-      return isDelta ? { ...a, sign: phrase === 'cheaper' ? -1 : 1 } : a;
-    });
+    .map((a): Amount => ({ ...a, sign: resolveSign(a) }));
   const absolute = amounts.filter((a) => a.sign === 0);
   const deltas = amounts.filter((a) => a.sign !== 0);
 
