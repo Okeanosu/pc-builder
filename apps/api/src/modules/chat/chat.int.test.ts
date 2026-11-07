@@ -3,8 +3,8 @@ import type { BuildDTO, ChatEvent, ChatSessionDTO } from '@pc/shared';
 import { asc, eq, inArray } from 'drizzle-orm';
 import type express from 'express';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createTestDeps } from '../../../test/helpers';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createTestDeps, redisWithFailingMulti } from '../../../test/helpers';
 import { createApp } from '../../app';
 import { builds, chatMessages, chatSessions } from '../../db/schema';
 import { seedDatabase } from '../../db/seed';
@@ -497,5 +497,21 @@ describe('chat rate limit', () => {
     expect(limited.status).toBe(429);
     expect(JSON.parse(limited.body as string)).toMatchObject({ error: { code: 'RATE_LIMITED' } });
     expect((await messageFrom('198.51.100.9', sessions[1]!)).status).toBe(200);
+  });
+
+  it('lets sessions and messages through and logs a warning when the rate-limit store fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const broken = createApp({ ...t.deps, llm: undefined, redis: redisWithFailingMulti(redis) });
+      const guest = request.agent(broken);
+      const session = await newSession(guest);
+      const { res, events } = await send(guest, session.id, { text: 'xin chào' });
+      expect(res.status).toBe(200);
+      expect(events.at(-1)).toMatchObject({ type: 'done', mode: 'FALLBACK' });
+      const limiterWarnings = warn.mock.calls.filter(([msg]) => String(msg).includes('rate limit'));
+      expect(limiterWarnings).toHaveLength(2);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

@@ -34,7 +34,10 @@ async function hit(redis: Redis, keys: string[]): Promise<{ count: number; ttl: 
   }));
 }
 
-/** Counts the request against every rule; any exhausted rule answers 429 with Retry-After. */
+/**
+ * Counts the request against every rule; any exhausted rule answers 429 with Retry-After.
+ * Fails open: if Redis cannot count, the request goes through with a warning rather than becoming a 500.
+ */
 export async function enforceRateLimit(
   redis: Redis,
   req: Request,
@@ -43,7 +46,15 @@ export async function enforceRateLimit(
   message: string,
 ): Promise<void> {
   const keys = rules.map((rule) => `rl:${rule.scope}:${rule.subject(req)}`);
-  const hits = await hit(redis, keys);
+  let hits: Awaited<ReturnType<typeof hit>>;
+  try {
+    hits = await hit(redis, keys);
+  } catch (err) {
+    const note = '[rate limit] Redis unavailable; request allowed without a limit check';
+    if (req.log) req.log.warn({ err }, note);
+    else console.warn(note, err);
+    return;
+  }
   let retryAfter = 0;
   hits.forEach(({ count, ttl }, i) => {
     if (count > rules[i]!.limit) retryAfter = Math.max(retryAfter, ttl > 0 ? ttl : WINDOW_SECONDS);

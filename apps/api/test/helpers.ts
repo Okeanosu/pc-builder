@@ -1,7 +1,7 @@
 import { loadEnv } from '../src/config/env';
 import { createDb } from '../src/db/client';
 import type { AppDeps } from '../src/deps';
-import { createRedis } from '../src/lib/redis';
+import { createRedis, type Redis } from '../src/lib/redis';
 
 /** Real Postgres (pcbuilder_test) + Redis db 1. Call `close()` in afterAll. */
 export function createTestDeps(overrides: Partial<AppDeps> = {}) {
@@ -21,4 +21,21 @@ export function createTestDeps(overrides: Partial<AppDeps> = {}) {
       await Promise.allSettled([sql.end(), redis.quit()]);
     },
   };
+}
+
+/** The same client, except that every MULTI rejects on exec(), as it does when Redis goes away mid-request. */
+export function redisWithFailingMulti(redis: Redis): Redis {
+  return new Proxy(redis, {
+    get(target, prop, receiver) {
+      if (prop === 'multi') {
+        return () => {
+          const tx = target.multi();
+          tx.exec = () => Promise.reject(new Error('simulated Redis outage'));
+          return tx;
+        };
+      }
+      const value = Reflect.get(target, prop, receiver);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 }
