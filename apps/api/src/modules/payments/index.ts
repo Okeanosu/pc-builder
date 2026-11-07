@@ -1,7 +1,3 @@
-import { Router } from 'express';
-import type { AppDeps } from '../../deps';
-
-export function createPaymentsRouter(_deps: AppDeps): Router {
-  const router = Router();
-  return router;
-}
+export { createPaymentsRouter } from './payments.routes';
+export { createPaymentsService, isValidSepayAuth, type PaymentOutcome } from './payments.service';
+export { buildVietQrUrl } from './vietqr';
