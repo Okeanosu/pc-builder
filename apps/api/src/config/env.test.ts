@@ -34,6 +34,13 @@ describe('loadEnv fails closed in production', () => {
     expect(() => loadEnv({ ...prod, VIETQR_ACCOUNT_NO: '0000000000' })).toThrow(/VIETQR_ACCOUNT_NO/);
   });
 
+  it('rejects a malformed VIETQR_ACCOUNT_NO in production', () => {
+    for (const bad of ['12345', '1234567890123456789012', '10123abc78', '1012 345 678']) {
+      expect(() => loadEnv({ ...prod, VIETQR_ACCOUNT_NO: bad })).toThrow(/VIETQR_ACCOUNT_NO/);
+    }
+    expect(loadEnv({ ...prod, VIETQR_ACCOUNT_NO: '123456' }).VIETQR_ACCOUNT_NO).toBe('123456');
+  });
+
   it('keeps the dev defaults outside production', () => {
     const env = loadEnv({ NODE_ENV: 'development' });
     expect(env.SEPAY_API_KEY).toBe('dev-sepay-key');

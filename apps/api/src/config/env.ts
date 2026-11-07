@@ -43,6 +43,9 @@ function assertProductionSafe(env: Env): void {
   if (env.VIETQR_ACCOUNT_NO === PLACEHOLDER_ACCOUNT_NO) {
     throw new Error('VIETQR_ACCOUNT_NO must be set in production to the bank account that receives payments');
   }
+  if (!/^\d{6,19}$/.test(env.VIETQR_ACCOUNT_NO)) {
+    throw new Error('VIETQR_ACCOUNT_NO must be 6-19 digits');
+  }
 }
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
