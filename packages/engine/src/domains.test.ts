@@ -116,6 +116,17 @@ describe('pruneDominated', () => {
 });
 
 describe('problem model', () => {
+  it('adds the colour bonus per matching part, double for the case, never for GPUs/PSUs', () => {
+    const value = (id: string, color?: 'white' | 'black') => {
+      const problem = buildProblem({ ...gaming, preferences: { color } }, CATALOG, DEFAULT_PROFILES.gaming);
+      return problem.items.flat().find((it) => it.id === id)!.value;
+    };
+    expect(value('case-matx-white', 'white') - value('case-matx-white')).toBeCloseTo(3, 9);
+    expect(value('ram-ddr5-32-white', 'white') - value('ram-ddr5-32-white')).toBeCloseTo(1.5, 9);
+    expect(value('case-matx-white', 'black')).toBeCloseTo(value('case-matx-white'), 9);
+    expect(value('gpu-4060', 'black')).toBeCloseTo(value('gpu-4060'), 9);
+  });
+
   it('matches preferences per category and ignores unrelated categories', () => {
     expect(matchesPreferences(byId('cpu-r5-7600'), { cpuBrand: 'AMD' })).toBe(true);
     expect(matchesPreferences(byId('cpu-r5-7600'), { cpuBrand: 'Intel' })).toBe(false);

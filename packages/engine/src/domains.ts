@@ -22,7 +22,7 @@ import {
   PAIR_RULES,
   pairCompatible,
 } from './rules';
-import { cpuGpuTier, createScorer } from './scoring';
+import { cpuGpuTier, createScorer, ecosystemFactor } from './scoring';
 import type { EngineProduct, PartMap, PurposeProfile, SolveRequest } from './types';
 
 /** Variable indices follow CATEGORY_KEYS so that canonical (tie-break) order is the category order. */
@@ -39,9 +39,14 @@ export const VAR_COUNT = CATEGORY_KEYS.length;
 export const STATIC_ORDER: readonly number[] = [CPU, MAINBOARD, RAM, COOLER, GPU, CASE, PSU, STORAGE];
 
 export const BOOST_POINTS = 5;
-export const COLOR_BONUS = 1.5;
+/** Soft colour bonus per matching part; the case is what people see, so it counts double. */
+export const COLOR_BONUS: Partial<Record<CategoryKey, number>> = {
+  case: 3,
+  cooler: 1.5,
+  ram: 1.5,
+  mainboard: 1.5,
+};
 export const SOFT_PENALTY = 2;
-const COLOR_CATEGORIES: ReadonlySet<CategoryKey> = new Set(['case', 'cooler', 'ram', 'mainboard']);
 
 export interface Item {
   /** `null` is the "no discrete GPU" value (office builds on an iGPU). */
@@ -119,15 +124,14 @@ function selectCandidates(req: SolveRequest, catalog: readonly EngineProduct[]):
 function toItem(p: EngineProduct, req: SolveRequest, profile: PurposeProfile, score: number): Item {
   const boost = Math.min(1, Math.max(0, p.commercialBoost ?? 0));
   const color = req.preferences?.color;
-  const colorMatch =
-    color !== undefined &&
-    COLOR_CATEGORIES.has(p.category) &&
-    (p.specs as { color?: string }).color === color;
+  const colorMatch = color !== undefined && (p.specs as { color?: string }).color === color;
   return {
     product: p,
     id: p.id,
     price: p.price,
-    value: profile.weights[p.category] * (score + BOOST_POINTS * boost) + (colorMatch ? COLOR_BONUS : 0),
+    value:
+      profile.weights[p.category] * (score + BOOST_POINTS * boost) +
+      (colorMatch ? (COLOR_BONUS[p.category] ?? 0) : 0),
     score,
   };
 }
@@ -142,7 +146,11 @@ export function buildProblem(
   const profile = profileForRequest(baseProfile, req.preferences);
   const scorer = createScorer(catalog, req.purpose);
   const candidates = selectCandidates(req, catalog);
-  const items = candidates.map((list) => list.map((p) => toItem(p, req, profile, scorer.score(p))));
+  const items = candidates.map((list) =>
+    list.map((p) =>
+      toItem(p, req, profile, scorer.score(p) * ecosystemFactor(p, req.purpose, req.preferences)),
+    ),
+  );
   const gpuOptional =
     req.purpose === 'office' && !req.preferences?.requireDiscreteGpu && req.fixed?.gpu === undefined;
   if (gpuOptional) items[GPU]!.unshift(NO_GPU);

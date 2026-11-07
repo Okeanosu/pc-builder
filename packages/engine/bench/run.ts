@@ -107,7 +107,7 @@ for (const size of SIZES) {
     fullScenarioOf.push(...samples.map(() => req));
     const r = samples[0]!.result;
     scenarioRows.push(
-      `| ${size} | ${req.purpose} ${fmt(req.budget / 1e6, 0)}M | ${r.builds.length} | ${r.builds.map((b) => fmt(b.totalPrice / 1e6, 2)).join(' / ') || '—'} | ${r.builds.map((b) => fmt(b.score, 2)).join(' / ') || '—'} | ${r.infeasibleReason ?? ''} |`,
+      `| ${size} | ${req.purpose} ${fmt(req.budget / 1e6, 0)}M | ${r.builds.map((b) => `${b.label} ${fmt(b.totalPrice / 1e6, 2)}`).join(' / ') || '—'} | ${r.builds.map((b) => fmt(b.score, 2)).join(' / ') || '—'} | ${r.infeasibleReason ?? ''} |`,
     );
   }
 
@@ -213,8 +213,8 @@ ${pruneRows.join('\n')}
 
 ## Ablation: variable ordering inside \`full\`
 
-\`mrv\` = smallest domain first; \`weighted\` (default) = singleton domains first, then categories by descending
-purpose weight. ${REPS.ablation} runs per scenario.
+Default (\`weighted\`): objective-weighted ordering with singleton domains first (categories by descending purpose
+weight). Ablation (\`mrv\`): smallest remaining domain first. ${REPS.ablation} runs per scenario.
 
 | Catalog | order | p50 ms | p95 ms | mean nodes | capped |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -222,8 +222,8 @@ ${ablationRows.join('\n')}
 
 ## Recommended builds (\`full\`) per scenario
 
-| Catalog | scenario | builds | total price (triệu ₫) perf / balanced / budget | score | infeasible |
-| --- | --- | ---: | --- | --- | --- |
+| Catalog | scenario | builds: label total price (triệu ₫) | score | infeasible |
+| --- | --- | --- | --- | --- |
 ${scenarioRows.join('\n')}
 
 Category order of the domain sizes: ${CATEGORY_KEYS.join(', ')}.

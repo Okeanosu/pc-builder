@@ -1,10 +1,10 @@
 import type {
-  CaseSpecs,
   CategoryKey,
   CoolerSpecs,
   CpuSpecs,
   GpuSpecs,
   MainboardSpecs,
+  Preferences,
   PsuSpecs,
   Purpose,
   RamSpecs,
@@ -19,8 +19,6 @@ interface Refs {
   vram: number;
   ramSpeed: number;
   read: number;
-  gpuLength: number;
-  coolerHeight: number;
   coolerTdp: number;
 }
 
@@ -37,17 +35,28 @@ const GPU_MIX: Record<Purpose, [raster: number, vram: number]> = {
   ai: [0.35, 0.65],
   office: [1, 0],
 };
+// Sufficiency references: capacity / speed beyond these brings no noticeable gain for the purpose, so the budget
+// goes to the CPU/GPU instead (DDR5-6000 is the sweet spot; PCIe 5 reads only help nobody here).
+const RAM_SPEED_CAP_MHZ = 6000;
 const RAM_MIX: Record<Purpose, { capRefGB: number; cap: number; speed: number }> = {
   gaming: { capRefGB: 32, cap: 0.55, speed: 0.45 },
   graphics: { capRefGB: 64, cap: 0.75, speed: 0.25 },
   ai: { capRefGB: 64, cap: 0.8, speed: 0.2 },
   office: { capRefGB: 16, cap: 0.6, speed: 0.4 },
 };
-const STORAGE_MIX: Record<Purpose, { capRefGB: number; cap: number; read: number }> = {
-  gaming: { capRefGB: 2000, cap: 0.5, read: 0.5 },
-  graphics: { capRefGB: 4000, cap: 0.55, read: 0.45 },
-  ai: { capRefGB: 2000, cap: 0.5, read: 0.5 },
-  office: { capRefGB: 1000, cap: 0.5, read: 0.5 },
+const STORAGE_MIX: Record<Purpose, { capRefGB: number; cap: number; read: number; readCapMBps: number }> = {
+  gaming: { capRefGB: 1000, cap: 0.5, read: 0.5, readCapMBps: 5000 },
+  graphics: { capRefGB: 4000, cap: 0.55, read: 0.45, readCapMBps: 7500 },
+  ai: { capRefGB: 2000, cap: 0.5, read: 0.5, readCapMBps: 7500 },
+  office: { capRefGB: 500, cap: 0.5, read: 0.5, readCapMBps: 3500 },
+};
+
+/** CUDA dominates AI frameworks and GPU render engines, so non-NVIDIA cards are worth less for those purposes. */
+export const CUDA_ECOSYSTEM_FACTOR: Record<Purpose, number> = {
+  gaming: 1,
+  graphics: 0.8,
+  ai: 0.55,
+  office: 1,
 };
 
 // Rough Cinebench R23 / Time Spy estimates for products imported without benchmark data.
@@ -60,22 +69,14 @@ const gpuPerf = (p: EngineProduct) => p.benchmark?.gpuScore ?? (p.specs as GpuSp
 
 const ratio = (value: number, max: number) => (max > 0 ? Math.min(1, value / max) : 0);
 
-function chipsetTier(chipset: string): number {
-  const c = chipset.trim().toUpperCase();
-  if (c.startsWith('X') || c.startsWith('Z')) return 1;
-  if (c.startsWith('B')) return 0.7;
-  if (c.startsWith('H')) return 0.55;
-  return 0.4;
-}
-
 function efficiencyTier(efficiency: string): number {
   const e = efficiency.toLowerCase();
   if (e.includes('titanium')) return 1;
-  if (e.includes('platinum')) return 0.9;
-  if (e.includes('gold')) return 0.8;
-  if (e.includes('silver')) return 0.65;
-  if (e.includes('bronze')) return 0.55;
-  return 0.4;
+  if (e.includes('platinum')) return 0.85;
+  if (e.includes('gold')) return 0.7;
+  if (e.includes('silver')) return 0.5;
+  if (e.includes('bronze')) return 0.3;
+  return 0;
 }
 
 function computeRefs(items: readonly EngineProduct[]): Refs {
@@ -86,8 +87,6 @@ function computeRefs(items: readonly EngineProduct[]): Refs {
     vram: 0,
     ramSpeed: 0,
     read: 0,
-    gpuLength: 0,
-    coolerHeight: 0,
     coolerTdp: 0,
   };
   for (const p of items) {
@@ -101,10 +100,6 @@ function computeRefs(items: readonly EngineProduct[]): Refs {
       refs.ramSpeed = Math.max(refs.ramSpeed, (p.specs as RamSpecs).speedMHz);
     } else if (p.category === 'storage') {
       refs.read = Math.max(refs.read, (p.specs as StorageSpecs).readMBps);
-    } else if (p.category === 'case') {
-      const s = p.specs as CaseSpecs;
-      refs.gpuLength = Math.max(refs.gpuLength, s.maxGpuLengthMm);
-      refs.coolerHeight = Math.max(refs.coolerHeight, s.maxCoolerHeightMm);
     } else if (p.category === 'cooler') {
       refs.coolerTdp = Math.max(refs.coolerTdp, (p.specs as CoolerSpecs).tdpRatingW);
     }
@@ -125,39 +120,37 @@ function rawPerformance(p: EngineProduct, purpose: Purpose, refs: Refs): number 
     case 'ram': {
       const s = p.specs as RamSpecs;
       const mix = RAM_MIX[purpose];
-      return mix.cap * ratio(s.capacityGB, mix.capRefGB) + mix.speed * ratio(s.speedMHz, refs.ramSpeed);
+      const speedRef = Math.min(refs.ramSpeed, RAM_SPEED_CAP_MHZ);
+      return mix.cap * ratio(s.capacityGB, mix.capRefGB) + mix.speed * ratio(s.speedMHz, speedRef);
     }
     case 'storage': {
       const s = p.specs as StorageSpecs;
       const mix = STORAGE_MIX[purpose];
-      return mix.cap * ratio(s.capacityGB, mix.capRefGB) + mix.read * ratio(s.readMBps, refs.read);
+      const readRef = Math.min(refs.read, mix.readCapMBps);
+      return mix.cap * ratio(s.capacityGB, mix.capRefGB) + mix.read * ratio(s.readMBps, readRef);
     }
+    // Supporting parts are scored on sufficiency: their hard fit is enforced by rules, so money above "enough"
+    // should go to performance parts instead.
     case 'mainboard': {
       const s = p.specs as MainboardSpecs;
+      const memoryRefGB = purpose === 'ai' || purpose === 'graphics' ? 128 : 64;
       return (
-        0.4 * chipsetTier(s.chipset) +
-        0.2 * ratio(s.m2Slots, 4) +
-        0.15 * ratio(s.memorySlots, 4) +
-        0.15 * (s.wifi ? 1 : 0) +
-        0.1 * ratio(s.maxMemoryGB, 192)
+        0.7 +
+        0.1 * ratio(s.m2Slots, 2) +
+        0.1 * ratio(s.memorySlots, 4) +
+        0.1 * ratio(s.maxMemoryGB, memoryRefGB)
       );
     }
     case 'psu': {
+      // Wattage adequacy is C08 (hard minimum + headroom penalty), so watts beyond it earn nothing.
       const s = p.specs as PsuSpecs;
-      return 0.55 * efficiencyTier(s.efficiency) + 0.3 * ratio(s.wattage, 1200) + 0.15 * (s.modular ? 1 : 0);
+      return 0.85 + 0.12 * efficiencyTier(s.efficiency) + 0.03 * (s.modular ? 1 : 0);
     }
-    case 'case': {
-      const s = p.specs as CaseSpecs;
-      return (
-        0.35 * ratio(s.maxGpuLengthMm, refs.gpuLength) +
-        0.25 * ratio(s.maxCoolerHeightMm, refs.coolerHeight) +
-        0.25 * ratio(Math.max(0, ...s.radiatorSupportMm), 360) +
-        0.15 * ratio(s.supportedFormFactors.length, 3)
-      );
-    }
+    case 'case':
+      return 1;
     case 'cooler': {
-      const s = p.specs as CoolerSpecs;
-      return 0.85 * ratio(s.tdpRatingW, refs.coolerTdp) + 0.15 * (s.type === 'aio' ? 1 : 0);
+      // Adequacy (rating ≥ cpu TDP) is the C09 penalty; extra rating is only a small headroom bonus.
+      return 0.92 + 0.08 * ratio((p.specs as CoolerSpecs).tdpRatingW, refs.coolerTdp);
     }
   }
 }
@@ -197,6 +190,17 @@ export function createScorer(catalog: readonly EngineProduct[], purpose: Purpose
 
 export function scoreProduct(p: EngineProduct, purpose: Purpose, catalog: readonly EngineProduct[]): number {
   return createScorer(catalog, purpose).score(p);
+}
+
+/** Recommendation-time multiplier on a GPU's score; an explicit `gpuBrand` preference switches it off. */
+export function ecosystemFactor(
+  p: EngineProduct,
+  purpose: Purpose,
+  preferences: Preferences | undefined,
+): number {
+  if (p.category !== 'gpu' || preferences?.gpuBrand || (p.specs as GpuSpecs).chipsetBrand === 'NVIDIA')
+    return 1;
+  return CUDA_ECOSYSTEM_FACTOR[purpose];
 }
 
 export type Tier = 1 | 2 | 3 | 4 | 5;

@@ -224,10 +224,12 @@ const c13: Rule = ({ cpu, gpu }, { purpose, catalog }) => {
 };
 
 const c14: Rule = (parts, { budget }) => {
-  const items = Object.values(parts);
-  if (budget === undefined || items.length === 0) return [];
-  const total = items.reduce((sum, p) => sum + p.price, 0);
-  const categories = Object.keys(parts) as CategoryKey[];
+  const present = (Object.entries(parts) as [CategoryKey, EngineProduct | undefined][]).filter(
+    (entry): entry is [CategoryKey, EngineProduct] => entry[1] !== undefined,
+  );
+  if (budget === undefined || present.length === 0) return [];
+  const total = present.reduce((sum, [, p]) => sum + p.price, 0);
+  const categories = present.map(([category]) => category);
   if (total > budget) {
     return [
       issue('C14', 'error', `Tổng giá ${formatVnd(total)} vượt ngân sách ${formatVnd(budget)}`, categories),

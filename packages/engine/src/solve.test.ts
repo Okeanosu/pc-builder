@@ -1,8 +1,9 @@
 import type { CpuSpecs, GpuSpecs, MainboardSpecs, RamSpecs, StorageSpecs } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
-import { CATALOG } from '../test/fixtures/catalog';
+import { byId, CATALOG, variant } from '../test/fixtures/catalog';
 import { checkCompatibility } from './compatibility';
 import { DEFAULT_PROFILES } from './profiles';
+import { scoreProduct } from './scoring';
 import { solve } from './solver';
 import type { Build, EngineProduct, SolveRequest, SolveResult } from './types';
 
@@ -22,7 +23,8 @@ function expectValidBuilds(result: SolveResult, req: SolveRequest) {
       catalog: CATALOG,
     });
     expect(report.issues.filter((i) => i.severity === 'error')).toEqual([]);
-    expect(b.warnings).toEqual(report.issues);
+    const expected = report.issues.filter((i) => b.label === 'performance' || i.code !== 'C14');
+    expect(b.warnings).toEqual(expected);
     expect(b.totalPrice).toBeLessThanOrEqual(req.budget);
     expect(b.totalPrice).toBe(Object.values(b.parts).reduce((s, p) => s + (p?.price ?? 0), 0));
     expect(b.estimatedWattage).toBe(report.estimatedWattage);
@@ -233,12 +235,52 @@ describe('solve — office and topK', () => {
     expect(result.builds[0]!.parts.gpu!.id).toBe('gpu-rx7600');
   });
 
-  it('labels the alternatives balanced → budget even when one comes from the relaxed fallback', () => {
+  it('keeps the selected roles when only the GPU can vary (fixed cpu + board)', () => {
     const req: SolveRequest = { ...GAMING_25M, fixed: { cpu: 'cpu-r5-7600', mainboard: 'mb-b650m-white' } };
     const result = solve(req, CATALOG);
-    expect(result.builds.map((b) => b.label)).toEqual(
-      ['performance', 'balanced', 'budget'].slice(0, result.builds.length),
-    );
+    const labels = result.builds.map((b) => b.label);
+    expect(labels[0]).toBe('performance');
+    expect(labels).toEqual(['performance', 'balanced', 'budget'].filter((l) => labels.includes(l as never)));
     expectValidBuilds(result, req);
+  });
+});
+
+describe('solve — purpose policies', () => {
+  // A cheaper, faster 16 GB AMD card: it would win for ai on raw performance alone.
+  const amd16 = variant(
+    'gpu-rx7600',
+    { chipset: 'RX 7600 XT 16GB', vramGB: 16, lengthMm: 240, tgpW: 190 },
+    { id: 'gpu-amd-16', price: 8_990_000, benchmark: { gpuScore: 15_000 } },
+  );
+  const catalog = [...CATALOG, amd16];
+  const ai: SolveRequest = { budget: 45_000_000, purpose: 'ai' };
+
+  it('ai without a brand preference prefers an NVIDIA (CUDA) card when one fits', () => {
+    expect(scoreProduct(amd16, 'ai', catalog)).toBeGreaterThan(
+      scoreProduct(byId('gpu-4060ti-16'), 'ai', catalog),
+    );
+    const result = solve(ai, catalog);
+    expect((result.builds[0]!.parts.gpu!.specs as GpuSpecs).chipsetBrand).toBe('NVIDIA');
+  });
+
+  it("ai with gpuBrand 'AMD' still returns AMD cards", () => {
+    const result = solve({ ...ai, preferences: { gpuBrand: 'AMD' } }, catalog);
+    expect(result.builds.length).toBeGreaterThan(0);
+    for (const b of result.builds) expect((b.parts.gpu!.specs as GpuSpecs).chipsetBrand).toBe('AMD');
+    expect(result.builds[0]!.parts.gpu!.id).toBe('gpu-amd-16');
+  });
+
+  it('attaches the C14 under-spend warning only to the performance build', () => {
+    for (const r of [
+      solve(GAMING_25M, CATALOG),
+      solve(ai, CATALOG),
+      solve({ ...GAMING_25M, budget: 18e6 }, CATALOG),
+    ]) {
+      for (const b of r.builds) {
+        if (b.label !== 'performance') expect(b.warnings.map((w) => w.code)).not.toContain('C14');
+      }
+    }
+    const office = solve({ budget: 60_000_000, purpose: 'office' }, CATALOG);
+    expect(office.builds[0]!.warnings.map((w) => w.code)).toContain('C14');
   });
 });

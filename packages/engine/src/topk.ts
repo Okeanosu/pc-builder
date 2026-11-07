@@ -38,6 +38,23 @@ export function balancedFloor(performance: Candidate, budget: Candidate | null, 
   return (performance.score + (budget ? budget.score : threshold)) / 2;
 }
 
+export interface LabelledCandidate {
+  candidate: Candidate;
+  label: BuildLabel;
+}
+
+/** Roles are kept as selected; a missing role is simply omitted ("return what exists"). */
+export function labelRoles(
+  performance: Candidate,
+  balanced: Candidate | null,
+  budget: Candidate | null,
+): LabelledCandidate[] {
+  const out: LabelledCandidate[] = [{ candidate: performance, label: 'performance' }];
+  if (balanced) out.push({ candidate: balanced, label: 'balanced' });
+  if (budget) out.push({ candidate: budget, label: 'budget' });
+  return out;
+}
+
 function best(list: readonly Candidate[], cmp: Cmp): Candidate | null {
   let winner: Candidate | null = null;
   for (const c of list) if (!winner || cmp(c, winner) < 0) winner = c;
@@ -45,65 +62,42 @@ function best(list: readonly Candidate[], cmp: Cmp): Candidate | null {
 }
 
 /**
- * Exact definition of the diverse top-3, shared by the exhaustive strategies (applied to a candidate pool) and the
- * branch-and-bound strategy (one constrained search per label):
- *  - performance: max score;
- *  - budget: cheapest build with score ≥ 85% of the best, other (cpu, gpu) pair;
- *  - balanced: max score/price among builds scoring at least halfway between budget and performance, (cpu, gpu)
- *    pair unused so far (score/price alone would collapse onto the cheapest acceptable build);
- *  - any slot still empty: best score among unused pairs.
+ * Diverse top-3 shared by every strategy. Alternatives never cost more than performance; budget = cheapest with
+ * score ≥ 85% of the best; balanced = best score/price above the budget–performance midpoint, else the best score
+ * that keeps budget the cheapest. Each label uses a (cpu, gpu) pair not used by another.
  */
-export function selectDiverse(candidates: readonly Candidate[]): Candidate[] {
+export function selectDiverse(candidates: readonly Candidate[]): LabelledCandidate[] {
   const performance = best(candidates, byScore);
   if (!performance) return [];
   const threshold = BUDGET_SCORE_RATIO * performance.score;
+  const affordable = candidates.filter((c) => c.key !== performance.key && c.price <= performance.price);
   const budget = best(
-    candidates.filter((c) => c.key !== performance.key && c.score >= threshold),
+    affordable.filter((c) => c.score >= threshold),
     byPrice,
   );
-  const used = new Set([performance.key]);
-  if (budget) used.add(budget.key);
+  const free = affordable.filter((c) => c.key !== budget?.key);
   const floor = balancedFloor(performance, budget, threshold);
-  const balanced = best(
-    candidates.filter((c) => !used.has(c.key) && c.score >= floor),
-    byRatio,
-  );
-  const picks = [performance];
-  if (balanced) picks.push(balanced);
-  if (budget) picks.push(budget);
-  for (const c of picks) used.add(c.key);
-  while (picks.length < MAX_BUILDS) {
-    const next = best(
-      candidates.filter((c) => !used.has(c.key)),
+  const balanced =
+    best(
+      free.filter((c) => c.score >= floor),
+      byRatio,
+    ) ??
+    best(
+      free.filter((c) => !budget || c.score >= threshold),
       byScore,
     );
-    if (!next) break;
-    picks.push(next);
-    used.add(next.key);
-  }
-  return picks;
-}
-
-/** First pick is "performance"; the others are labelled balanced → budget by descending score (then price). */
-export function assignLabels(picks: readonly Candidate[]): { candidate: Candidate; label: BuildLabel }[] {
-  const [first, ...rest] = picks;
-  if (!first) return [];
-  rest.sort((a, b) => b.score - a.score || b.price - a.price || compareSeq(a.idx, b.idx));
-  return [first, ...rest].map((candidate, i) => ({ candidate, label: BUILD_LABELS[i]! }));
+  return labelRoles(performance, balanced, budget);
 }
 
 /**
- * Per-(cpu, gpu) Pareto fronts over (score ↑, price ↓) of every feasible build seen by an exhaustive search. Every
- * label of `selectDiverse` is Pareto-optimal within its pair, and points below 85% of the best score can only matter
- * as a pair's top, so the pool stays small while remaining exact.
+ * Per-(cpu, gpu) Pareto fronts over (score ↑, price ↓) of every feasible build an exhaustive search sees. Every
+ * label of `selectDiverse` is Pareto-optimal within its pair, so selecting from the fronts is exact.
  */
 export class CandidatePool {
   private readonly fronts = new Map<number, Candidate[]>();
-  private bestScore = Number.NEGATIVE_INFINITY;
 
   add(idx: ArrayLike<number>, score: number, price: number, key: number): void {
     const front = this.fronts.get(key) ?? [];
-    let isTop = true;
     for (const f of front) {
       if (
         f.score >= score &&
@@ -112,25 +106,13 @@ export class CandidatePool {
       ) {
         return;
       }
-      if (f.score > score) isTop = false;
     }
-    if (!isTop && score < BUDGET_SCORE_RATIO * this.bestScore) return;
-    const candidate: Candidate = { idx: Int32Array.from(idx), score, price, key, obj: score };
-    const kept = front.filter(
-      (f) =>
-        !(score >= f.score && price <= f.price) &&
-        (f.score >= BUDGET_SCORE_RATIO * this.bestScore || isTopOf(front, f)),
-    );
-    kept.push(candidate);
+    const kept = front.filter((f) => !(score >= f.score && price <= f.price));
+    kept.push({ idx: Int32Array.from(idx), score, price, key, obj: score });
     this.fronts.set(key, kept);
-    if (score > this.bestScore) this.bestScore = score;
   }
 
   candidates(): Candidate[] {
     return [...this.fronts.values()].flat();
   }
-}
-
-function isTopOf(front: readonly Candidate[], c: Candidate): boolean {
-  return front.every((f) => byScore(c, f) <= 0);
 }

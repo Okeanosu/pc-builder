@@ -343,4 +343,12 @@ describe('C14 budget', () => {
     expect(hasCode(pricey(1), 'C14')).toBe(false);
     expect(hasCode({}, 'C14', { budget: 1_000_000 })).toBe(false);
   });
+  it('ignores empty slots of a type-valid PartMap', () => {
+    const parts: PartMap = { cpu: variant('cpu-r5-7600', {}, { price: 2_000_000 }), gpu: undefined };
+    const report = checkCompatibility(parts, { budget: 10_000_000 });
+    expect(report.issues).toEqual([
+      expect.objectContaining({ code: 'C14', severity: 'warning', categories: ['cpu'] }),
+    ]);
+    expect(checkCompatibility({ cpu: undefined, ram: undefined }, { budget: 1 }).issues).toEqual([]);
+  });
 });

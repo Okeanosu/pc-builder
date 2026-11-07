@@ -22,7 +22,7 @@ export interface SearchConfig {
   forwardChecking: boolean;
   /**
    * `static`: CPU → MAINBOARD → RAM → COOLER → GPU → CASE → PSU → STORAGE; `mrv`: smallest domain first;
-   * `weighted`: forced (singleton) domains first, then the categories with the largest purpose weight.
+   * `weighted`: objective-weighted ordering with singleton domains first (largest purpose weight next).
    */
   variableOrder: VariableOrder;
   branchAndBound: boolean;
@@ -244,10 +244,8 @@ export function search(problem: Problem, initial: number[][], cfg: SearchConfig)
   };
 
   /**
-   * LP relaxation of the remaining MCKP: max Σ(value − λ·price) s.t. Σ price ≤ room and Σ value ≥ need, relative to
-   * the cheapest-per-category base. The greedy hull walk visits the max-value point for every spend level, and the
-   * objective is concave along it, so the optimum is where efficiency drops to λ, clamped to the floor and the room.
-   * Returns −∞ when the floor cannot be met.
+   * LP relaxation: max Σ(value − λ·price) s.t. Σ price ≤ room, Σ value ≥ need (−∞ if unreachable). The greedy hull
+   * walk is concave in spend, so the optimum is where efficiency falls to λ, clamped to the floor and the room.
    */
   const relaxedGain = (room: number, penalty: number, need: number): number => {
     for (let r = 0; r < VAR_COUNT; r++) cursor[r] = 1;

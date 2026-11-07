@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "bench": "tsx bench/run.ts",
-    "bench:equivalence": "tsx bench/equivalence.ts"
+    "bench:equivalence": "tsx bench/equivalence.ts",
+    "bench:seed": "tsx bench/seed-smoke.ts"
   },
   "dependencies": {
     "@pc/shared": "workspace:*"

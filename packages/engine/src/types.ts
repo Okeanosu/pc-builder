@@ -99,7 +99,12 @@ export interface SolveStats {
   capped?: boolean;
 }
 
-export type InfeasibleReason = 'BUDGET_TOO_LOW' | 'NO_COMPATIBLE_COMBINATION' | 'FIXED_PART_CONFLICT';
+/** `SEARCH_LIMIT`: the node limit stopped the search before any build (or a proof of infeasibility) was found. */
+export type InfeasibleReason =
+  | 'BUDGET_TOO_LOW'
+  | 'NO_COMPATIBLE_COMBINATION'
+  | 'FIXED_PART_CONFLICT'
+  | 'SEARCH_LIMIT';
 
 export interface SolveResult {
   builds: Build[];

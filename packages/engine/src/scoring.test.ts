@@ -2,7 +2,8 @@ import { CATEGORY_KEYS, PURPOSES } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
 import { byId, CATALOG, CPUS, GPUS, variant } from '../test/fixtures/catalog';
 import { DEFAULT_PROFILES, profileForRequest } from './profiles';
-import { cpuGpuTier, scoreProduct } from './scoring';
+import { CUDA_ECOSYSTEM_FACTOR, cpuGpuTier, ecosystemFactor, scoreProduct } from './scoring';
+import type { EngineProduct } from './types';
 
 describe('scoreProduct', () => {
   it('gaming ranks RTX 4070 above RTX 4060', () => {
@@ -54,19 +55,7 @@ describe('scoreProduct', () => {
     expect(scoreProduct(byId('psu-650-gold'), 'office', [])).toBe(100);
   });
 
-  it('ranks mainboard, psu, case, cooler, storage and ram by their features', () => {
-    expect(scoreProduct(byId('mb-z790'), 'gaming', CATALOG)).toBeGreaterThan(
-      scoreProduct(byId('mb-h610m'), 'gaming', CATALOG),
-    );
-    expect(scoreProduct(byId('psu-750-gold'), 'gaming', CATALOG)).toBeGreaterThan(
-      scoreProduct(byId('psu-450-bronze'), 'gaming', CATALOG),
-    );
-    expect(scoreProduct(byId('case-o11-white'), 'gaming', CATALOG)).toBeGreaterThan(
-      scoreProduct(byId('case-itx-sfx'), 'gaming', CATALOG),
-    );
-    expect(scoreProduct(byId('cooler-aio-360-white'), 'gaming', CATALOG)).toBeGreaterThan(
-      scoreProduct(byId('cooler-lowprofile'), 'gaming', CATALOG),
-    );
+  it('ranks storage and ram by their performance features', () => {
     expect(scoreProduct(byId('ssd-nvme-2tb'), 'graphics', CATALOG)).toBeGreaterThan(
       scoreProduct(byId('ssd-sata-500'), 'graphics', CATALOG),
     );
@@ -75,27 +64,93 @@ describe('scoreProduct', () => {
     );
   });
 
-  it('grades chipsets and PSU efficiency labels', () => {
-    const chipsets = ['X870E', 'B650', 'H610', 'A620'];
-    const boards = chipsets.map((chipset, i) => variant('mb-b650m-white', { chipset }, { id: `mb-${i}` }));
-    const labels = [
-      '80 Plus Titanium',
-      '80 Plus Platinum',
-      '80 Plus Gold',
-      '80 Plus Silver',
-      '80 Plus Bronze',
-      'Standard',
-    ];
-    const supplies = labels.map((efficiency, i) =>
-      variant('psu-650-gold', { efficiency }, { id: `psu-${i}` }),
+  it('saturates storage read speed per purpose (PCIe 5 earns nothing extra)', () => {
+    const gen5 = variant('ssd-nvme-2tb', { readMBps: 14_000 }, { id: 'ssd-gen5' });
+    const slow = variant('ssd-nvme-2tb', { readMBps: 3_000 }, { id: 'ssd-slow' });
+    const reference = [...CATALOG, gen5, slow];
+    const s = (p: EngineProduct, purpose: 'gaming' | 'graphics') => scoreProduct(p, purpose, reference);
+    expect(s(gen5, 'gaming')).toBe(s(byId('ssd-nvme-2tb'), 'gaming'));
+    expect(s(byId('ssd-nvme-2tb'), 'graphics')).toBeGreaterThan(s(slow, 'graphics'));
+    expect(s(gen5, 'graphics') - s(byId('ssd-nvme-2tb'), 'graphics')).toBeLessThan(1);
+  });
+
+  it('saturates RAM speed at DDR5-6000', () => {
+    const fast = variant('ram-ddr5-32', { speedMHz: 7200 }, { id: 'ram-7200' });
+    const reference = [...CATALOG, fast];
+    expect(scoreProduct(fast, 'gaming', reference)).toBe(
+      scoreProduct(byId('ram-ddr5-32'), 'gaming', reference),
     );
-    const reference = [...CATALOG, ...boards, ...supplies];
-    const descending = (list: typeof boards) => {
-      const scores = list.map((p) => scoreProduct(p, 'office', reference));
+    expect(scoreProduct(byId('ram-ddr5-32'), 'gaming', reference)).toBeGreaterThan(
+      scoreProduct(byId('ram-ddr4-32'), 'gaming', reference),
+    );
+  });
+
+  describe('sufficiency scoring for supporting parts', () => {
+    it('PSU: efficiency tier and modularity count, extra wattage does not', () => {
+      const big = variant('psu-750-gold', { wattage: 1200 }, { id: 'psu-1200-gold' });
+      const reference = [...CATALOG, big];
+      const s = (p: EngineProduct) => scoreProduct(p, 'gaming', reference);
+      expect(s(big)).toBe(s(byId('psu-750-gold')));
+      expect(s(byId('psu-650-gold'))).toBe(s(byId('psu-750-gold')));
+      expect(s(byId('psu-650-gold'))).toBeGreaterThan(s(byId('psu-450-bronze')));
+      const labels = [
+        '80 Plus Titanium',
+        '80 Plus Platinum',
+        '80 Plus Gold',
+        '80 Plus Silver',
+        '80 Plus Bronze',
+        'White',
+      ];
+      const supplies = labels.map((efficiency, i) =>
+        variant('psu-450-bronze', { efficiency }, { id: `psu-${i}` }),
+      );
+      const scores = supplies.map((p) => scoreProduct(p, 'office', [...CATALOG, ...supplies]));
       for (let i = 1; i < scores.length; i++) expect(scores[i - 1]).toBeGreaterThan(scores[i] as number);
-    };
-    descending(boards);
-    descending(supplies);
+      // Quality is a small differentiator: a Bronze unit still scores within 15 points of the best.
+      expect(Math.min(...scores)).toBeGreaterThan(85);
+    });
+
+    it('mainboard: chipset tier is ignored, only slots and memory headroom count', () => {
+      const premium = variant('mb-b650m-white', { chipset: 'X870E' }, { id: 'mb-x870e' });
+      const reference = [...CATALOG, premium];
+      expect(scoreProduct(premium, 'gaming', reference)).toBe(
+        scoreProduct(byId('mb-b650m-white'), 'gaming', reference),
+      );
+      expect(scoreProduct(byId('mb-b650m-white'), 'gaming', CATALOG)).toBeGreaterThan(
+        scoreProduct(byId('mb-h610m'), 'gaming', CATALOG),
+      );
+      expect(scoreProduct(byId('mb-h610m'), 'gaming', CATALOG)).toBeGreaterThan(
+        scoreProduct(byId('mb-h610m'), 'ai', CATALOG),
+      );
+    });
+
+    it('case: every case that fits scores the same (colour is a separate bonus)', () => {
+      expect(scoreProduct(byId('case-o11-white'), 'gaming', CATALOG)).toBe(100);
+      expect(scoreProduct(byId('case-itx-sfx'), 'gaming', CATALOG)).toBe(100);
+    });
+
+    it('cooler: near-flat, extra rating is only a small headroom bonus', () => {
+      const best = scoreProduct(byId('cooler-aio-360-white'), 'gaming', CATALOG);
+      const weakest = scoreProduct(byId('cooler-lowprofile'), 'gaming', CATALOG);
+      expect(best).toBeGreaterThan(weakest);
+      expect(best - weakest).toBeLessThan(10);
+    });
+  });
+});
+
+describe('ecosystemFactor', () => {
+  it('discounts non-NVIDIA GPUs for ai (strongly) and graphics (moderately) without a brand preference', () => {
+    const amd = byId('gpu-rx7600');
+    expect(ecosystemFactor(amd, 'ai', undefined)).toBe(CUDA_ECOSYSTEM_FACTOR.ai);
+    expect(ecosystemFactor(amd, 'graphics', {})).toBe(CUDA_ECOSYSTEM_FACTOR.graphics);
+    expect(CUDA_ECOSYSTEM_FACTOR.ai).toBeLessThan(CUDA_ECOSYSTEM_FACTOR.graphics);
+    expect(ecosystemFactor(amd, 'gaming', undefined)).toBe(1);
+    expect(ecosystemFactor(byId('gpu-4060'), 'ai', undefined)).toBe(1);
+    expect(ecosystemFactor(byId('cpu-r5-7600'), 'ai', undefined)).toBe(1);
+  });
+
+  it('is overridden by an explicit gpuBrand preference', () => {
+    expect(ecosystemFactor(byId('gpu-rx7600'), 'ai', { gpuBrand: 'AMD' })).toBe(1);
   });
 });
 
@@ -115,7 +170,9 @@ describe('cpuGpuTier', () => {
   });
 
   it('handles non-cpu/gpu products and returns the neutral tier without a reference', () => {
-    expect(cpuGpuTier(byId('ssd-nvme-2tb'), CATALOG)).toBe(5);
+    // 1 TB already saturates the gaming references, so the 1 TB and 2 TB drives tie for the top rank.
+    expect(cpuGpuTier(byId('ssd-nvme-2tb'), CATALOG)).toBe(cpuGpuTier(byId('ssd-nvme-1tb'), CATALOG));
+    expect(cpuGpuTier(byId('ssd-sata-500'), CATALOG)).toBe(1);
     expect(cpuGpuTier(byId('gpu-4070'), [])).toBe(3);
   });
 });

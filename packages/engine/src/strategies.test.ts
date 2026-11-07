@@ -126,7 +126,7 @@ describe('node limit', () => {
     );
     expect(r.stats.capped).toBe(true);
     expect(r.stats.nodesExplored).toBeLessThanOrEqual(5_000);
-    expect(r.infeasibleReason).toBeUndefined();
+    expect(r.infeasibleReason).toBe(r.builds.length === 0 ? 'SEARCH_LIMIT' : undefined);
   });
 
   it('caps backtracking and full search too, returning best-so-far builds', () => {
@@ -134,7 +134,37 @@ describe('node limit', () => {
       const r = solve({ budget: 25_000_000, purpose: 'gaming', strategy, nodeLimit: 200 }, CATALOG);
       expect(r.stats.capped).toBe(true);
       expect(r.stats.nodesExplored).toBeLessThanOrEqual(200);
-      expect(r.infeasibleReason).toBeUndefined();
+      expect(r.infeasibleReason).toBe(r.builds.length === 0 ? 'SEARCH_LIMIT' : undefined);
     }
+  });
+
+  it("reports 'SEARCH_LIMIT' when a capped run found no build", () => {
+    const r = solve({ budget: 25_000_000, purpose: 'gaming', nodeLimit: 1 }, CATALOG);
+    expect(r.builds).toEqual([]);
+    expect(r.infeasibleReason).toBe('SEARCH_LIMIT');
+    expect(r.minFeasibleBudget).toBeUndefined();
+  });
+
+  // 5M gaming is proven infeasible in 6 nodes; the unbounded cheapest-build search needs more than 10.
+  it('never reports a minFeasibleBudget from a capped diagnosis search', () => {
+    const req: SolveRequest = { budget: 5_000_000, purpose: 'gaming' };
+    expect(solve(req, CATALOG).minFeasibleBudget).toBe(12_820_000);
+    const foundSome = solve({ ...req, nodeLimit: 10 }, CATALOG);
+    expect(foundSome.stats.capped).toBe(false);
+    expect(foundSome.infeasibleReason).toBe('BUDGET_TOO_LOW');
+    expect(foundSome.minFeasibleBudget).toBeUndefined();
+    const foundNone = solve({ ...req, nodeLimit: 6 }, CATALOG);
+    expect(foundNone.infeasibleReason).toBe('SEARCH_LIMIT');
+    expect(foundNone.minFeasibleBudget).toBeUndefined();
+  });
+
+  it('reports SEARCH_LIMIT when the fixed-part relaxation check is capped', () => {
+    const req: SolveRequest = {
+      budget: 60_000_000,
+      purpose: 'gaming',
+      fixed: { cpu: 'cpu-r5-7600', mainboard: 'mb-z790' },
+    };
+    expect(solve({ ...req, nodeLimit: 6 }, CATALOG).infeasibleReason).toBe('SEARCH_LIMIT');
+    expect(solve(req, CATALOG).infeasibleReason).toBe('FIXED_PART_CONFLICT');
   });
 });
