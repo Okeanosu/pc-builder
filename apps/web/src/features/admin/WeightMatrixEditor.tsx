@@ -187,7 +187,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                       aria-expanded={Boolean(open[c])}
                       aria-controls={`alloc-${c}`}
                       onClick={() => setOpen((o) => ({ ...o, [c]: !o[c] }))}
-                      className="focus-ring flex h-9 w-full items-center gap-2 rounded-sm px-2 text-start hover:bg-surface-2"
+                      className="focus-ring flex h-9 w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 text-start hover:bg-surface-2"
                     >
                       <ChevronRight
                         className={cn(

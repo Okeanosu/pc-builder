@@ -136,13 +136,29 @@ function Reconciliation({ order }: { order: AdminOrderDetailDTO }) {
       </p>
     );
   }
-  const ok = matched.length > 0;
+  const unmatched = order.payments.filter((p) => p.status !== 'SUCCESS');
+  const unmatchedSum = unmatched.reduce((n, p) => n + p.amount, 0);
+  if (matched.length === 0) {
+    return (
+      <p className="text-sm text-warn-ink">
+        Chưa khớp: đã nhận {formatVnd(received)}, đơn cần {formatVnd(order.total)}. Kiểm tra sao kê ngân hàng
+        rồi xác nhận tay nếu đúng.
+      </p>
+    );
+  }
   return (
-    <p className={cn('text-sm', ok ? 'text-ok-ink' : 'text-warn-ink')}>
-      {ok
-        ? `Đã khớp: nhận ${formatVnd(received)} cho đơn ${formatVnd(order.total)}.`
-        : `Chưa khớp: nhận ${formatVnd(received)}, đơn cần ${formatVnd(order.total)}. Kiểm tra sao kê và xác nhận tay nếu đúng.`}
-    </p>
+    <div className="flex flex-col gap-0.5 text-sm">
+      <p className="text-ok-ink">
+        Đã khớp: giao dịch {formatVnd(matched.reduce((n, p) => n + p.amount, 0))} cho đơn{' '}
+        {formatVnd(order.total)}.
+      </p>
+      {unmatched.length > 0 && (
+        <p className="text-warn-ink">
+          Còn {unmatched.length} giao dịch không khớp ({formatVnd(unmatchedSum)}) cần đối soát hoặc hoàn lại
+          cho khách.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -177,7 +193,12 @@ function PaymentsCard({ order }: { order: AdminOrderDetailDTO }) {
                     <td className={td}>
                       <div>{PROVIDER_LABEL[p.provider] ?? p.provider}</div>
                       {p.providerTxnId && (
-                        <div className="font-mono text-xs text-muted">#{p.providerTxnId}</div>
+                        <div
+                          className="max-w-40 truncate font-mono text-xs text-muted"
+                          title={p.providerTxnId}
+                        >
+                          #{p.providerTxnId}
+                        </div>
                       )}
                     </td>
                     <td className={cn(td, 'font-mono text-xs')}>{p.transferContent ?? '—'}</td>
