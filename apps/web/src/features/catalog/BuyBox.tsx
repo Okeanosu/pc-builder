@@ -13,8 +13,7 @@ import { cn } from '@/lib/cn';
 import { queryKeys } from '@/lib/query-keys';
 import { AddToCartButton } from '../cart/AddToCartButton';
 import { QtyStepper } from '../cart/QtyStepper';
-
-const MAX_LINE_QTY = 20;
+import { MAX_LINE_QTY } from '../checkout/constants';
 
 /** Price, live stock and purchase actions. The page is cached, so stock is refetched on mount. */
 export function BuyBox({ product: initial }: { product: ProductDTO }) {
