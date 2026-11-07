@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  participant U as Người dùng
+  participant P as Trang /builder
+  participant S as useBuilderStore (Zustand)
+  participant E as @pc/engine (luật C01-C14)
+  participant A as API
+  U->>P: chọn linh kiện cho một slot (PartPicker)
+  P->>S: setPart(category, product)
+  S->>E: checkCompatibility(parts)
+  E-->>S: issues[] + estimatedWattage + recommendedPsuWattage
+  S-->>P: cập nhật CompatibilityBadge, thanh tổng giá, công suất (tức thì, không gọi mạng)
+  P-->>U: cảnh báo vàng (mềm) hoặc đỏ (xung đột cứng) kèm mã luật
+  U->>P: bấm Lưu cấu hình / Thêm cả bộ vào giỏ
+  P->>A: POST /api/compatibility/check {productIds[]}
+  A->>A: nạp sản phẩm từ DB, chạy cùng bộ luật (nguồn chân lý)
+  A-->>P: {ok, issues, estimatedWattage, recommendedPsuWattage}
+  alt có lỗi cứng
+    P-->>U: chặn thao tác, hiển thị danh sách xung đột
+  else chỉ cảnh báo hoặc hợp lệ
+    P->>A: POST /api/builds (hoặc /api/cart/builds/:buildId)
+    A-->>P: build đã lưu
+    P-->>U: xác nhận
+  end

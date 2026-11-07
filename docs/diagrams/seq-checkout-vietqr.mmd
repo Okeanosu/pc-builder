@@ -1,0 +1,47 @@
+sequenceDiagram
+  autonumber
+  participant U as Khách hàng
+  participant W as Web (checkout, trang thanh toán)
+  participant A as API
+  participant DB as Postgres
+  participant R as Redis
+  participant B as Ngân hàng / SePay
+  U->>W: Điền thông tin giao hàng, bấm Đặt hàng
+  W->>A: POST /api/orders
+  A->>A: tính lại giá từ DB (không tin giá client)
+  rect rgb(235, 245, 255)
+    note over A,DB: Một transaction
+    loop mỗi sản phẩm trong đơn
+      A->>DB: UPDATE products SET reserved = reserved + q WHERE id = $1 AND stock - reserved >= q
+      alt 0 dòng bị ảnh hưởng
+        A-->>W: 409 hết hàng (rollback toàn bộ)
+      end
+    end
+    A->>DB: INSERT orders (PENDING_PAYMENT, expires_at = now + 15 phút), order_items
+  end
+  A->>R: SET hold:order:{code} TTL 15 phút
+  A-->>W: 201 {code}
+  W->>A: GET /api/orders/:code/payment
+  A-->>W: URL ảnh VietQR (img.vietqr.io, amount, addInfo = mã đơn)
+  W-->>U: hiển thị mã QR + đếm ngược
+  U->>B: quét QR và chuyển khoản
+  loop mỗi 3 giây
+    W->>A: GET /api/orders/:code/payment (polling)
+    A-->>W: trạng thái đơn
+  end
+  B->>A: POST /api/payments/webhook/sepay (Authorization: Apikey ...)
+  A->>A: xác thực API key, nội dung chứa mã đơn, transferAmount >= total
+  A->>DB: provider_txn_id đã có chưa? (idempotent)
+  rect rgb(235, 255, 240)
+    note over A,DB: Một transaction
+    A->>DB: INSERT payments, UPDATE orders SET status = PAID, payment_status = PAID, paid_at
+    A->>DB: UPDATE products SET stock = stock - q, reserved = reserved - q
+    A->>DB: INSERT inventory_movements (reason = ORDER)
+  end
+  A->>R: DEL hold:order:{code}
+  W->>A: GET /api/orders/:code/payment
+  A-->>W: PAID
+  W-->>U: chuyển sang trang đơn hàng thành công
+  opt Quá hạn 15 phút không thanh toán
+    A->>DB: sweeper 60 giây: đơn PENDING_PAYMENT quá expires_at → CANCELLED, reserved -= q
+  end
