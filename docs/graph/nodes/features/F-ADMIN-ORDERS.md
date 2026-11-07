@@ -8,7 +8,7 @@ links:
   decidedBy: ["ADR-021"]
   realizes: ["FR-15", "UC-15"]
   dependsOn: ["M-ADMIN", "F-ORDER", "F-AUTH"]
-  shownIn: ["SCR-ADMIN-ORDERS"]
+  shownIn: ["SCR-ADMIN-ORDERS", "SCR-ADMIN-PAYMENTS"]
 code: ["apps/api/src/modules/admin/orders/**", "apps/web/src/features/admin/orders/**", "apps/web/src/features/admin/OrderStatusControl.tsx"]
 tests: ["apps/api/src/modules/admin/**/*.int.test.ts", "apps/web/src/features/admin/orders/**/*.test.ts"]
 diagrams: []

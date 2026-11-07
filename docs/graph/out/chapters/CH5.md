@@ -488,7 +488,7 @@ stateDiagram-v2
 ### F-PAYMENT-VIETQR — Thanh toán VietQR động, webhook SePay và giả lập
 
 Trạng thái: **done**
-Liên kết — realizes: FR-06, UC-10 · dependsOn: M-PAYMENTS, E-PAYMENT, F-ORDER, F-INVENTORY-LOCK · decidedBy: ADR-008, ADR-021 · shownIn: SCR-PAY
+Liên kết — realizes: FR-06, UC-10 · dependsOn: M-PAYMENTS, E-PAYMENT, F-ORDER, F-INVENTORY-LOCK · decidedBy: ADR-008, ADR-021 · shownIn: SCR-PAY, SCR-ADMIN-PAYMENTS
 
 **Mục đích:** nhận tiền chuyển khoản và tự chuyển đơn sang đã thanh toán mà không cần nhân viên đối soát tay.
 
@@ -590,7 +590,7 @@ sequenceDiagram
 ### F-RECOMMEND — Gợi ý cấu hình theo form (ngân sách, mục đích, tùy chọn)
 
 Trạng thái: **done**
-Liên kết — realizes: FR-08, UC-04, NFR-01 · dependsOn: M-RECOMMENDATION, F-ENGINE-CORE, E-PURPOSE-WEIGHT, E-BUILD · decidedBy: ADR-004, ADR-013, ADR-015, ADR-020 · shownIn: SCR-HOME, SCR-ADVISOR
+Liên kết — realizes: FR-08, UC-04, NFR-01 · dependsOn: M-RECOMMENDATION, F-ENGINE-CORE, E-PURPOSE-WEIGHT, E-BUILD · decidedBy: ADR-004, ADR-013, ADR-015, ADR-020 · shownIn: SCR-HOME, SCR-ADVISOR, SCR-ADVISOR-FORM
 
 **Mục đích:** cho người dùng không muốn chat vẫn nhận 2-3 cấu hình tối ưu chỉ với một form ngắn.
 

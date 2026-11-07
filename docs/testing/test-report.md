@@ -6,7 +6,7 @@
 
 | Hạng mục | Kết quả |
 | --- | --- |
-| Kiểm thử tự động (unit + integration) | **948 ca trên 75 tệp**, tất cả đạt (Engine 175, API 579, Web 167, Graph CLI 27), đếm lại ngày 2026-11-08 sau đợt sửa cuối phía API; lúc QA đo là 897 ca trên 70 tệp |
+| Kiểm thử tự động (unit + integration) | **1.028 ca trên 82 tệp**, tất cả đạt (Engine 175, API 580, Web 246, Graph CLI 27), đếm lại ngày 2026-11-08 sau các đợt sửa cuối (API và Web); lúc QA đo là 897 ca trên 70 tệp |
 | Độ phủ nhánh `packages/engine` | 98,85% (mục tiêu ≥ 90%) |
 | E2E Playwright | 6 test (5 test chạy ở cả 1440 px và 390 px, smoke chạy 1 khung nhìn) + bước đăng nhập; 3 lần chạy độc lập, mỗi test lặp 3 lần/lần chạy (smoke và a11y có từ lần 2): 87 lượt thực thi, 0 lỗi, 0 lượt chập chờn |
 | Hiệu năng Engine (trích bench) | p95 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms) |
@@ -14,7 +14,7 @@
 | Độ trễ chat SSE (dự phòng) | sự kiện `builds` p95 19,5 ms; cả lượt p95 23,2 ms (mục tiêu ≤ 8 s) |
 | Chất lượng AI (golden set, chế độ dự phòng) | nghiêm ngặt 26/30; theo khả năng thiết kế của chế độ luật 30/30; cấu hình hợp lệ 69/69 |
 | Test chập chờn ECONNRESET | không tái hiện được: 0 lỗi trong 2.116 lượt ca API, 195 lượt dưới tải CPU nặng, 900 yêu cầu đăng nhập thăm dò |
-| Lỗi phát hiện | 2 BUG (1 bảo mật mức trung bình, 1 khả năng truy cập mức thấp), **cả hai đã sửa** ngày 2026-11-08 kèm test hồi quy; 3 quan sát và các hạn chế đo, xem mục 9. Sau bản sửa: API 540 ca, Web 167 ca, tất cả đạt |
+| Lỗi phát hiện | 2 BUG (1 bảo mật mức trung bình, 1 khả năng truy cập mức thấp), **cả hai đã sửa** ngày 2026-11-08 kèm test hồi quy; 3 quan sát và các hạn chế đo, xem mục 9. Sau bản sửa lúc đó: API 540 ca, Web 167 ca, tất cả đạt; số đếm cuối cùng ở mục 2 |
 
 ## 1. Môi trường kiểm thử
 
@@ -33,22 +33,22 @@
 
 ## 2. Chiến lược và tháp kiểm thử
 
-Số lượng lấy từ chính các lần chạy (bảng kết quả của Vitest/Playwright), không đếm tay. Các dòng unit/integration dưới đây được đếm lại ngày 2026-11-08 sau đợt sửa cuối phía API (đổi mật khẩu, token hết hạn, kiểm tra giá trong chat, fail-closed khi triển khai…); thời gian chạy và số lần chạy lặp ở mục 8 vẫn là số đo của QA trên 529 ca.
+Số lượng lấy từ chính các lần chạy (bảng kết quả của Vitest/Playwright), không đếm tay. Các dòng unit/integration dưới đây được đếm lại ngày 2026-11-08 sau các đợt sửa cuối (đổi mật khẩu, token hết hạn, kiểm tra giá trong chat, fail-closed khi triển khai…); thời gian chạy và số lần chạy lặp ở mục 8 vẫn là số đo của QA trên 529 ca.
 
 | Tầng | Gói / công cụ | Tệp | Ca kiểm thử | Thời gian chạy | Ghi chú |
 | --- | --- | ---: | ---: | ---: | --- |
 | Unit — Engine | `packages/engine`, Vitest | 9 | 175 | 1,6 s | luật C01–C15, AC-3, FC, B&B, top-K, vô nghiệm |
-| Unit — API (hàm thuần) | `apps/api`, Vitest | 20 | 360 | — | NLU dự phòng (113 ca), máy trạng thái đơn (75 ca), VietQR, validator specSchema, orchestrator với LLM giả, kiểm tra giá trong câu trả lời AI, cấu hình production fail-closed… |
+| Unit — API (hàm thuần) | `apps/api`, Vitest | 20 | 361 | — | NLU dự phòng (113 ca), máy trạng thái đơn (75 ca), VietQR, validator specSchema, orchestrator với LLM giả, kiểm tra giá trong câu trả lời AI, cấu hình production fail-closed… |
 | Integration — API | `apps/api`, Vitest + Supertest, Postgres + Redis thật | 21 | 219 | — | 19 tệp `*.int.test.ts` (201 ca) + `app.test.ts` (2) + `seed.test.ts` (16) |
-| (cả gói API) | | 41 | 579 | 125,8 s | lần chạy ngày 2026-11-08 sau đợt sửa cuối; 4 lần chạy QA (529 ca, 110,4–111,7 s) ở mục 8 |
-| Unit — Web | `apps/web`, Vitest + jsdom | 23 | 167 | 1,0 s | store, parser SSE, ánh xạ bộ lọc ↔ URL, form… |
+| (cả gói API) | | 41 | 580 | 125,8 s | lần chạy ngày 2026-11-08 sau các đợt sửa cuối (thời gian là của lần đếm trước); 4 lần chạy QA (529 ca, 110,4–111,7 s) ở mục 8 |
+| Unit — Web | `apps/web`, Vitest + jsdom | 30 | 246 | 1,0 s | store, parser SSE, ánh xạ bộ lọc ↔ URL, form… |
 | Unit — Spec-Code Graph | `tools/graph`, Vitest | 2 | 27 | 0,2 s | |
 | E2E | `e2e/`, Playwright | 6 | 6 (+1 bước đăng nhập) | ~3 phút/lần chạy (gồm build web) | 1440 px và 390 px |
 | Hiệu năng | bench Engine, autocannon, đo SSE | — | 3 kịch bản tải + 20 lượt chat | 90 s + 2 s | mục 5 |
 | Chất lượng AI | `apps/api/eval` | — | 30 kịch bản | — | mục 6 |
 | UAT | Google Form (SUS) | — | — | — | chưa thực hiện trong task này |
 
-Tổng số ca tự động không kể E2E (đếm lại 2026-11-08): 175 + 579 + 167 + 27 = **948**, tất cả đạt.
+Tổng số ca tự động không kể E2E (đếm lại 2026-11-08): 175 + 580 + 246 + 27 = **1.028** ca trên 9 + 41 + 30 + 2 = **82** tệp, tất cả đạt; số liệu được đếm sau các đợt sửa cuối.
 
 ## 3. Độ phủ mã
 

@@ -38,30 +38,23 @@ describe('bankName', () => {
 
 describe('paymentSimulator', () => {
   it('shows the dev button outside production for everyone', () => {
-    expect(paymentSimulator({ nodeEnv: 'development', role: undefined, flag: undefined })).toEqual({
+    expect(paymentSimulator({ nodeEnv: 'development', role: undefined })).toEqual({
       show: true,
       label: 'Giả lập thanh toán (dev)',
     });
-    expect(paymentSimulator({ nodeEnv: 'test', role: 'CUSTOMER', flag: undefined }).show).toBe(true);
+    expect(paymentSimulator({ nodeEnv: 'test', role: 'CUSTOMER' }).show).toBe(true);
   });
 
   it('shows a "(demo)" button in production to admins, whom the API lets simulate', () => {
-    expect(paymentSimulator({ nodeEnv: 'production', role: 'ADMIN', flag: undefined })).toEqual({
+    expect(paymentSimulator({ nodeEnv: 'production', role: 'ADMIN' })).toEqual({
       show: true,
       label: 'Giả lập thanh toán (demo)',
     });
   });
 
-  it('shows it in production to everyone when the demo flag is on', () => {
-    expect(paymentSimulator({ nodeEnv: 'production', role: undefined, flag: '1' })).toEqual({
-      show: true,
-      label: 'Giả lập thanh toán (demo)',
-    });
-  });
-
-  it('hides it in production from customers, staff and guests without the flag', () => {
-    expect(paymentSimulator({ nodeEnv: 'production', role: 'CUSTOMER', flag: undefined }).show).toBe(false);
-    expect(paymentSimulator({ nodeEnv: 'production', role: 'STAFF', flag: '0' }).show).toBe(false);
-    expect(paymentSimulator({ nodeEnv: 'production', role: undefined, flag: 'true' }).show).toBe(false);
+  it('hides it in production from customers, staff and guests', () => {
+    expect(paymentSimulator({ nodeEnv: 'production', role: 'CUSTOMER' }).show).toBe(false);
+    expect(paymentSimulator({ nodeEnv: 'production', role: 'STAFF' }).show).toBe(false);
+    expect(paymentSimulator({ nodeEnv: 'production', role: undefined }).show).toBe(false);
   });
 });
