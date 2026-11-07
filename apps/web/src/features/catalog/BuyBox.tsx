@@ -78,8 +78,8 @@ export function BuyBox({ product: initial }: { product: ProductDTO }) {
       </div>
       {state === 'out' && (
         <p className="text-sm text-muted">
-          Sản phẩm sẽ có lại sớm. Bạn vẫn có thể thêm vào cấu hình để xem tương thích, hoặc hỏi AI gợi ý mẫu
-          thay thế còn hàng.
+          Sản phẩm đang tạm hết. Bạn vẫn có thể thêm vào cấu hình để kiểm tra tương thích, hoặc hỏi AI gợi ý
+          mẫu tương đương còn hàng.
         </p>
       )}
     </div>

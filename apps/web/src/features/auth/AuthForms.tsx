@@ -100,7 +100,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-5">
       <FormError message={formError} />
       <Field label="Email" required error={errors.email}>
         <Input
@@ -199,7 +199,7 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-5">
       <FormError message={formError} />
       <Field label="Họ và tên" required error={errors.fullName}>
         <Input

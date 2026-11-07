@@ -132,6 +132,7 @@ export function CheckoutView() {
   return (
     <form
       ref={formRef}
+      method="post"
       onSubmit={submit}
       noValidate
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-8"
