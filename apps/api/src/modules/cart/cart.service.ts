@@ -15,11 +15,14 @@ import {
 import {
   type CartLine,
   type CartStore,
-  claimGuestCart,
+  type CartWriteResult,
+  guestCartKey,
   guestCartStore,
   MAX_LINE_QTY,
+  parseGuestHash,
   userCartStore,
 } from './cart.store';
+import { tryLock } from './redis-lock';
 
 /** Who owns the cart for this request: a signed-in user (DB cart) or the anonymous visitor (Redis cart). */
 export interface CartOwner {
@@ -58,6 +61,14 @@ export function insufficientStock(row: ProductWithRefs, requested: number): AppE
   );
 }
 
+function throwIfRejected(result: CartWriteResult, row: ProductWithRefs): void {
+  if (result.ok) return;
+  if (result.reason === 'QTY_LIMIT') {
+    throw new AppError(422, 'QTY_LIMIT', `Mỗi sản phẩm tối đa ${MAX_LINE_QTY} chiếc trong giỏ`);
+  }
+  throw insufficientStock(row, result.total);
+}
+
 export function toCartDTO(lines: PricedCartLine[]): CartDTO {
   const items: CartItemDTO[] = lines.map((l) => ({
     id: l.id,
@@ -73,34 +84,43 @@ export function toCartDTO(lines: PricedCartLine[]): CartDTO {
   };
 }
 
+const MERGE_LOCK_MS = 10_000;
+
 export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
   const { db, redis } = deps;
 
-  async function mergeGuestInto(store: CartStore, guestId: string): Promise<void> {
-    const guestLines = await claimGuestCart(redis, guestId);
-    if (guestLines.length === 0) return;
-    const productIds = new Set(
-      (
-        await findProductsByIds(
-          db,
-          guestLines.map((l) => l.productId),
-        )
-      ).map((r) => r.product.id),
-    );
-    const buildIds = [...new Set(guestLines.flatMap((l) => (l.buildId ? [l.buildId] : [])))];
-    const knownBuilds = new Set(
-      buildIds.length > 0
-        ? (await db.select({ id: builds.id }).from(builds).where(inArray(builds.id, buildIds))).map(
-            (b) => b.id,
-          )
-        : [],
-    );
-    const existing = await store.list();
-    for (const line of guestLines) {
-      if (!productIds.has(line.productId)) continue;
-      if (line.buildId && !knownBuilds.has(line.buildId)) continue;
-      const current = existing.find((e) => e.productId === line.productId && e.buildId === line.buildId);
-      await store.set(line.productId, line.buildId, Math.min(MAX_LINE_QTY, (current?.qty ?? 0) + line.qty));
+  /**
+   * Moves a pending guest cart into the user's DB cart. The DB upsert runs first and the guest hash is
+   * deleted only afterwards, so a failure keeps the guest lines for the next attempt. A short Redis lock
+   * stops two concurrent requests from merging the same lines twice.
+   */
+  async function mergeGuestInto(store: ReturnType<typeof userCartStore>, guestId: string): Promise<void> {
+    const key = guestCartKey(guestId);
+    if ((await redis.hlen(key)) === 0) return;
+    const lock = await tryLock(redis, `lock:cart-merge:${guestId}`, MERGE_LOCK_MS);
+    if (!lock) return;
+    try {
+      const guestLines = parseGuestHash(await redis.hgetall(key));
+      if (guestLines.length === 0) return;
+      const sellable = new Set(
+        (await findProductsByIds(db, [...new Set(guestLines.map((l) => l.productId))]))
+          .filter((r) => r.product.status === 'ACTIVE')
+          .map((r) => r.product.id),
+      );
+      const buildIds = [...new Set(guestLines.flatMap((l) => (l.buildId ? [l.buildId] : [])))];
+      const knownBuilds = new Set(
+        buildIds.length > 0
+          ? (await db.select({ id: builds.id }).from(builds).where(inArray(builds.id, buildIds))).map(
+              (b) => b.id,
+            )
+          : [],
+      );
+      await store.mergeIn(
+        guestLines.filter((l) => sellable.has(l.productId) && (!l.buildId || knownBuilds.has(l.buildId))),
+      );
+      await redis.del(key);
+    } finally {
+      await lock.release();
     }
   }
 
@@ -132,32 +152,16 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
     return row;
   }
 
-  /** Total units of a product across the cart if `line` were replaced by `qty`. */
-  function productTotal(lines: CartLine[], productId: string, skip: CartLine | undefined, qty: number) {
-    return lines.filter((l) => l.productId === productId && l !== skip).reduce((s, l) => s + l.qty, qty);
-  }
-
-  async function setLineQty(
-    store: CartStore,
-    lines: CartLine[],
-    row: ProductWithRefs,
-    buildId: string | null,
-    qty: number,
-  ) {
-    if (qty > MAX_LINE_QTY) {
-      throw new AppError(422, 'QTY_LIMIT', `Mỗi sản phẩm tối đa ${MAX_LINE_QTY} chiếc trong giỏ`);
-    }
-    const line = lines.find((l) => l.productId === row.product.id && l.buildId === buildId);
-    const total = productTotal(lines, row.product.id, line, qty);
-    if (total > availableStock(row.product)) throw insufficientStock(row, total);
-    await store.set(row.product.id, buildId, qty);
-  }
-
   async function view(store: CartStore): Promise<CartDTO> {
     return toCartDTO(await price(await store.list()));
   }
 
   return {
+    /** Runs the pending guest→user merge without reading the cart (checkout locks and reads it itself). */
+    async prepare(owner: CartOwner): Promise<void> {
+      await storeFor(owner);
+    },
+
     /** Priced lines of the caller's cart (merging a pending guest cart first). */
     async lines(owner: CartOwner): Promise<PricedCartLine[]> {
       return price(await (await storeFor(owner)).list());
@@ -170,20 +174,31 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
     async addItem(owner: CartOwner, productId: string, qty: number): Promise<CartDTO> {
       const row = await activeProduct(productId);
       const store = await storeFor(owner);
-      const lines = await store.list();
-      const current = lines.find((l) => l.productId === productId && l.buildId === null);
-      await setLineQty(store, lines, row, null, (current?.qty ?? 0) + qty);
+      const result = await store.write({
+        productId,
+        buildId: null,
+        qty,
+        mode: 'add',
+        available: availableStock(row.product),
+      });
+      throwIfRejected(result, row);
       return view(store);
     },
 
     async updateItem(owner: CartOwner, itemId: string, qty: number): Promise<CartDTO> {
       const store = await storeFor(owner);
-      const lines = await store.list();
-      const line = lines.find((l) => l.id === itemId);
+      const line = (await store.list()).find((l) => l.id === itemId);
       if (!line) throw notFound('Sản phẩm trong giỏ');
       const [row] = await findProductsByIds(db, [line.productId]);
       if (!row) throw notFound('Sản phẩm');
-      await setLineQty(store, lines, row, line.buildId, qty);
+      const result = await store.write({
+        productId: line.productId,
+        buildId: line.buildId,
+        qty,
+        mode: 'set',
+        available: availableStock(row.product),
+      });
+      throwIfRejected(result, row);
       return view(store);
     },
 
@@ -195,7 +210,11 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
       return view(store);
     },
 
-    /** Adds each part of a stored build tagged with its id; parts already in the cart for it are kept as is. */
+    /**
+     * Adds each part of a stored build tagged with its id. Lines are written with absolute quantities, so
+     * re-adding the same build is idempotent; if any part cannot be added, the parts added by this call are
+     * removed again (all-or-nothing).
+     */
     async addBuild(owner: CartOwner, buildId: string): Promise<CartDTO> {
       if (!isGuid(buildId)) throw notFound('Cấu hình');
       const [build] = await db.select().from(builds).where(eq(builds.id, buildId));
@@ -204,28 +223,39 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
       for (const item of build.items) wanted.set(item.productId, (wanted.get(item.productId) ?? 0) + 1);
 
       const store = await storeFor(owner);
-      const lines = await store.list();
+      const existing = await store.list();
       const rows = new Map(
         (await findProductsByIds(db, [...wanted.keys()])).map((r) => [r.product.id, r] as const),
       );
-      const toAdd: { row: ProductWithRefs; qty: number }[] = [];
-      for (const [productId, qty] of wanted) {
-        if (lines.some((l) => l.productId === productId && l.buildId === buildId)) continue;
-        const row = rows.get(productId);
-        if (row?.product.status !== 'ACTIVE') {
-          const name = build.items.find((i) => i.productId === productId)?.name ?? productId;
-          throw new AppError(409, 'INSUFFICIENT_STOCK', `"${name}" đã ngừng kinh doanh`, {
-            productId,
-            name,
-            requested: qty,
-            available: 0,
-          });
-        }
-        const total = productTotal(lines, productId, undefined, qty);
-        if (total > availableStock(row.product)) throw insufficientStock(row, total);
-        toAdd.push({ row, qty });
+      const pending = [...wanted].filter(
+        ([productId]) => !existing.some((l) => l.productId === productId && l.buildId === buildId),
+      );
+      for (const [productId, qty] of pending) {
+        if (rows.get(productId)?.product.status === 'ACTIVE') continue;
+        const name = build.items.find((i) => i.productId === productId)?.name ?? productId;
+        throw new AppError(409, 'INSUFFICIENT_STOCK', `"${name}" đã ngừng kinh doanh`, {
+          productId,
+          name,
+          requested: qty,
+          available: 0,
+        });
       }
-      for (const { row, qty } of toAdd) await store.set(row.product.id, buildId, qty);
+      const added: { productId: string; buildId: string }[] = [];
+      for (const [productId, qty] of pending) {
+        const row = rows.get(productId)!;
+        const result = await store.write({
+          productId,
+          buildId,
+          qty,
+          mode: 'set',
+          available: availableStock(row.product),
+        });
+        if (!result.ok) {
+          await store.remove(added);
+          throwIfRejected(result, row);
+        }
+        added.push({ productId, buildId });
+      }
       return view(store);
     },
 

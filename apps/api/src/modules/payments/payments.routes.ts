@@ -30,7 +30,14 @@ export function createPaymentsRouter(deps: AppDeps): Router {
         throw new AppError(401, 'UNAUTHORIZED', 'Sai API key');
       }
       const outcome = await svc.processTransfer(req.body, 'SEPAY');
-      req.log?.info({ outcome, txn: req.body?.id }, 'sepay webhook');
+      if (outcome === 'NO_ORDER') {
+        req.log?.warn(
+          { txn: req.body?.id, amount: req.body?.transferAmount, content: req.body?.content },
+          'sepay transfer matched no order; stored for manual reconciliation',
+        );
+      } else {
+        req.log?.info({ outcome, txn: req.body?.id }, 'sepay webhook');
+      }
       res.json({ success: true });
     }),
   );

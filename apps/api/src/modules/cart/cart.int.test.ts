@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { cartItems, carts } from '../../db/schema';
-import { createCommerceHarness, guestIdFrom } from './test-support';
+import { createCommerceHarness, guestIdFrom } from '../../../test/test-support';
+import { cartItems, carts, products } from '../../db/schema';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
@@ -170,5 +170,106 @@ describe('user cart (DB) and merge on login', () => {
 
     const guestAfter = await agent.get('/api/cart');
     expect(guestAfter.body.items).toEqual([]);
+  });
+});
+
+describe('atomic cart writes under concurrency', () => {
+  it('parallel adds to a guest cart never lose an increment', async () => {
+    const ram = await h.product('ram', { stock: 50, reserved: 0 });
+    const agent = request.agent(h.app);
+    const gid = guestIdFrom((await agent.get('/api/cart')).headers['set-cookie']);
+
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () => agent.post('/api/cart/items').send({ productId: ram.id, qty: 1 })),
+    );
+
+    expect(results.map((r) => r.status)).toEqual([201, 201, 201, 201, 201]);
+    expect(await h.deps.redis.hgetall(`cart:guest:${gid}`)).toEqual({ [`${ram.id}:-`]: '5' });
+  });
+
+  it('parallel adds to a user cart end in a single row with the summed quantity', async () => {
+    const auth = `Bearer ${await h.tokenFor('CUSTOMER')}`;
+    const ram = await h.product('ram', { stock: 50, reserved: 0 });
+
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(h.app).post('/api/cart/items').set('Authorization', auth).send({ productId: ram.id, qty: 1 }),
+      ),
+    );
+
+    expect(results.map((r) => r.status)).toEqual([201, 201, 201, 201, 201]);
+    const rows = await h.deps.db.select().from(cartItems).where(eq(cartItems.productId, ram.id));
+    expect(rows).toMatchObject([{ qty: 5, buildId: null }]);
+  });
+
+  it('parallel adds cannot push a line past available stock (guest and user)', async () => {
+    const gpu = await h.product('gpu', { stock: 3, reserved: 0 });
+    const agent = request.agent(h.app);
+    await agent.get('/api/cart'); // obtain the gid cookie first so all requests share one guest cart
+    const auth = `Bearer ${await h.tokenFor('CUSTOMER')}`;
+
+    const guest = await Promise.all(
+      Array.from({ length: 5 }, () => agent.post('/api/cart/items').send({ productId: gpu.id, qty: 1 })),
+    );
+    const user = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(h.app).post('/api/cart/items').set('Authorization', auth).send({ productId: gpu.id, qty: 1 }),
+      ),
+    );
+
+    for (const batch of [guest, user]) {
+      expect(batch.filter((r) => r.status === 201)).toHaveLength(3);
+      expect(batch.filter((r) => r.status === 409)).toHaveLength(2);
+    }
+    expect((await agent.get('/api/cart')).body.items[0].qty).toBe(3);
+    const [row] = await h.deps.db.select().from(cartItems).where(eq(cartItems.productId, gpu.id));
+    expect(row!.qty).toBe(3);
+  });
+});
+
+describe('guest → user merge safety', () => {
+  it('skips products hidden since they were added', async () => {
+    const token = await h.tokenFor('CUSTOMER');
+    const cpu = await h.product('cpu', { stock: 10, reserved: 0 });
+    const ssd = await h.product('storage', { stock: 10, reserved: 0 });
+    const agent = request.agent(h.app);
+    await agent.post('/api/cart/items').send({ productId: cpu.id, qty: 1 });
+    await agent.post('/api/cart/items').send({ productId: ssd.id, qty: 1 });
+    await h.deps.db.update(products).set({ status: 'HIDDEN' }).where(eq(products.id, ssd.id));
+
+    const merged = await agent.get('/api/cart').set('Authorization', `Bearer ${token}`);
+    expect(merged.body.items.map((i: { product: { id: string } }) => i.product.id)).toEqual([cpu.id]);
+  });
+
+  it('keeps the guest lines when the database merge fails, and merges them on the next request', async () => {
+    const token = await h.tokenFor('CUSTOMER');
+    const cpu = await h.product('cpu', { stock: 10, reserved: 0 });
+    const agent = request.agent(h.app);
+    const first = await agent.post('/api/cart/items').send({ productId: cpu.id, qty: 2 });
+    const gid = guestIdFrom(first.headers['set-cookie']);
+
+    const db = h.deps.db;
+    const failingDb = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop === 'insert') {
+          return (table: typeof carts | typeof cartItems) => {
+            if (table === cartItems) throw new Error('simulated DB failure');
+            return target.insert(table);
+          };
+        }
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+    const broken = await request(h.appWith({ db: failingDb }))
+      .get('/api/cart')
+      .set('Cookie', `gid=${gid}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(broken.status).toBe(500);
+    expect(await h.deps.redis.hgetall(`cart:guest:${gid}`)).toEqual({ [`${cpu.id}:-`]: '2' });
+
+    const ok = await agent.get('/api/cart').set('Authorization', `Bearer ${token}`);
+    expect(ok.body.items).toMatchObject([{ qty: 2, product: { id: cpu.id } }]);
+    expect(await h.deps.redis.exists(`cart:guest:${gid}`)).toBe(0);
   });
 });

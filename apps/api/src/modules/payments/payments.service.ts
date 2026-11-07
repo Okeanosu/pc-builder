@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import type { PaymentInfoDTO } from '@pc/shared';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { orders, payments } from '../../db/schema';
 import type { AppDeps } from '../../deps';
@@ -8,7 +8,7 @@ import {
   type AppliedTransition,
   afterTransitions,
   applyTransition,
-  findOrderCode,
+  findOrderCodes,
   type OrderRow,
 } from '../orders';
 import { buildVietQrUrl } from './vietqr';
@@ -53,13 +53,17 @@ export function createPaymentsService(deps: AppDeps) {
       return {
         orderCode: order.code,
         amount: order.total,
-        qrImageUrl: buildVietQrUrl({
-          bankBin: env.VIETQR_BANK_BIN,
-          accountNo: env.VIETQR_ACCOUNT_NO,
-          accountName: env.VIETQR_ACCOUNT_NAME,
-          amount: order.total,
-          addInfo: order.code,
-        }),
+        // No QR once the order is settled or expired, so nobody is invited to transfer money for it.
+        qrImageUrl:
+          order.status === 'PENDING_PAYMENT'
+            ? buildVietQrUrl({
+                bankBin: env.VIETQR_BANK_BIN,
+                accountNo: env.VIETQR_ACCOUNT_NO,
+                accountName: env.VIETQR_ACCOUNT_NAME,
+                amount: order.total,
+                addInfo: order.code,
+              })
+            : null,
         bankBin: env.VIETQR_BANK_BIN,
         accountNo: env.VIETQR_ACCOUNT_NO,
         accountName: env.VIETQR_ACCOUNT_NAME,
@@ -80,8 +84,29 @@ export function createPaymentsService(deps: AppDeps) {
       const t = parsed.data;
       if (t.transferType !== 'in') return 'IGNORED_OUTGOING';
       const content = t.content ?? '';
-      const code = findOrderCode(content) ?? findOrderCode(t.code ?? '');
-      if (!code) return 'NO_ORDER';
+      const candidates = [...new Set([...findOrderCodes(content), ...findOrderCodes(t.code ?? '')])];
+      const known =
+        candidates.length > 0
+          ? await db.select({ code: orders.code }).from(orders).where(inArray(orders.code, candidates))
+          : [];
+      const code = candidates.find((c) => known.some((k) => k.code === c));
+      const base = {
+        provider,
+        amount: t.transferAmount,
+        transferContent: content,
+        providerTxnId: String(t.id),
+        raw: body as Record<string, unknown>,
+      };
+
+      if (!code) {
+        // Money arrived but matches no order: keep it (idempotently) so staff can reconcile it by hand.
+        const stored = await db
+          .insert(payments)
+          .values({ ...base, orderId: null, status: 'NO_ORDER' })
+          .onConflictDoNothing({ target: payments.providerTxnId })
+          .returning({ id: payments.id });
+        return stored.length > 0 ? 'NO_ORDER' : 'DUPLICATE';
+      }
 
       const { outcome, applied } = await db.transaction(
         async (
@@ -100,15 +125,7 @@ export function createPaymentsService(deps: AppDeps) {
                 : 'UNDERPAID';
           const inserted = await tx
             .insert(payments)
-            .values({
-              orderId: order.id,
-              provider,
-              amount: t.transferAmount,
-              transferContent: content,
-              providerTxnId: String(t.id),
-              raw: body as Record<string, unknown>,
-              status: status === 'PAID' ? 'SUCCESS' : status,
-            })
+            .values({ ...base, orderId: order.id, status: status === 'PAID' ? 'SUCCESS' : status })
             .onConflictDoNothing({ target: payments.providerTxnId })
             .returning({ id: payments.id });
           if (inserted.length === 0) return { outcome: 'DUPLICATE', applied: null };

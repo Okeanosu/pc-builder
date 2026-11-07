@@ -23,8 +23,13 @@ export async function expirePendingOrders(
 
   const applied: AppliedTransition[] = [];
   for (const order of due) {
-    const done = await deps.db.transaction((tx) => applyTransition(tx, order, 'CANCELLED', { now }));
-    if (done) applied.push(done);
+    // One bad order (lock timeout, deadlock) must not keep the rest from expiring or skip their cleanup.
+    try {
+      const done = await deps.db.transaction((tx) => applyTransition(tx, order, 'CANCELLED', { now }));
+      if (done) applied.push(done);
+    } catch (err) {
+      console.error(`[order-expiry] could not expire ${order.code}; will retry next run`, err);
+    }
   }
   if (applied.length > 0) await afterTransitions(deps.redis, applied);
   return applied.map((a) => a.code);

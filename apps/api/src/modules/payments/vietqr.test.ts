@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findOrderCode, newOrderCode } from '../orders/order-code';
+import { findOrderCode, findOrderCodes, newOrderCode } from '../orders/order-code';
 import { buildVietQrUrl } from './vietqr';
 
 describe('buildVietQrUrl', () => {
@@ -51,5 +51,13 @@ describe('order codes in transfer content', () => {
     expect(findOrderCode('thanh toan pcbk7q2zx4m')).toBe('PCBK7Q2ZX4M');
     expect(findOrderCode('chuyen tien mua iphone')).toBeNull();
     expect(findOrderCode('PCB1234')).toBeNull();
+  });
+
+  it('lists every distinct code in order of appearance', () => {
+    expect(findOrderCodes('PCBAAAAAAAA nham, dung la pcbk7q2zx4m; lai PCBAAAAAAAA')).toEqual([
+      'PCBAAAAAAAA',
+      'PCBK7Q2ZX4M',
+    ]);
+    expect(findOrderCodes('khong co ma')).toEqual([]);
   });
 });

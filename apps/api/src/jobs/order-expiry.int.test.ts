@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CHECKOUT, createCommerceHarness } from '../../test/test-support';
 import { orders } from '../db/schema';
-import { CHECKOUT, createCommerceHarness } from '../modules/cart/test-support';
 import { expirePendingOrders, startOrderExpiryJob } from './order-expiry';
 
 const h = createCommerceHarness();
@@ -49,6 +49,45 @@ describe('order expiry job', () => {
     const later = new Date(Date.now() + (h.deps.env.ORDER_HOLD_MINUTES + 1) * 60_000);
     expect(await expirePendingOrders(h.deps, later)).toEqual([]);
     expect(await statusOf(code)).toBe('PAID');
+    expect((await h.getProduct(cpu.id)).reserved).toBe(1);
+  });
+
+  it('a failure on one order does not stop the others or their post-commit cleanup', async () => {
+    const cpu = await h.product('cpu', { stock: 5, reserved: 0 });
+    const first = await placeOrder(cpu.id, 1);
+    const second = await placeOrder(cpu.id, 1);
+    await h.deps.db
+      .update(orders)
+      .set({ expiresAt: new Date(Date.now() - 2000) })
+      .where(eq(orders.code, first));
+    await h.deps.db
+      .update(orders)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(orders.code, second));
+
+    let calls = 0;
+    const db = h.deps.db;
+    const flakyDb = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop === 'transaction') {
+          return (fn: Parameters<typeof db.transaction>[0]) => {
+            calls += 1;
+            if (calls === 1) return Promise.reject(new Error('simulated deadlock'));
+            return target.transaction(fn);
+          };
+        }
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+
+    const expired = await expirePendingOrders({ ...h.deps, db: flakyDb }, new Date());
+
+    expect(expired).toEqual([second]);
+    expect(await statusOf(first)).toBe('PENDING_PAYMENT');
+    expect(await statusOf(second)).toBe('CANCELLED');
+    expect(await h.deps.redis.exists(`hold:order:${second}`)).toBe(0);
+    expect(await h.deps.redis.exists(`hold:order:${first}`)).toBe(1);
     expect((await h.getProduct(cpu.id)).reserved).toBe(1);
   });
 

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { inventoryMovements } from '../../../db/schema';
-import { createCommerceHarness } from '../../cart/test-support';
+import { createCommerceHarness } from '../../../../test/test-support';
+import { inventoryMovements, payments } from '../../../db/schema';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
@@ -106,5 +106,30 @@ describe('PATCH /api/admin/orders/:code/status', () => {
       ['ORDER', -2],
     ]);
     expect(moves.find((m) => m.reason === 'CANCEL')!.actorId).toBe(await h.userId('ADMIN'));
+  });
+
+  it('confirming payment by hand is ADMIN only and records a MANUAL payment', async () => {
+    const gpu = await h.product('gpu', { stock: 3, reserved: 0 });
+    const order = await h.placeOrder([{ productId: gpu.id, qty: 1 }]);
+
+    const asStaff = await setStatus(order.code, 'PAID');
+    expect(asStaff.status).toBe(403);
+    expect(await h.deps.db.select().from(payments)).toEqual([]);
+
+    const res = await setStatus(order.code, 'PAID', admin);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: 'PAID', paymentStatus: 'PAID' });
+    expect(await h.getProduct(gpu.id)).toMatchObject({ stock: 2, reserved: 0 });
+    const [pay] = await h.deps.db.select().from(payments);
+    expect(pay).toMatchObject({
+      provider: 'MANUAL',
+      amount: order.total,
+      status: 'SUCCESS',
+      providerTxnId: null,
+    });
+    expect(pay!.raw).toMatchObject({ actorId: await h.userId('ADMIN'), actorEmail: 'admin@pcbuilder.vn' });
+
+    const detail = await request(h.app).get(`/api/admin/orders/${order.code}`).set('Authorization', staff);
+    expect(detail.body.payments).toMatchObject([{ provider: 'MANUAL', orderCode: order.code }]);
   });
 });

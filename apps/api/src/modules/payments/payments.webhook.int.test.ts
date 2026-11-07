@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { CHECKOUT, createCommerceHarness } from '../../../test/test-support';
 import { inventoryMovements, orders, payments } from '../../db/schema';
 import { expirePendingOrders } from '../../jobs/order-expiry';
-import { CHECKOUT, createCommerceHarness } from '../cart/test-support';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
@@ -127,7 +127,7 @@ describe('POST /api/payments/webhook/sepay', () => {
     expect(await h.deps.db.select().from(payments)).toEqual([]);
   });
 
-  it('acknowledges but ignores outgoing transfers, unknown codes and malformed bodies', async () => {
+  it('acknowledges everything; stores unmatched incoming transfers as NO_ORDER, ignores outgoing and malformed', async () => {
     const { order } = await placeOrder(1);
     const post = (body: unknown) =>
       request(h.app)
@@ -136,16 +136,105 @@ describe('POST /api/payments/webhook/sepay', () => {
         .send(body as object);
 
     const out = await post(sepayBody(order.code, order.total, { transferType: 'out' }));
-    const unknown = await post(sepayBody('PCBZZZZZZZZ', order.total));
-    const noCode = await post(sepayBody('', order.total, { content: 'chuyen tien mua iphone' }));
+    const unknownBody = sepayBody('PCBZZZZZZZZ', order.total);
+    const unknown = await post(unknownBody);
+    const replay = await post(unknownBody);
+    const noCodeBody = sepayBody('', 123_000, { content: 'chuyen tien mua iphone' });
+    const noCode = await post(noCodeBody);
     const malformed = await post({ hello: 'world' });
 
-    for (const res of [out, unknown, noCode, malformed]) {
+    for (const res of [out, unknown, replay, noCode, malformed]) {
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ success: true });
     }
     expect((await orderRow(order.code)).status).toBe('PENDING_PAYMENT');
-    expect(await h.deps.db.select().from(payments)).toEqual([]);
+    const rows = await h.deps.db.select().from(payments);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.orderId === null && r.status === 'NO_ORDER')).toBe(true);
+    expect(rows.map((r) => r.providerTxnId).sort()).toEqual(
+      [String(unknownBody.id), String(noCodeBody.id)].sort(),
+    );
+
+    const staff = `Bearer ${await h.tokenFor('STAFF')}`;
+    const listed = await request(h.app)
+      .get('/api/admin/payments?status=NO_ORDER')
+      .set('Authorization', staff);
+    expect(listed.status).toBe(200);
+    expect(listed.body.total).toBe(2);
+    expect(listed.body.items.every((p: { orderCode: string | null }) => p.orderCode === null)).toBe(true);
+  });
+
+  it('tries every order code in the content, not just the first', async () => {
+    const { order } = await placeOrder(1);
+    const body = sepayBody(order.code, order.total, {
+      content: `PCBAAAAAAAA nhầm mã, đúng là ${order.code} cảm ơn`,
+    });
+    const res = await request(h.app)
+      .post('/api/payments/webhook/sepay')
+      .set('Authorization', apiKey())
+      .send(body);
+    expect(res.status).toBe(200);
+    expect((await orderRow(order.code)).status).toBe('PAID');
+  });
+
+  it('a duplicate webhook delivered in parallel pays once and stores one payment', async () => {
+    const { gpu, order } = await placeOrder(2);
+    const body = sepayBody(order.code, order.total);
+
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        request(h.app).post('/api/payments/webhook/sepay').set('Authorization', apiKey()).send(body),
+      ),
+    );
+
+    expect(results.map((r) => r.status)).toEqual([200, 200, 200, 200, 200]);
+    expect(await h.deps.db.select().from(payments)).toHaveLength(1);
+    expect(await orderRow(order.code)).toMatchObject({ status: 'PAID', paymentStatus: 'PAID' });
+    expect(await h.getProduct(gpu.id)).toMatchObject({ stock: 3, reserved: 0 });
+    const moves = await h.deps.db
+      .select()
+      .from(inventoryMovements)
+      .where(eq(inventoryMovements.ref, order.code));
+    expect(moves).toHaveLength(1);
+  });
+
+  it('expiry racing a webhook always ends consistent: either paid once or released once', async () => {
+    const cpu = await h.product('cpu', { stock: 50, reserved: 0 });
+    const rounds = 6;
+    let paid = 0;
+    for (let i = 0; i < rounds; i++) {
+      const order = await h.placeOrder([{ productId: cpu.id, qty: 1 }]);
+      await h.deps.db
+        .update(orders)
+        .set({ expiresAt: new Date(Date.now() - 1000) })
+        .where(eq(orders.code, order.code));
+
+      const [, res] = await Promise.all([
+        expirePendingOrders(h.deps, new Date()),
+        request(h.app)
+          .post('/api/payments/webhook/sepay')
+          .set('Authorization', apiKey())
+          .send(sepayBody(order.code, order.total)),
+      ]);
+      expect(res.status).toBe(200);
+
+      const row = await orderRow(order.code);
+      const [pay] = await h.deps.db.select().from(payments).where(eq(payments.orderId, row.id));
+      const moves = await h.deps.db
+        .select()
+        .from(inventoryMovements)
+        .where(eq(inventoryMovements.ref, order.code));
+      if (row.status === 'PAID') {
+        paid += 1;
+        expect(pay!.status).toBe('SUCCESS');
+        expect(moves).toMatchObject([{ reason: 'ORDER', delta: -1 }]);
+      } else {
+        expect(row.status).toBe('CANCELLED');
+        expect(pay!.status).toBe('MANUAL_REVIEW');
+        expect(moves).toEqual([]);
+      }
+    }
+    expect(await h.getProduct(cpu.id)).toMatchObject({ stock: 50 - paid, reserved: 0 });
   });
 
   it('keeps a late payment for an expired (cancelled) order for manual review', async () => {
@@ -192,7 +281,7 @@ describe('GET /api/orders/:code/payment', () => {
       .set('Authorization', apiKey())
       .send(sepayBody(order.code, order.total));
     const paid = await agent.get(`/api/orders/${order.code}/payment`);
-    expect(paid.body).toMatchObject({ status: 'PAID', paymentStatus: 'PAID' });
+    expect(paid.body).toMatchObject({ status: 'PAID', paymentStatus: 'PAID', qrImageUrl: null });
   });
 });
 

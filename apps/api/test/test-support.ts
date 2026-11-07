@@ -1,13 +1,19 @@
+import http from 'node:http';
 import type { CategoryKey, OrderDTO, Role } from '@pc/shared';
 import { eq } from 'drizzle-orm';
 import type { Express } from 'express';
 import request from 'supertest';
-import { createTestDeps } from '../../../test/helpers';
-import { createApp } from '../../app';
-import { builds, categories, products, users } from '../../db/schema';
-import { seedDatabase } from '../../db/seed';
-import type { AppDeps } from '../../deps';
-import { signAccessToken } from '../../middleware/auth';
+import { createApp } from '../src/app';
+import { builds, categories, products, users } from '../src/db/schema';
+import { seedDatabase } from '../src/db/seed';
+import type { AppDeps } from '../src/deps';
+import { signAccessToken } from '../src/middleware/auth';
+import { createTestDeps } from './helpers';
+
+// Node ≥19 makes the global agent keep sockets alive. supertest starts and closes a server per request,
+// so a pooled socket can point at a server that is already gone and the next request fails with
+// "socket hang up". One connection per request keeps the integration tests deterministic.
+http.globalAgent = new http.Agent({ keepAlive: false });
 
 export const CHECKOUT = {
   shippingName: 'Nguyễn Văn Khách',

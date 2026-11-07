@@ -2,8 +2,8 @@ import { formatVnd } from '@pc/shared';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { createCommerceHarness } from '../../../test/test-support';
 import { builds } from '../../db/schema';
-import { createCommerceHarness } from '../cart/test-support';
 import { embeddedFontNames, extractPdfText } from './test-pdf-text';
 
 const NOW = new Date('2026-11-07T03:00:00Z');
