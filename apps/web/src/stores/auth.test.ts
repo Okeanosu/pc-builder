@@ -113,6 +113,47 @@ describe('proactive refresh', () => {
   });
 });
 
+describe('refresh failures that are not a rejected session', () => {
+  it('keeps the user signed in on a network error and retries on the next tick', async () => {
+    let attempt = 0;
+    const calls = stubApi({
+      '/auth/login': () => json(200, { accessToken: 't1', user }),
+      '/auth/refresh': () => {
+        attempt += 1;
+        if (attempt === 1) throw new TypeError('Failed to fetch');
+        return json(200, { accessToken: 't2', user });
+      },
+    });
+    await useAuthStore.getState().login(user.email, 'Khach@123');
+    expect(await useAuthStore.getState().refresh()).toBeNull();
+    expect(useAuthStore.getState().user).toEqual(user);
+    expect(getAccessToken()).toBe('t1');
+    expect(await useAuthStore.getState().refresh()).toBe('t2');
+    expect(countOf(calls, '/auth/refresh')).toBe(2);
+  });
+
+  it('keeps the user signed in on a 500', async () => {
+    stubApi({
+      '/auth/login': () => json(200, { accessToken: 't1', user }),
+      '/auth/refresh': () => json(500, { error: { code: 'INTERNAL', message: 'Lỗi máy chủ' } }),
+    });
+    await useAuthStore.getState().login(user.email, 'Khach@123');
+    expect(await useAuthStore.getState().refresh()).toBeNull();
+    expect(useAuthStore.getState().user).toEqual(user);
+    expect(getAccessToken()).toBe('t1');
+  });
+
+  it('signs the user out on a 403', async () => {
+    stubApi({
+      '/auth/login': () => json(200, { accessToken: 't1', user }),
+      '/auth/refresh': () => json(403, { error: { code: 'FORBIDDEN', message: 'Bị khóa' } }),
+    });
+    await useAuthStore.getState().login(user.email, 'Khach@123');
+    expect(await useAuthStore.getState().refresh()).toBeNull();
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+});
+
 describe('changePassword', () => {
   it('re-reads the session through refresh when the server answers 204', async () => {
     const calls = stubApi({

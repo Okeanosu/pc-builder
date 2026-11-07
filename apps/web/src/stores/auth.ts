@@ -76,8 +76,9 @@ export const useAuthStore = create<AuthState>((set, get) => {
     refresh() {
       inflightRefresh ??= api<AuthResponse>('/auth/refresh', { method: 'POST' })
         .then((res) => apply(res) && res.accessToken)
-        .catch(() => {
-          clear();
+        .catch((err: unknown) => {
+          // Only a rejected session ends it; a network blip or 5xx leaves the next tick to retry.
+          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) clear();
           return null;
         })
         .finally(() => {
