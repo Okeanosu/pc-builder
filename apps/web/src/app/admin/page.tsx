@@ -1,0 +1,9 @@
+import type { Metadata } from 'next';
+import { DashboardPage } from '@/features/admin/dashboard/DashboardPage';
+
+export const instant = false;
+export const metadata: Metadata = { title: 'Tổng quan' };
+
+export default function AdminDashboardRoute() {
+  return <DashboardPage />;
+}
