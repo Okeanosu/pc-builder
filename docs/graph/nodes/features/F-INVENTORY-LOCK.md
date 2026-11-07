@@ -19,6 +19,8 @@ diagrams: []
 
 Bấm đặt hàng trùng của cùng một người mua được chặn riêng (khóa dòng `carts` với tài khoản, khóa Redis `lock:checkout:{gid}` với khách vãng lai), nên không có hai đơn cùng giữ hàng cho một giỏ.
 
+Kết quả sau vòng rà soát (báo cáo task 6b, ADR-017): đặt hàng đôi của tài khoản trước khi sửa cho `[201, 201, 409]` tức hai đơn, sau khi sửa `[201, 400, 400]` và một đơn; khách vãng lai gửi 3 yêu cầu song song chỉ một 201 (còn lại `CHECKOUT_IN_PROGRESS` hoặc `EMPTY_CART`), `reserved = 2`. Job hết hạn chịu lỗi từng đơn (mỗi đơn một try/catch) và chạy đua với webhook thanh toán thì chỉ một bên thắng nhờ UPDATE có điều kiện trạng thái.
+
 **Quyết định chính:** ADR-007 - điều kiện nằm trong câu UPDATE nên atomic ở tầng cơ sở dữ liệu (READ COMMITTED: giao dịch đến sau chờ khóa dòng rồi đánh giá lại điều kiện trên bản ghi mới), không cần khóa phân tán; Redis chỉ làm đồng hồ giữ hàng.
 
 **Điểm nhấn cho báo cáo (CH5):** `orders.concurrency.int.test.ts` bắn song song thật (5 agent supertest, mỗi agent một giỏ khách riêng, `Promise.all`): sản phẩm tồn 1 → đúng 1 phản hồi 201 và 4 phản hồi `409 OUT_OF_STOCK`, `reserved = 1`; 8 yêu cầu cho 3 sản phẩm → đúng 3 đơn; 6 đơn khóa hai sản phẩm theo thứ tự ngược nhau → không deadlock, không bán vượt. Đối chứng: thay câu UPDATE có điều kiện bằng kiểu "đọc rồi ghi" (SELECT kiểm tra rồi UPDATE không điều kiện) thì cùng bài test cho 5/5 đơn thành công với tồn kho 1, tức bán vượt 4 chiếc.
