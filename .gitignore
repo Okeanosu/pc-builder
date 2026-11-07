@@ -13,3 +13,5 @@ test-results/
 .superpowers/
 .claude/worktrees/
 .playwright-mcp/
+infra/.env.prod
+infra/.env.prod.local
