@@ -50,6 +50,16 @@ describe('transitionOptions', () => {
     expect(unpaid.allowed).toBe(true);
     expect(unpaid.confirm).toBeTruthy();
   });
+
+  it('lets only ADMIN confirm a payment by hand', () => {
+    const staff = transitionOptions(order('PENDING_PAYMENT'), 'STAFF').find((o) => o.to === 'PAID')!;
+    expect(staff.allowed).toBe(false);
+    expect(staff.reason).toBe('Chỉ quản trị viên được xác nhận thanh toán thủ công');
+    const admin = transitionOptions(order('PENDING_PAYMENT'), 'ADMIN').find((o) => o.to === 'PAID')!;
+    expect(admin.allowed).toBe(true);
+    expect(admin.reason).toBeUndefined();
+    expect(admin.confirm).toContain('sao kê');
+  });
 });
 
 describe('timelineSteps', () => {
