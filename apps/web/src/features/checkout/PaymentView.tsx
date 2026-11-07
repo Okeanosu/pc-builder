@@ -20,6 +20,7 @@ import { useAuthStore } from '@/stores/auth';
 import { OrderStatusBadge, OrderSummary } from '../account/OrderSummary';
 import { OrderTimeline } from '../account/OrderTimeline';
 import { apiErrorMessage } from '../auth/form-errors';
+import { ReorderButton } from '../cart/ReorderButton';
 import { formatCountdown, remainingMs } from './countdown';
 import { bankName, isSettled, paymentPhase } from './payment';
 
@@ -247,14 +248,12 @@ export function PaymentView({ code }: { code: string }) {
               title={phase === 'expired' ? 'Mã QR đã hết hạn' : 'Đơn hàng đã hủy'}
               description={
                 phase === 'expired'
-                  ? 'Đã quá 15 phút giữ hàng nên đơn sẽ tự hủy. Nếu bạn vừa chuyển khoản, trang này vẫn tự cập nhật trong giây lát.'
-                  : 'Đơn đã hủy và hàng đã được trả về kho. Bạn có thể đặt lại; giá và tồn kho sẽ được tính lại.'
+                  ? 'Đã quá 15 phút giữ hàng nên đơn sẽ tự hủy. Nếu bạn vừa chuyển khoản, trang này vẫn tự cập nhật trong giây lát; nếu chưa, hãy đặt lại để nhận mã mới.'
+                  : 'Đơn đã hủy và hàng đã được trả về kho. Đặt lại để nhận mã QR mới; giá và tồn kho sẽ được tính lại.'
               }
               actions={
                 <>
-                  <Button asChild>
-                    <Link href="/cart">Đặt lại từ giỏ hàng</Link>
-                  </Button>
+                  <ReorderButton items={order.data?.items} />
                   <Button asChild variant="outline">
                     <Link href="/">Tiếp tục mua sắm</Link>
                   </Button>

@@ -14,6 +14,7 @@ import { ApiError, api } from '@/lib/api';
 import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth';
 import { apiErrorMessage } from '../auth/form-errors';
+import { ReorderButton } from '../cart/ReorderButton';
 import { OrderStatusBadge, OrderSummary, orderDate } from './OrderSummary';
 import { OrderTimeline } from './OrderTimeline';
 
@@ -114,6 +115,7 @@ export function OrderDetailView({ code }: { code: string }) {
             {order.type === 'BUILD' ? 'Lắp ráp nguyên bộ' : 'Mua linh kiện'}
           </p>
         </div>
+        {order.status === 'CANCELLED' && <ReorderButton items={order.items} />}
         {pending && (
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" onClick={() => setConfirmOpen(true)}>

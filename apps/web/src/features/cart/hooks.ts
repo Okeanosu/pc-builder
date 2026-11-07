@@ -1,6 +1,6 @@
 'use client';
 
-import type { BuildDTO, CartDTO } from '@pc/shared';
+import type { BuildDTO, CartDTO, OrderItemDTO } from '@pc/shared';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { toast } from '@/components/ui/Toast';
@@ -72,3 +72,30 @@ export const useAddBuildToCart = () =>
     (buildId: string) => api<CartDTO>(`/cart/builds/${buildId}`, { method: 'POST' }),
     'Chưa thêm được cấu hình vào giỏ',
   );
+
+/** Puts an expired or cancelled order back into the cart: build parts as their build, the rest line by line. */
+export function useReorder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (items: readonly OrderItemDTO[]) => {
+      let cart: CartDTO | undefined;
+      for (const buildId of new Set(items.flatMap((i) => (i.buildId ? [i.buildId] : [])))) {
+        cart = await api<CartDTO>(`/cart/builds/${buildId}`, { method: 'POST' });
+      }
+      for (const i of items.filter((x) => !x.buildId)) {
+        cart = await api<CartDTO>('/cart/items', {
+          method: 'POST',
+          json: { productId: i.productId, qty: i.qty },
+        });
+      }
+      return cart;
+    },
+    onSuccess: (cart) => {
+      if (cart) qc.setQueryData(queryKeys.cart, cart);
+    },
+    onError: (error) => {
+      toast({ title: 'Chưa đặt lại được toàn bộ', description: apiErrorMessage(error), tone: 'error' });
+      void qc.invalidateQueries({ queryKey: queryKeys.cart });
+    },
+  });
+}
