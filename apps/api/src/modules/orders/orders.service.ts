@@ -270,7 +270,7 @@ export function createOrdersService(deps: AppDeps) {
       const order = await db.transaction((tx) =>
         insertOrder(tx, lines, input, { userId: null, guestId: owner.guestId }),
       );
-      await afterCheckout(order, () => cart.removeLines(owner, lines));
+      await afterCheckout(order, () => cart.consumeGuestLines(owner.guestId, lines));
       return order;
     } finally {
       await lock.release();

@@ -75,9 +75,33 @@ end
 redis.call('EXPIRE', KEYS[1], ARGV[7])
 return {1, wanted}`;
 
-export function guestCartStore(redis: Redis, guestId: string): CartStore {
+// KEYS[1] cart hash; ARGV: field1, qty1, field2, qty2, … Subtracts each quantity and drops fields at ≤ 0,
+// so units added after the caller read the cart are kept.
+const GUEST_CONSUME = `
+for i = 1, #ARGV, 2 do
+  local left = redis.call('HINCRBY', KEYS[1], ARGV[i], -tonumber(ARGV[i + 1]))
+  if left <= 0 then redis.call('HDEL', KEYS[1], ARGV[i]) end
+end
+return 1`;
+
+export function guestCartStore(
+  redis: Redis,
+  guestId: string,
+): CartStore & {
+  /** Removes exactly the quantities that were read (checkout, merge) instead of whole fields. */
+  consume(lines: Pick<CartLine, 'productId' | 'buildId' | 'qty'>[]): Promise<void>;
+} {
   const key = guestCartKey(guestId);
   return {
+    async consume(lines) {
+      if (lines.length === 0) return;
+      await redis.eval(
+        GUEST_CONSUME,
+        1,
+        key,
+        ...lines.flatMap((l) => [guestField(l.productId, l.buildId), String(l.qty)]),
+      );
+    },
     async list() {
       return parseGuestHash(await redis.hgetall(key));
     },
@@ -192,20 +216,24 @@ export function userCartStore(db: Db, userId: string) {
     async mergeIn(lines) {
       if (lines.length === 0) return;
       const id = await ensureCart();
-      await db
-        .insert(cartItems)
-        .values(
-          lines.map((l) => ({
-            cartId: id,
-            productId: l.productId,
-            buildId: l.buildId,
-            qty: Math.min(l.qty, MAX_LINE_QTY),
-          })),
-        )
-        .onConflictDoUpdate({
-          target: lineKey,
-          set: { qty: sql`least(${cartItems.qty} + excluded.qty, ${MAX_LINE_QTY})` },
-        });
+      await db.transaction(async (tx) => {
+        // Same lock order as every other cart writer and checkout (carts row first), so no deadlock.
+        await tx.select({ id: carts.id }).from(carts).where(eq(carts.id, id)).for('update');
+        await tx
+          .insert(cartItems)
+          .values(
+            lines.map((l) => ({
+              cartId: id,
+              productId: l.productId,
+              buildId: l.buildId,
+              qty: Math.min(l.qty, MAX_LINE_QTY),
+            })),
+          )
+          .onConflictDoUpdate({
+            target: lineKey,
+            set: { qty: sql`least(${cartItems.qty} + excluded.qty, ${MAX_LINE_QTY})` },
+          });
+      });
     },
   };
   return store;

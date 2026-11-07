@@ -118,7 +118,8 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
       await store.mergeIn(
         guestLines.filter((l) => sellable.has(l.productId) && (!l.buildId || knownBuilds.has(l.buildId))),
       );
-      await redis.del(key);
+      // Subtract exactly what was read (skipped lines included) so a guest add racing the merge survives.
+      await guestCartStore(redis, guestId).consume(guestLines);
     } finally {
       await lock.release();
     }
@@ -175,7 +176,8 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
       const row = await activeProduct(productId);
       const store = await storeFor(owner);
       const result = await store.write({
-        productId,
+        // canonical id from the DB: an uppercase UUID in the request must not create a second Redis field
+        productId: row.product.id,
         buildId: null,
         qty,
         mode: 'add',
@@ -259,9 +261,9 @@ export function createCartService(deps: Pick<AppDeps, 'db' | 'redis'>) {
       return view(store);
     },
 
-    /** Drops the given lines (used after they were turned into an order). */
-    async removeLines(owner: CartOwner, lines: Pick<CartLine, 'productId' | 'buildId'>[]): Promise<void> {
-      await (await storeFor(owner)).remove(lines);
+    /** Subtracts ordered quantities from a guest cart, keeping units the guest added meanwhile. */
+    async consumeGuestLines(guestId: string, lines: Pick<CartLine, 'productId' | 'buildId' | 'qty'>[]) {
+      await guestCartStore(redis, guestId).consume(lines);
     },
   };
 }

@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { createCommerceHarness, guestIdFrom } from '../../../test/test-support';
+import { CHECKOUT, createCommerceHarness, guestIdFrom } from '../../../test/test-support';
 import { cartItems, carts, products } from '../../db/schema';
 
 const h = createCommerceHarness();
@@ -249,13 +249,11 @@ describe('guest → user merge safety', () => {
     const gid = guestIdFrom(first.headers['set-cookie']);
 
     const db = h.deps.db;
+    // the merge upsert runs in a transaction; make that transaction fail
     const failingDb = new Proxy(db, {
       get(target, prop, receiver) {
-        if (prop === 'insert') {
-          return (table: typeof carts | typeof cartItems) => {
-            if (table === cartItems) throw new Error('simulated DB failure');
-            return target.insert(table);
-          };
+        if (prop === 'transaction') {
+          return () => Promise.reject(new Error('simulated DB failure'));
         }
         const value = Reflect.get(target, prop, receiver);
         return typeof value === 'function' ? value.bind(target) : value;
@@ -271,5 +269,92 @@ describe('guest → user merge safety', () => {
     const ok = await agent.get('/api/cart').set('Authorization', `Bearer ${token}`);
     expect(ok.body.items).toMatchObject([{ qty: 2, product: { id: cpu.id } }]);
     expect(await h.deps.redis.exists(`cart:guest:${gid}`)).toBe(0);
+  });
+
+  it('keeps a guest increment that lands between the merge read and the cleanup', async () => {
+    const token = await h.tokenFor('CUSTOMER');
+    const ram = await h.product('ram', { stock: 20, reserved: 0 });
+    const agent = request.agent(h.app);
+    const first = await agent.post('/api/cart/items').send({ productId: ram.id, qty: 2 });
+    const gid = guestIdFrom(first.headers['set-cookie']);
+    const key = `cart:guest:${gid}`;
+
+    const redis = h.deps.redis;
+    const racingRedis = new Proxy(redis, {
+      get(target, prop, receiver) {
+        if (prop === 'eval') {
+          return async (...args: unknown[]) => {
+            // a concurrent guest add arrives right before the merged lines are consumed
+            if (String(args[0]).includes('HDEL')) await target.hincrby(key, `${ram.id}:-`, 1);
+            return (target.eval as (...a: unknown[]) => unknown)(...args);
+          };
+        }
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+
+    const merged = await request(h.appWith({ redis: racingRedis }))
+      .get('/api/cart')
+      .set('Cookie', `gid=${gid}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(merged.body.items).toMatchObject([{ qty: 2, product: { id: ram.id } }]);
+    expect(await h.deps.redis.hgetall(key)).toEqual({ [`${ram.id}:-`]: '1' });
+
+    const next = await agent.get('/api/cart').set('Authorization', `Bearer ${token}`);
+    expect(next.body.items).toMatchObject([{ qty: 3, product: { id: ram.id } }]);
+    expect(await h.deps.redis.exists(key)).toBe(0);
+  });
+
+  it('a login merge racing a checkout neither deadlocks nor loses units', async () => {
+    const token = await h.tokenFor('CUSTOMER');
+    const auth = `Bearer ${token}`;
+    const cpu = await h.product('cpu', { stock: 100, reserved: 0 });
+    const ssd = await h.product('storage', { stock: 100, reserved: 0 });
+    let ordered = 0;
+    let added = 0;
+    for (let round = 0; round < 5; round++) {
+      await request(h.app)
+        .post('/api/cart/items')
+        .set('Authorization', auth)
+        .send({ productId: cpu.id, qty: 1 });
+      const agent = request.agent(h.app);
+      const first = await agent.post('/api/cart/items').send({ productId: cpu.id, qty: 1 });
+      const gid = guestIdFrom(first.headers['set-cookie']);
+      await agent.post('/api/cart/items').send({ productId: ssd.id, qty: 1 });
+      added += 3;
+
+      const [view, order] = await Promise.all([
+        request(h.app).get('/api/cart').set('Cookie', `gid=${gid}`).set('Authorization', auth),
+        request(h.app)
+          .post('/api/orders')
+          .set('Cookie', `gid=${gid}`)
+          .set('Authorization', auth)
+          .send(CHECKOUT),
+      ]);
+      expect(view.status).toBe(200);
+      expect([201, 400]).toContain(order.status);
+      if (order.status === 201) {
+        ordered += order.body.items.reduce((s: number, i: { qty: number }) => s + i.qty, 0);
+      }
+      expect(await h.deps.redis.hlen(`cart:guest:${gid}`)).toBe(0);
+    }
+    const left = (await request(h.app).get('/api/cart').set('Authorization', auth)).body.itemCount as number;
+    expect(ordered + left).toBe(added);
+  });
+});
+
+describe('product ids are canonicalised', () => {
+  it('an uppercase product id lands on the canonical line', async () => {
+    const cpu = await h.product('cpu', { stock: 10, reserved: 0 });
+    const agent = request.agent(h.app);
+    const first = await agent.post('/api/cart/items').send({ productId: cpu.id.toUpperCase(), qty: 1 });
+    expect(first.status).toBe(201);
+    expect(first.body.items).toMatchObject([{ qty: 1, product: { id: cpu.id } }]);
+    const gid = guestIdFrom(first.headers['set-cookie']);
+    expect(await h.deps.redis.hgetall(`cart:guest:${gid}`)).toEqual({ [`${cpu.id}:-`]: '1' });
+
+    const second = await agent.post('/api/cart/items').send({ productId: cpu.id, qty: 2 });
+    expect(second.body.items).toMatchObject([{ qty: 3, product: { id: cpu.id } }]);
   });
 });

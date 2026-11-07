@@ -257,6 +257,36 @@ describe('checkout hardening', () => {
     expect(await h.deps.db.select().from(orders)).toEqual([]);
   });
 
+  it('a guest increment landing between checkout read and cart cleanup is kept', async () => {
+    const ram = await h.product('ram', { stock: 20, reserved: 0 });
+    const agent = request.agent(h.app);
+    const first = await agent.post('/api/cart/items').send({ productId: ram.id, qty: 2 });
+    const gid = guestIdFrom(first.headers['set-cookie']);
+    const key = `cart:guest:${gid}`;
+    const redis = h.deps.redis;
+    const racingRedis = new Proxy(redis, {
+      get(target, prop, receiver) {
+        if (prop === 'eval') {
+          return async (...args: unknown[]) => {
+            if (String(args[0]).includes('HDEL')) await target.hincrby(key, `${ram.id}:-`, 1);
+            return (target.eval as (...a: unknown[]) => unknown)(...args);
+          };
+        }
+        const value = Reflect.get(target, prop, receiver);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+
+    const res = await request(h.appWith({ redis: racingRedis }))
+      .post('/api/orders')
+      .set('Cookie', `gid=${gid}`)
+      .send(CHECKOUT);
+
+    expect(res.status).toBe(201);
+    expect(res.body.items).toMatchObject([{ productId: ram.id, qty: 2 }]);
+    expect(await h.deps.redis.hgetall(key)).toEqual({ [`${ram.id}:-`]: '1' });
+  });
+
   it('a Redis failure after commit does not turn a committed order into a 500', async () => {
     const cpu = await h.product('cpu', { stock: 5, reserved: 0 });
     const redis = h.deps.redis;
