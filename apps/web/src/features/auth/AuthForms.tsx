@@ -35,7 +35,7 @@ function useAuthRedirect() {
   return target;
 }
 
-function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' | 'trailing'>) {
+export function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' | 'trailing'>) {
   const [visible, setVisible] = useState(false);
   return (
     <Input
@@ -56,7 +56,7 @@ function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' | 'trail
   );
 }
 
-function FormError({ message }: { message: string | null }) {
+export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <p

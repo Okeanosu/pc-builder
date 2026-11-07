@@ -314,7 +314,7 @@ export function SpecSchemaPage() {
       </Button>
       <p className="max-w-3xl text-sm text-muted">
         Mỗi danh mục lưu một lược đồ thông số dạng JSONB. Lược đồ sinh ra biểu mẫu nhập sản phẩm, bảng thông
-        số và bộ lọc động trên cửa hàng. Các khóa có biểu tượng khóa được bộ luật tương thích (C01–C14) đọc
+        số và bộ lọc động trên cửa hàng. Các khóa có biểu tượng khóa được bộ luật tương thích (C01–C15) đọc
         nên không đổi tên hay kiểu được.
       </p>
       {!isAdmin && (

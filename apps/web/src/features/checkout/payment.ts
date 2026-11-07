@@ -1,4 +1,4 @@
-import type { OrderStatus, PaymentInfoDTO } from '@pc/shared';
+import type { OrderStatus, PaymentInfoDTO, Role } from '@pc/shared';
 
 /** Napas BINs of the banks most often configured for VietQR. */
 const BANK_NAMES: Record<string, string> = {
@@ -37,3 +37,20 @@ export function paymentPhase(
 }
 
 export const isSettled = (phase: PaymentPhase) => phase === 'paid' || phase === 'cancelled';
+
+/**
+ * Who sees the "Giả lập thanh toán" button: everyone in dev, admins in production (the API allows them),
+ * and everyone in a production demo built with NEXT_PUBLIC_PAYMENT_SIMULATOR=1.
+ */
+export function paymentSimulator({
+  nodeEnv,
+  role,
+  flag,
+}: {
+  nodeEnv: string | undefined;
+  role: Role | undefined;
+  flag: string | undefined;
+}): { show: boolean; label: string } {
+  if (nodeEnv !== 'production') return { show: true, label: 'Giả lập thanh toán (dev)' };
+  return { show: role === 'ADMIN' || flag === '1', label: 'Giả lập thanh toán (demo)' };
+}

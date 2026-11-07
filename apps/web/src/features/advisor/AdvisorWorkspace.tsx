@@ -1,6 +1,6 @@
 'use client';
 
-import { MessagesSquare, PanelsTopLeft } from 'lucide-react';
+import { ListChecks, MessagesSquare, PanelsTopLeft } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { WorkshopSurface } from '@/components/layout/WorkshopSurface';
@@ -8,7 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { attachChatView, latestBuilds, useChatStore } from '@/stores/chat';
 import { BuildCompare } from './BuildCompare';
 import { ChatPanel } from './ChatPanel';
+import { CacheChip, InfeasiblePanel, QuickRecommendForm, useQuickRecommend } from './QuickRecommendForm';
+import { QUICK_FORM_DEFAULTS, type QuickFormValues } from './quick-form';
 import { useHeaderOffset } from './useHeaderOffset';
+
+type AdviceMode = 'chat' | 'form';
+
+const FORM_EMPTY = {
+  title: 'Cấu hình sẽ hiện ở đây',
+  description:
+    'Chọn ngân sách và mục đích ở biểu mẫu bên cạnh rồi bấm “Gợi ý cấu hình”. Ba phương án tương thích từ hàng trong kho sẽ xếp cạnh nhau.',
+};
 
 const RECOMMEND_TOOLS = new Set(['recommend_builds', 'modify_build']);
 
@@ -51,9 +61,37 @@ export function AdvisorWorkspace() {
   // Leaving the page stops a running answer; arriving from the widget keeps it (see attachChatView).
   useEffect(() => attachChatView(), []);
   const offset = useHeaderOffset();
+  const params = useSearchParams();
   const [tab, setTab] = useState<'chat' | 'builds'>('chat');
-  const { builds, selectedBuildId, pending } = useCompareState();
-  const selectBuild = useChatStore((s) => s.selectBuild);
+  const [mode, setMode] = useState<AdviceMode>(() =>
+    params.get('mode') === 'form' && !params.get('q') ? 'form' : 'chat',
+  );
+  const [formValues, setFormValues] = useState<QuickFormValues>(QUICK_FORM_DEFAULTS);
+  const chat = useCompareState();
+  const selectChatBuild = useChatStore((s) => s.selectBuild);
+  // On mobile the compare tab carries both the builds and the "why nothing fits" notice.
+  const quick = useQuickRecommend(() => setTab('builds'));
+  const retryWithBudget = (millions: number) => {
+    const next = { ...formValues, budget: String(millions) };
+    setFormValues(next);
+    quick.send(next);
+  };
+
+  const compare =
+    mode === 'chat'
+      ? {
+          builds: chat.builds,
+          selectedId: chat.selectedBuildId,
+          onSelect: selectChatBuild,
+          pending: chat.pending,
+        }
+      : {
+          builds: quick.outcome?.result.builds ?? [],
+          selectedId: quick.selectedId,
+          onSelect: quick.select,
+          pending: quick.pending,
+        };
+  const builds = compare.builds;
 
   return (
     <WorkshopSurface
@@ -69,8 +107,8 @@ export function AdvisorWorkspace() {
       >
         <TabsList className="mx-4 mt-3 mb-3 grid w-auto shrink-0 grid-cols-2 lg:hidden">
           <TabsTrigger value="chat" className="justify-center">
-            <MessagesSquare aria-hidden />
-            Trò chuyện
+            {mode === 'chat' ? <MessagesSquare aria-hidden /> : <ListChecks aria-hidden />}
+            Tư vấn
           </TabsTrigger>
           <TabsTrigger value="builds" className="justify-center">
             <PanelsTopLeft aria-hidden />
@@ -88,7 +126,37 @@ export function AdvisorWorkspace() {
           forceMount
           className="flex min-h-0 flex-1 flex-col data-[state=inactive]:max-lg:hidden lg:rounded-lg lg:border lg:border-border lg:bg-bg/85 lg:shadow-raised lg:backdrop-blur-sm"
         >
-          <ChatPanel variant="page" onShowBuilds={() => setTab('builds')} className="flex-1" />
+          <Tabs
+            value={mode}
+            onValueChange={(v) => setMode(v as AdviceMode)}
+            className="flex min-h-0 flex-1 flex-col gap-0"
+          >
+            <div className="flex shrink-0 items-center border-b border-border px-4 py-2">
+              <TabsList aria-label="Cách nhận gợi ý cấu hình">
+                <TabsTrigger value="chat">
+                  <MessagesSquare aria-hidden />
+                  Trò chuyện
+                </TabsTrigger>
+                <TabsTrigger value="form">
+                  <ListChecks aria-hidden />
+                  Biểu mẫu
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent
+              value="chat"
+              forceMount
+              className="flex min-h-0 flex-1 flex-col rounded-none data-[state=inactive]:hidden"
+            >
+              <ChatPanel variant="page" onShowBuilds={() => setTab('builds')} className="flex-1" />
+            </TabsContent>
+            <TabsContent
+              value="form"
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-none"
+            >
+              <QuickRecommendForm quick={quick} values={formValues} onChange={setFormValues} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent
@@ -97,10 +165,19 @@ export function AdvisorWorkspace() {
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 data-[state=inactive]:max-lg:hidden lg:px-1 lg:pb-2"
         >
           <BuildCompare
-            builds={builds}
-            selectedId={selectedBuildId}
-            onSelect={selectBuild}
-            pending={pending}
+            builds={compare.builds}
+            selectedId={compare.selectedId}
+            onSelect={compare.onSelect}
+            pending={compare.pending}
+            badge={
+              mode === 'form' && quick.outcome?.cacheHit && builds.length > 0 ? <CacheChip /> : undefined
+            }
+            empty={mode === 'form' ? FORM_EMPTY : undefined}
+            emptySlot={
+              mode === 'form' && quick.outcome ? (
+                <InfeasiblePanel outcome={quick.outcome} onUseBudget={retryWithBudget} />
+              ) : undefined
+            }
             className="lg:pt-1"
           />
         </TabsContent>

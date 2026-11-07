@@ -27,6 +27,7 @@ import {
   thEnd,
 } from '../ui';
 import { pickEnum, useClampPage, useListParams } from '../use-list-params';
+import { OrdersSubNav } from './OrdersSubNav';
 
 const PAGE_SIZE = 20;
 const ALL = 'all';
@@ -50,6 +51,7 @@ export function OrdersPage() {
   return (
     <div className="flex flex-col gap-4">
       <AdminPageHeader title="Đơn hàng" />
+      <OrdersSubNav current="/admin/orders" />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchBox
           value={q}

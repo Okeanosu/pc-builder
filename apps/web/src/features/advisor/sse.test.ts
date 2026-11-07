@@ -1,5 +1,7 @@
 import type { ChatEvent } from '@pc/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getAccessToken, setAccessToken } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { ChatStreamError, createSseParser, readSseStream, streamChat } from './sse';
 
 const frame = (e: ChatEvent) => `data: ${JSON.stringify(e)}\n\n`;
@@ -163,5 +165,84 @@ describe('streamChat', () => {
     expect(err).toBeInstanceOf(ChatStreamError);
     expect(err?.code).toBe('NETWORK');
     expect(err?.message).toMatch(/kết nối/);
+  });
+
+  describe('expired session', () => {
+    const realRefresh = useAuthStore.getState().refresh;
+    afterEach(() => {
+      useAuthStore.setState({ refresh: realRefresh });
+      setAccessToken(null);
+    });
+
+    const unauthorized = () =>
+      new Response(JSON.stringify({ error: { code: 'TOKEN_EXPIRED', message: 'Token expired' } }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    const sse = () => new Response(WIRE, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+
+    function stubSequence(...responses: Response[]) {
+      const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => responses.shift()!);
+      vi.stubGlobal('fetch', fetchMock);
+      return fetchMock;
+    }
+
+    it('refreshes on 401 and retries once with the new token', async () => {
+      setAccessToken('old');
+      const refresh = vi.fn(async () => {
+        setAccessToken('fresh');
+        return 'fresh';
+      });
+      useAuthStore.setState({ refresh });
+      const fetchMock = stubSequence(unauthorized(), sse());
+      const events: ChatEvent[] = [];
+      await streamChat('s1', 'hi', { onEvent: (e) => events.push(e) });
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(events).toEqual(EVENTS);
+      const auth = fetchMock.mock.calls.map(([, init]) => new Headers(init?.headers).get('Authorization'));
+      expect(auth).toEqual(['Bearer old', 'Bearer fresh']);
+    });
+
+    it('also tries a refresh when the in-memory token is already gone', async () => {
+      const refresh = vi.fn(async () => {
+        setAccessToken('fresh');
+        return 'fresh';
+      });
+      useAuthStore.setState({ refresh });
+      stubSequence(unauthorized(), sse());
+      await streamChat('s1', 'hi', { onEvent: () => {} });
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(getAccessToken()).toBe('fresh');
+    });
+
+    it('reports AUTH_EXPIRED in Vietnamese when the refresh fails, without a second post', async () => {
+      setAccessToken('old');
+      const refresh = vi.fn(async () => {
+        setAccessToken(null);
+        return null;
+      });
+      useAuthStore.setState({ refresh });
+      const fetchMock = stubSequence(unauthorized());
+      const err = (await streamChat('s1', 'hi', { onEvent: () => {} }).catch((e: unknown) => e)) as
+        | ChatStreamError
+        | undefined;
+      expect(err).toBeInstanceOf(ChatStreamError);
+      expect(err?.code).toBe('AUTH_EXPIRED');
+      expect(err?.status).toBe(401);
+      expect(err?.message).toMatch(/Phiên đăng nhập đã hết hạn/);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not refresh twice when the retried request is still unauthorized', async () => {
+      const refresh = vi.fn(async () => 'fresh');
+      useAuthStore.setState({ refresh });
+      const fetchMock = stubSequence(unauthorized(), unauthorized());
+      const err = (await streamChat('s1', 'hi', { onEvent: () => {} }).catch((e: unknown) => e)) as
+        | ChatStreamError
+        | undefined;
+      expect(err?.code).toBe('AUTH_EXPIRED');
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 });

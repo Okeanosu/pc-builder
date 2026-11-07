@@ -17,9 +17,8 @@ import { queryKeys } from '@/lib/query-keys';
 import { useAuthStore } from '@/stores/auth';
 import { apiErrorMessage } from '../auth/form-errors';
 import { useBuilds, useCart } from '../cart/hooks';
-import { groupCartLines, isBuildComplete } from '../cart/lines';
+import { cartAssemblyFee, groupCartLines, isBuildComplete } from '../cart/lines';
 import { type CheckoutFormValues, validateCheckout } from './checkout-form';
-import { ASSEMBLY_FEE } from './constants';
 
 type Errors = Partial<Record<keyof CheckoutFormValues, string>>;
 const FIELD_ORDER: (keyof CheckoutFormValues)[] = ['shippingName', 'phone', 'address', 'note'];
@@ -69,7 +68,7 @@ export function CheckoutView() {
   const buildGroup = buildId ? grouped.builds.find((g) => g.buildId === buildId) : undefined;
   const lines = buildId ? (buildGroup?.items ?? []) : (cart?.items ?? []);
   const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-  const assemblyFee = buildId ? ASSEMBLY_FEE : 0;
+  const assemblyFee = buildId ? cartAssemblyFee(cart) : 0;
   const build = buildId ? builds.get(buildId) : undefined;
   const incomplete = build && buildGroup ? !isBuildComplete(build, buildGroup) : false;
 

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ExternalLink, QrCode, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
-import { Badge, type BadgeProps } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,17 +21,7 @@ import { formatDateTime } from '../format';
 import { OrderStatusControl } from '../OrderStatusControl';
 import { PageSkeleton, QueryError, tableClass, td, th, thEnd } from '../ui';
 import { OrderTimeline } from './OrderTimeline';
-
-const PAYMENT_LABEL: Record<string, { label: string; tone: NonNullable<BadgeProps['tone']> }> = {
-  SUCCESS: { label: 'Khớp', tone: 'ok' },
-  UNDERPAID: { label: 'Chuyển thiếu', tone: 'warn' },
-  MANUAL_REVIEW: { label: 'Cần đối soát', tone: 'warn' },
-};
-
-const PROVIDER_LABEL: Record<string, string> = {
-  SEPAY: 'SePay (webhook)',
-  SIMULATOR: 'Giả lập',
-};
+import { paymentProviderLabel, paymentStatusMeta } from './payments';
 
 function groupItems(items: OrderItemDTO[]): { buildId: string | null; items: OrderItemDTO[] }[] {
   const groups = new Map<string | null, OrderItemDTO[]>();
@@ -186,12 +176,12 @@ function PaymentsCard({ order }: { order: AdminOrderDetailDTO }) {
             </thead>
             <tbody>
               {order.payments.map((p: AdminPaymentDTO) => {
-                const s = PAYMENT_LABEL[p.status] ?? { label: p.status, tone: 'neutral' as const };
+                const s = paymentStatusMeta(p.status);
                 return (
                   <tr key={p.id}>
                     <td className={cn(td, 'whitespace-nowrap text-muted')}>{formatDateTime(p.createdAt)}</td>
                     <td className={td}>
-                      <div>{PROVIDER_LABEL[p.provider] ?? p.provider}</div>
+                      <div>{paymentProviderLabel(p.provider)}</div>
                       {p.providerTxnId && (
                         <div
                           className="max-w-32 truncate font-mono text-xs text-muted"

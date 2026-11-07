@@ -2,6 +2,7 @@
 
 import { type BuildDTO, PURPOSE_LABELS } from '@pc/shared';
 import { Cpu } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -16,8 +17,20 @@ interface BuildCompareProps {
   onSelect: (id: string) => void;
   /** The engine is still choosing parts for the current turn. */
   pending?: boolean;
+  /** Small chip beside the title (e.g. "từ bộ nhớ đệm"). */
+  badge?: ReactNode;
+  /** Copy for the empty panel; defaults to the chat wording. */
+  empty?: { title: string; description: string };
+  /** Shown instead of the empty panel, e.g. why a search found nothing. */
+  emptySlot?: ReactNode;
   className?: string;
 }
+
+const CHAT_EMPTY = {
+  title: 'Cấu hình sẽ hiện ở đây',
+  description:
+    'Nhập nhu cầu và ngân sách, ví dụ “chơi game 25 triệu”. Ba cấu hình tương thích, chọn từ hàng trong kho, sẽ xếp cạnh nhau để so sánh.',
+};
 
 function SkeletonCard({ index }: { index: number }) {
   return (
@@ -43,7 +56,16 @@ function SkeletonCard({ index }: { index: number }) {
   );
 }
 
-export function BuildCompare({ builds, selectedId, onSelect, pending, className }: BuildCompareProps) {
+export function BuildCompare({
+  builds,
+  selectedId,
+  onSelect,
+  pending,
+  badge,
+  empty = CHAT_EMPTY,
+  emptySlot,
+  className,
+}: BuildCompareProps) {
   const head = builds[0];
   return (
     <section
@@ -52,9 +74,12 @@ export function BuildCompare({ builds, selectedId, onSelect, pending, className 
     >
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <div className="flex flex-col gap-0.5">
-          <h2 id="build-compare-title" className="text-lg font-semibold text-fg">
-            So sánh cấu hình
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="build-compare-title" className="text-lg font-semibold text-fg">
+              So sánh cấu hình
+            </h2>
+            {!pending && badge}
+          </div>
           <p className="text-sm text-muted">
             {head
               ? `${PURPOSE_LABELS[head.purpose]} · ngân sách ${formatVnd(head.budget)}`
@@ -76,13 +101,11 @@ export function BuildCompare({ builds, selectedId, onSelect, pending, className 
           ))}
         </div>
       ) : builds.length === 0 ? (
-        <Card className="border-dashed bg-transparent">
-          <EmptyState
-            icon={<Cpu />}
-            title="Cấu hình sẽ hiện ở đây"
-            description="Nhập nhu cầu và ngân sách, ví dụ “chơi game 25 triệu”. Ba cấu hình tương thích, chọn từ hàng trong kho, sẽ xếp cạnh nhau để so sánh."
-          />
-        </Card>
+        (emptySlot ?? (
+          <Card className="border-dashed bg-transparent">
+            <EmptyState icon={<Cpu />} title={empty.title} description={empty.description} />
+          </Card>
+        ))
       ) : (
         <div
           key={builds.map((b) => b.id).join()}

@@ -15,6 +15,7 @@ import { toast } from '@/components/ui/Toast';
 import { useAuthStore } from '@/stores/auth';
 import { useAddBuildToCart } from '../cart/hooks';
 import { Pagination } from '../catalog/Pagination';
+import { ChangePasswordForm } from './ChangePasswordForm';
 import { OrderStatusBadge, orderDate } from './OrderSummary';
 import { useMyBuilds, useMyOrders } from './queries';
 
@@ -175,6 +176,8 @@ export function AccountOverview() {
           <BuildGrid builds={builds.data.slice(0, 2)} />
         )}
       </section>
+
+      <ChangePasswordForm />
     </div>
   );
 }

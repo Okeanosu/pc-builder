@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useEffect, useState } from 'react';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore, watchTokenFreshness } from '@/stores/auth';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -15,5 +15,6 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
+  useEffect(() => watchTokenFreshness(), []);
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

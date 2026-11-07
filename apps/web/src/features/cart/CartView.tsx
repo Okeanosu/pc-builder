@@ -20,9 +20,15 @@ import { Price } from '@/components/ui/Price';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
-import { ASSEMBLY_FEE, MAX_LINE_QTY } from '../checkout/constants';
+import { MAX_LINE_QTY } from '../checkout/constants';
 import { useBuilds, useCart, useRemoveCartItem, useUpdateCartItem } from './hooks';
-import { assemblableBuildId, type BuildGroup, groupCartLines, isBuildComplete } from './lines';
+import {
+  assemblableBuildId,
+  type BuildGroup,
+  cartAssemblyFee,
+  groupCartLines,
+  isBuildComplete,
+} from './lines';
 import { openPersonalPdf } from './pdf';
 import { QtyStepper } from './QtyStepper';
 
@@ -170,6 +176,7 @@ export function CartView() {
   const { byId: builds } = useBuilds(grouped.builds.map((g) => g.buildId));
   const assembleId = assemblableBuildId(grouped, builds);
   const assembleGroup = grouped.builds.find((g) => g.buildId === assembleId);
+  const assemblyFee = cartAssemblyFee(cart);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
@@ -278,7 +285,7 @@ export function CartView() {
                     <span className="text-sm font-semibold text-fg">Đặt lắp ráp nguyên bộ</span>
                     <span className="text-sm text-muted">
                       Kỹ thuật viên lắp sẵn, đi dây gọn và test máy trước khi giao. Phí lắp ráp{' '}
-                      <Price amount={ASSEMBLY_FEE} size="sm" className="text-fg" />.
+                      <Price amount={assemblyFee} size="sm" className="text-fg" />.
                     </span>
                     {grouped.retail.length > 0 && (
                       <span className="text-xs text-muted">
@@ -291,7 +298,7 @@ export function CartView() {
                   <Link href={`/checkout?build=${assembleId}`}>
                     Đặt lắp ráp ·{' '}
                     <Price
-                      amount={assembleGroup.subtotal + ASSEMBLY_FEE}
+                      amount={assembleGroup.subtotal + assemblyFee}
                       size="sm"
                       className="text-graphite-100"
                     />

@@ -1,5 +1,6 @@
 import type {
   AdminOrderDetailDTO,
+  AdminPaymentDTO,
   AdminProductCreateInput,
   AdminProductDTO,
   AdminProductPatchInput,
@@ -62,6 +63,12 @@ export interface AdminOrderQuery {
   q?: string;
 }
 
+export interface AdminPaymentQuery {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+}
+
 export interface AdminChatQuery {
   page?: number;
   pageSize?: number;
@@ -122,6 +129,9 @@ export const adminApi = {
       method: 'PATCH',
       json: { status },
     }),
+
+  payments: (q: AdminPaymentQuery) =>
+    api<Paginated<AdminPaymentDTO>>(`/admin/payments${toQueryString({ ...q })}`),
 
   chats: (q: AdminChatQuery) => api<Paginated<ChatLogSummaryDTO>>(`/admin/chats${toQueryString({ ...q })}`),
   chat: (id: string) => api<ChatLogDetailDTO>(`/admin/chats/${id}`),

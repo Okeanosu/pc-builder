@@ -341,6 +341,115 @@ describe('useChatStore', () => {
   });
 });
 
+describe('expired sign-in', () => {
+  const signedIn = {
+    id: 'u1',
+    email: 'khach@pcbuilder.vn',
+    fullName: 'Khách',
+    phone: null,
+    role: 'CUSTOMER' as const,
+  };
+  const expired = () =>
+    new ChatStreamError('AUTH_EXPIRED', 'Phiên đăng nhập đã hết hạn. Đăng nhập lại.', 401);
+
+  it('shows the expiry with a login action and keeps the session instead of opening a new one', async () => {
+    useChatStore.setState({ sessionId: 'mine' });
+    localStorage.setItem(CHAT_SESSION_KEY, 'mine');
+    const transport = fakeTransport({
+      sendMessage: vi.fn(async () => {
+        throw expired();
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('nâng RAM lên 32GB');
+    const a = useChatStore.getState().messages[1] as AssistantMessage;
+    expect(a.error).toMatch(/Phiên đăng nhập đã hết hạn/);
+    expect(a.needsLogin).toBe(true);
+    expect(transport.createSession).not.toHaveBeenCalled();
+    expect(transport.sendMessage).toHaveBeenCalledTimes(1);
+    expect(useChatStore.getState().sessionId).toBe('mine');
+    expect(localStorage.getItem(CHAT_SESSION_KEY)).toBe('mine');
+  });
+
+  it('treats a 401 from the session API the same way', async () => {
+    const transport = fakeTransport({
+      createSession: vi.fn(async () => {
+        throw new ApiError(401, 'TOKEN_EXPIRED', 'Token expired');
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('hi');
+    const a = useChatStore.getState().messages[1] as AssistantMessage;
+    expect(a.error).toMatch(/Phiên đăng nhập đã hết hạn/);
+    expect(a.needsLogin).toBe(true);
+    expect(transport.createSession).toHaveBeenCalledTimes(1);
+    expect(transport.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not silently swap to a guest session after the expiry, even when the old one now answers 403', async () => {
+    useAuthStore.setState({ user: signedIn });
+    useChatStore.setState({ sessionId: 'mine' });
+    let calls = 0;
+    const transport = fakeTransport({
+      sendMessage: vi.fn(async () => {
+        calls += 1;
+        if (calls === 1) {
+          useAuthStore.setState({ user: null });
+          throw expired();
+        }
+        throw new ChatStreamError('SESSION_NOT_FOUND', 'gone', 403);
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('một');
+    await useChatStore.getState().send('hai');
+    const last = useChatStore.getState().messages.at(-1) as AssistantMessage;
+    expect(last.needsLogin).toBe(true);
+    expect(transport.createSession).not.toHaveBeenCalled();
+    expect(useChatStore.getState().sessionId).toBe('mine');
+  });
+
+  it('continues the same session once the user signs in again', async () => {
+    useAuthStore.setState({ user: signedIn });
+    useChatStore.setState({ sessionId: 'mine' });
+    let calls = 0;
+    const transport = fakeTransport({
+      sendMessage: vi.fn(async (_sid: string, _t: string, { onEvent }) => {
+        calls += 1;
+        if (calls === 1) {
+          useAuthStore.setState({ user: null });
+          throw expired();
+        }
+        for (const e of REPLY) onEvent(e);
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('một');
+    useAuthStore.setState({ user: signedIn });
+    await useChatStore.getState().send('hai');
+    expect(transport.sendMessage).toHaveBeenLastCalledWith('mine', 'hai', expect.anything());
+    expect((useChatStore.getState().messages.at(-1) as AssistantMessage).error).toBeNull();
+  });
+
+  it('a new conversation started on purpose lifts the guard', async () => {
+    useChatStore.setState({ sessionId: 'mine' });
+    let calls = 0;
+    const transport = fakeTransport({
+      sendMessage: vi.fn(async (_sid: string, _t: string, { onEvent }) => {
+        calls += 1;
+        if (calls === 1) throw expired();
+        for (const e of REPLY) onEvent(e);
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('một');
+    useChatStore.getState().reset();
+    await useChatStore.getState().send('hai');
+    expect(transport.createSession).toHaveBeenCalledTimes(1);
+    expect(useChatStore.getState().sessionId).toBe('new-session');
+  });
+});
+
 describe('attachChatView', () => {
   function hangingTransport() {
     return fakeTransport({
