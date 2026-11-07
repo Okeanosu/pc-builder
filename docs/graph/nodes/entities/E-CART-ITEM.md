@@ -13,4 +13,4 @@ diagrams: []
 
 **Bảng:** `cart_items`
 
-Sản phẩm và số lượng trong giỏ, `build_id` tùy chọn để gom các dòng thuộc cùng cấu hình. Khóa duy nhất `(cart_id, product_id, build_id)`.
+Sản phẩm và số lượng trong giỏ, `build_id` tùy chọn để gom các dòng thuộc cùng cấu hình. Ràng buộc duy nhất `(cart_id, product_id, build_id)` dạng `NULLS NOT DISTINCT`, nên cả dòng mua lẻ (`build_id` null) cũng không trùng và thêm vào giỏ dùng được `INSERT … ON CONFLICT DO UPDATE` nguyên tử (migration `0001_commerce_hardening`).

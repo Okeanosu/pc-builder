@@ -2,7 +2,7 @@
 id: API-ORDERS
 type: api
 title: "API đơn hàng"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["F-ORDER"]
@@ -13,9 +13,9 @@ diagrams: []
 ---
 
 **Endpoint:**
-- `POST /api/orders`
-- `GET /api/me/orders`
-- `GET /api/orders/:code`
-- `POST /api/orders/:code/cancel`
+- `POST /api/orders` (`checkoutSchema`, 201 `OrderDTO`)
+- `GET /api/me/orders?page=&pageSize=` (đăng nhập, `Paginated<OrderDTO>`)
+- `GET /api/orders/:code` (chủ đơn, khách vãng lai đã đặt, hoặc STAFF/ADMIN; người khác nhận 404)
+- `POST /api/orders/:code/cancel` (chủ đơn, chỉ khi PENDING_PAYMENT)
 
-Tạo đơn RETAIL/BUILD, xem và hủy đơn. Lỗi nghiệp vụ: 409 khi hết hàng, 409 khi chuyển trạng thái không hợp lệ.
+Tạo đơn RETAIL/BUILD, xem và hủy đơn. Lỗi nghiệp vụ: `400 EMPTY_CART`, `409 OUT_OF_STOCK` khi hết hàng (kèm tên sản phẩm), `409 INVALID_TRANSITION` khi chuyển trạng thái không hợp lệ.

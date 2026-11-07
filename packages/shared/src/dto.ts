@@ -161,7 +161,8 @@ export interface OrderDTO {
 export interface PaymentInfoDTO {
   orderCode: string;
   amount: number;
-  qrImageUrl: string;
+  /** Only while the order awaits payment; null once paid, cancelled or expired. */
+  qrImageUrl: string | null;
   bankBin: string;
   accountNo: string;
   accountName: string;

@@ -1,7 +1,3 @@
-import { Router } from 'express';
-import type { AppDeps } from '../../deps';
-
-export function createQuotesRouter(_deps: AppDeps): Router {
-  const router = Router();
-  return router;
-}
+export { type QuoteData, type QuoteLine, renderQuotePdf } from './quote-pdf';
+export { createQuotesRouter } from './quotes.routes';
+export { createQuotesService } from './quotes.service';
