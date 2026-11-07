@@ -163,7 +163,7 @@ describe('runTurn — AI mode', () => {
     });
     expect(rec.calls).toEqual([{ budget: 25_000_000, purpose: 'gaming' }]);
     expect(res.toolCalls).toHaveLength(1);
-    expect(res.toolCalls[0]).toMatchObject({ name: 'recommend_builds', ok: true });
+    expect(res.toolCalls[0]).toMatchObject({ name: 'recommend_builds', ok: true, buildIds: ['b1', 'b2'] });
   });
 
   it('sends the system prompt, registered tool declarations and the user message to the model', async () => {

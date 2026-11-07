@@ -1,7 +1,3 @@
-import { Router } from 'express';
-import type { AppDeps } from '../../deps';
-
-export function createChatRouter(_deps: AppDeps): Router {
-  const router = Router();
-  return router;
-}
+export { createChatRouter } from './chat.routes';
+export { type ChatService, createChatService } from './chat.service';
+export { createToolRegistry } from './tools/registry';
