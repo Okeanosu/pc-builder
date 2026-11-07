@@ -2,7 +2,7 @@
 id: F-ADMIN-ORDERS
 type: feature
 title: "Quản trị đơn hàng"
-status: planned
+status: in-progress
 chapters: ["CH4"]
 links:
   realizes: ["FR-15", "UC-15"]
@@ -15,4 +15,6 @@ diagrams: []
 
 **Mục đích:** xử lý đơn từ khi nhận tiền đến khi giao.
 
-**Mô tả:** danh sách đơn có lọc theo trạng thái và loại; chuyển trạng thái qua `PATCH /admin/orders/:code/status`, dùng lại máy trạng thái của F-ORDER nên không thể nhảy bước. Đơn BUILD ở bước PROCESSING được hiểu là đang lắp ráp.
+**Mô tả:** `GET /admin/orders` lọc theo trạng thái, loại (RETAIL/BUILD) và tìm theo mã đơn, số điện thoại, tên người nhận; `GET /admin/orders/:code` kèm email khách và các giao dịch `payments`. Chuyển trạng thái qua `PATCH /admin/orders/:code/status`, dùng lại máy trạng thái của F-ORDER dưới khóa dòng nên không thể nhảy bước (`409 INVALID_TRANSITION`). Hủy đơn đã thanh toán chỉ dành cho ADMIN (cần hoàn tiền thủ công): hàng được trả về kho (movement CANCEL) và đơn chuyển REFUNDED. Đơn BUILD ở bước PROCESSING được hiểu là đang lắp ráp.
+
+**Trạng thái:** API xong; trang quản trị (web) chưa làm.

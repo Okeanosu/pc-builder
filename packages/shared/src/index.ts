@@ -1,3 +1,4 @@
+export * from './admin';
 export * from './chat-events';
 export * from './constants';
 export * from './dto';

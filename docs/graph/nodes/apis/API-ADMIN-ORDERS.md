@@ -2,7 +2,7 @@
 id: API-ADMIN-ORDERS
 type: api
 title: "API quản trị đơn hàng"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["F-ADMIN-ORDERS"]
@@ -13,7 +13,8 @@ diagrams: []
 ---
 
 **Endpoint:**
-- `GET /api/admin/orders`
-- `PATCH /api/admin/orders/:code/status`
+- `GET /api/admin/orders?status=&type=&q=&page=&pageSize=`
+- `GET /api/admin/orders/:code` (`AdminOrderDetailDTO`: đơn + email khách + giao dịch)
+- `PATCH /api/admin/orders/:code/status` (`{status}`)
 
-Danh sách có lọc và chuyển trạng thái theo máy trạng thái.
+Danh sách có lọc và chuyển trạng thái theo máy trạng thái (`409 INVALID_TRANSITION`); hủy đơn đã thanh toán chỉ ADMIN (STAFF nhận 403).
