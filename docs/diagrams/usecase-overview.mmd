@@ -1,0 +1,62 @@
+%% Mermaid has no native use case diagram; actors are rectangles, use cases are stadium shapes
+flowchart LR
+  guest([Khách vãng lai])
+  customer([Khách hàng])
+  staff([Nhân viên])
+  admin([Quản trị viên])
+  bank[/Ngân hàng / SePay/]
+  llm[/Google Gemini/]
+
+  subgraph SYS[Hệ thống PC Builder]
+    direction TB
+    subgraph SHOP[Cửa hàng]
+      UC01([UC-01 Duyệt và lọc sản phẩm])
+      UC02([UC-02 Đăng ký / Đăng nhập])
+      UC08([UC-08 Quản lý giỏ hàng])
+      UC09([UC-09 Đặt hàng])
+      UC10([UC-10 Thanh toán VietQR])
+      UC11([UC-11 Theo dõi / Hủy đơn])
+    end
+    subgraph BUILDER[Công cụ cấu hình PC]
+      UC03([UC-03 Tư vấn cấu hình qua chat])
+      UC04([UC-04 Gợi ý cấu hình theo form])
+      UC05([UC-05 Lắp ráp PC tương tác])
+      UC06([UC-06 Lưu và chia sẻ cấu hình])
+      UC07([UC-07 Xuất báo giá PDF])
+    end
+    subgraph ADM[Quản trị]
+      UC12([UC-12 Quản lý sản phẩm])
+      UC13([UC-13 Quản lý tồn kho và benchmark])
+      UC14([UC-14 Cấu hình thuật toán])
+      UC15([UC-15 Xử lý đơn hàng])
+      UC16([UC-16 Xem thống kê doanh thu])
+    end
+  end
+
+  guest --- UC01
+  guest --- UC03
+  guest --- UC04
+  guest --- UC05
+  guest --- UC02
+  customer --- UC01
+  customer --- UC03
+  customer --- UC04
+  customer --- UC05
+  customer --- UC06
+  customer --- UC07
+  customer --- UC08
+  customer --- UC09
+  customer --- UC10
+  customer --- UC11
+  staff --- UC13
+  staff --- UC15
+  admin --- UC12
+  admin --- UC13
+  admin --- UC14
+  admin --- UC15
+  admin --- UC16
+  UC03 --- llm
+  UC10 --- bank
+  UC09 -. include .-> UC08
+  UC10 -. extend .-> UC09
+  UC07 -. extend .-> UC06

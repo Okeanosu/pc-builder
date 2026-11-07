@@ -1,0 +1,35 @@
+flowchart LR
+  U[Khách hàng / Admin] -->|HTTPS| WEB
+
+  subgraph WEBAPP[apps/web - Next.js 16]
+    WEB[App Router<br/>SSR + CSR]
+    STORES[Zustand stores<br/>builder, cart, chat, auth]
+    WEB --- STORES
+  end
+
+  subgraph APIAPP[apps/api - Express 5]
+    MW[Middleware<br/>helmet, cors, guest, auth]
+    MODS[Modules<br/>auth, catalog, recommendation, compatibility,<br/>builds, chat, cart, orders, payments, quotes, admin]
+    LLM[chat/llm<br/>LlmClient]
+    DB[db/ Drizzle schema]
+    MW --> MODS
+    MODS --> LLM
+    MODS --> DB
+  end
+
+  subgraph PKG[packages]
+    SHARED[shared<br/>kiểu, Zod, hằng số]
+    ENG[engine<br/>luật C01-C14, CSP, MCKP]
+  end
+
+  WEB -->|REST / SSE| MW
+  MODS --> ENG
+  STORES -. luật tương thích chạy ở client .-> ENG
+  WEB --> SHARED
+  MODS --> SHARED
+  ENG --> SHARED
+
+  DB --> PG[(PostgreSQL<br/>JSONB + GIN)]
+  MODS --> RD[(Redis<br/>cache, giỏ khách, khóa tồn kho, rate-limit, refresh token)]
+  LLM -->|function calling| GEM[Google Gemini API]
+  BANK[SePay webhook / giả lập] -->|POST| MW

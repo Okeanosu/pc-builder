@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> PENDING_PAYMENT: tạo đơn, giữ hàng 15 phút
+  PENDING_PAYMENT --> PAID: webhook SePay / giả lập thanh toán
+  PENDING_PAYMENT --> CANCELLED: khách hủy hoặc quá hạn (nhả reserved)
+  PAID --> PROCESSING: nhân viên xác nhận (BUILD: đang lắp ráp)
+  PAID --> CANCELLED: hủy, hoàn tiền thủ công
+  PROCESSING --> SHIPPING: bàn giao vận chuyển
+  SHIPPING --> COMPLETED: giao thành công
+  COMPLETED --> [*]
+  CANCELLED --> [*]
