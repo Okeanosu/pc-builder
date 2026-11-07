@@ -14,7 +14,7 @@
 | Độ trễ chat SSE (dự phòng) | sự kiện `builds` p95 19,5 ms; cả lượt p95 23,2 ms (mục tiêu ≤ 8 s) |
 | Chất lượng AI (golden set, chế độ dự phòng) | nghiêm ngặt 26/30; theo khả năng thiết kế của chế độ luật 30/30; cấu hình hợp lệ 69/69 |
 | Test chập chờn ECONNRESET | không tái hiện được: 0 lỗi trong 2.116 lượt ca API, 195 lượt dưới tải CPU nặng, 900 yêu cầu đăng nhập thăm dò |
-| Lỗi phát hiện | 2 BUG (1 bảo mật mức trung bình, 1 khả năng truy cập mức thấp), 3 quan sát và các hạn chế đo, xem mục 9 |
+| Lỗi phát hiện | 2 BUG (1 bảo mật mức trung bình, 1 khả năng truy cập mức thấp), **cả hai đã sửa** ngày 2026-11-08 kèm test hồi quy; 3 quan sát và các hạn chế đo, xem mục 9. Sau bản sửa: API 540 ca, Web 167 ca, tất cả đạt |
 
 ## 1. Môi trường kiểm thử
 
