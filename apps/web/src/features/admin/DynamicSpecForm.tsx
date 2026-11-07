@@ -161,6 +161,7 @@ function NumberChips({
             value={text}
             disabled={disabled}
             placeholder="Nhập rồi nhấn Enter"
+            wrapperClassName="min-w-0 shrink"
             trailing={field.unit}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {

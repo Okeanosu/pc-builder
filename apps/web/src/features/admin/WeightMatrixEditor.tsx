@@ -248,6 +248,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                               invalid={Boolean(errs[`allocation.${c}.min`] || rangeError)}
                               aria-label={`Tỷ lệ tối thiểu ${CATEGORY_LABELS[c]} cho ${PURPOSE_LABELS[p]}`}
                               onChange={(e) => setBound(p, c, 'min', e.target.value)}
+                              wrapperClassName="min-w-0 shrink"
                               className={cellInput}
                             />
                             <span className="text-muted" aria-hidden>
@@ -262,6 +263,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                               invalid={Boolean(errs[`allocation.${c}.max`] || rangeError)}
                               aria-label={`Tỷ lệ tối đa ${CATEGORY_LABELS[c]} cho ${PURPOSE_LABELS[p]}`}
                               onChange={(e) => setBound(p, c, 'max', e.target.value)}
+                              wrapperClassName="min-w-0 shrink"
                               className={cellInput}
                             />
                           </div>
