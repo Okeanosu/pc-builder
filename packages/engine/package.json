@@ -12,7 +12,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "bench": "tsx bench/run.ts"
+    "bench": "tsx bench/run.ts",
+    "bench:equivalence": "tsx bench/equivalence.ts"
   },
   "dependencies": {
     "@pc/shared": "workspace:*"
