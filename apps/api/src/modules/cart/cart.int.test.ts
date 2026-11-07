@@ -12,8 +12,17 @@ describe('guest cart (Redis)', () => {
   it('starts empty and issues a gid cookie', async () => {
     const res = await request(h.app).get('/api/cart');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ items: [], subtotal: 0, itemCount: 0 });
+    expect(res.body).toEqual({ items: [], subtotal: 0, itemCount: 0, assemblyFee: 200_000 });
     expect(guestIdFrom(res.headers['set-cookie'])).toHaveLength(21);
+  });
+
+  it('reports the assembly fee from ASSEMBLY_FEE so the web shows what checkout will charge', async () => {
+    const app = h.appWith({ env: { ...h.deps.env, ASSEMBLY_FEE: 350_000 } });
+    const cpu = await h.product('cpu', { stock: 10, reserved: 0 });
+    const agent = request.agent(app);
+    const added = await agent.post('/api/cart/items').send({ productId: cpu.id, qty: 1 });
+    expect(added.body.assemblyFee).toBe(350_000);
+    expect((await agent.get('/api/cart')).body.assemblyFee).toBe(350_000);
   });
 
   it('adds a line priced at the effective (sale) price and stores it under cart:guest:{gid}', async () => {

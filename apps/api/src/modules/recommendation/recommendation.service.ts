@@ -1,5 +1,10 @@
 import { type SolveStats, solve } from '@pc/engine';
-import { type BuildDTO, type RecommendationRequest, recommendationRequestSchema } from '@pc/shared';
+import {
+  type BuildDTO,
+  type InfeasibleReason,
+  type RecommendationRequest,
+  recommendationRequestSchema,
+} from '@pc/shared';
 import type { Db } from '../../db/client';
 import { getCatalogVersion } from '../../lib/catalog-version';
 import type { Redis } from '../../lib/redis';
@@ -17,7 +22,7 @@ export interface RecommendMeta {
 export interface RecommendResult {
   builds: BuildDTO[];
   stats: SolveStats;
-  infeasibleReason?: string;
+  infeasibleReason?: InfeasibleReason;
   minFeasibleBudget?: number;
   cache: 'HIT' | 'MISS';
 }
@@ -25,7 +30,7 @@ export interface RecommendResult {
 interface CachedRecommendation {
   buildIds: string[];
   stats: SolveStats;
-  infeasibleReason?: string;
+  infeasibleReason?: InfeasibleReason;
   minFeasibleBudget?: number;
 }
 
