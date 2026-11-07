@@ -3,9 +3,10 @@ export interface LlmMessage {
   parts: LlmPart[];
 }
 
+/** `thoughtSignature` must be echoed back with a function call on Gemini 3 models or the next request is rejected. */
 export type LlmPart =
   | { text: string }
-  | { functionCall: { name: string; args: Record<string, unknown> } }
+  | { functionCall: { name: string; args: Record<string, unknown> }; thoughtSignature?: string }
   | { functionResponse: { name: string; response: Record<string, unknown> } };
 
 export interface LlmToolDecl {
@@ -16,7 +17,7 @@ export interface LlmToolDecl {
 
 export type LlmChunk =
   | { type: 'text'; text: string }
-  | { type: 'functionCall'; name: string; args: Record<string, unknown> };
+  | { type: 'functionCall'; name: string; args: Record<string, unknown>; thoughtSignature?: string };
 
 export interface LlmClient {
   stream(input: {
