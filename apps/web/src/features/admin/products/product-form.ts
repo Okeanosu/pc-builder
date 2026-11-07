@@ -94,6 +94,9 @@ function topLevelErrors(d: ProductDraft): FieldErrors {
   if (!d.brand.trim()) errors.brand = 'Nhập hãng sản xuất';
   if (!d.sku.trim()) errors.sku = 'Nhập mã SKU';
   if (d.price === null || d.price <= 0) errors.price = 'Nhập giá bán lớn hơn 0';
+  else if (d.salePrice !== null && d.salePrice >= d.price) {
+    errors.salePrice = 'Giá khuyến mãi phải nhỏ hơn giá bán';
+  }
   if (!d.categoryId) errors.categoryId = 'Chọn danh mục';
   return errors;
 }

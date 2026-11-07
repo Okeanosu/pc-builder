@@ -92,3 +92,12 @@ export function isWeightDraftDirty(draft: WeightDraft, saved: WeightProfile): bo
       !same(draft.allocation[k].max, saved.allocation[k]?.max ?? 0),
   );
 }
+
+/** When the server copy changes (refetch, another admin's save), untouched columns follow it; edited ones stay. */
+export function rebaseDraft(
+  draft: WeightDraft,
+  prevSaved: WeightProfile,
+  nextSaved: WeightProfile,
+): WeightDraft {
+  return isWeightDraftDirty(draft, prevSaved) ? draft : toWeightDraft(nextSaved);
+}

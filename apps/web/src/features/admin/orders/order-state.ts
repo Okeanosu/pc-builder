@@ -29,15 +29,18 @@ interface OrderLike {
 function option(order: OrderLike, to: OrderStatus, role: Role): TransitionOption {
   const build = order.type === 'BUILD';
   switch (to) {
-    case 'PAID':
+    case 'PAID': {
+      const admin = role === 'ADMIN';
       return {
         to,
         label: 'Xác nhận đã nhận tiền',
         variant: 'secondary',
         confirm:
           'Chỉ dùng khi đã đối chiếu sao kê ngân hàng mà VietQR chưa tự ghi nhận. Hàng đang giữ sẽ được trừ khỏi kho.',
-        allowed: true,
+        allowed: admin,
+        ...(admin ? {} : { reason: 'Chỉ quản trị viên được xác nhận thanh toán thủ công' }),
       };
+    }
     case 'PROCESSING':
       return {
         to,
