@@ -4,7 +4,6 @@ import { Cpu, LayoutDashboard, LogOut, Package, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/auth';
@@ -82,17 +81,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
           </li>
         </ul>
       </nav>
-      <div className="min-w-0">
-        {user ? (
-          children
-        ) : (
-          <div className="flex flex-col gap-4" aria-busy>
-            <Skeleton className="h-8 w-56" />
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <Skeleton className="h-40 w-full rounded-lg" />
-          </div>
-        )}
-      </div>
+      {/* Always rendered so Next can validate the page segment; pages show their own skeleton until auth settles. */}
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

@@ -110,7 +110,15 @@ export function AccountOverview() {
   const user = useAuthStore((s) => s.user);
   const orders = useMyOrders(1, 3);
   const builds = useMyBuilds();
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="flex flex-col gap-4" aria-busy>
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <ListSkeleton />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1">
