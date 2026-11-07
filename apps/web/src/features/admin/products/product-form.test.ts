@@ -73,6 +73,25 @@ describe('buildProductPayload (create)', () => {
   });
 });
 
+describe('buildProductPayload (sale price)', () => {
+  it('rejects a sale price that is not below the regular price, on the salePrice field', () => {
+    const base = { ...productToDraft(product, fields) };
+    for (const salePrice of [5_000_000, 5_200_000]) {
+      const { payload, errors } = buildProductPayload({ ...base, salePrice }, fields, product);
+      expect(payload).toBeNull();
+      expect(errors).toEqual({ salePrice: 'Giá khuyến mãi phải nhỏ hơn giá bán' });
+    }
+  });
+
+  it('accepts a lower sale price and an empty one', () => {
+    const base = productToDraft(product, fields);
+    expect(buildProductPayload({ ...base, salePrice: 4_500_000 }, fields, product).payload?.input).toEqual({
+      salePrice: 4_500_000,
+    });
+    expect(buildProductPayload({ ...base, salePrice: null }, fields, product).errors).toEqual({});
+  });
+});
+
 describe('buildProductPayload (edit)', () => {
   it('sends only what changed and never touches stock', () => {
     const draft = { ...productToDraft(product, fields), price: 4_800_000 };
