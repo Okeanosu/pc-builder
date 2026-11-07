@@ -174,7 +174,15 @@ function PickerContent({
     : `${total} sản phẩm còn hàng${checked > 0 ? ` · ${compatible}/${checked} đã kiểm tra tương thích` : ''}`;
 
   return (
-    <DrawerContent title={`Chọn ${noun}`} description={description} className="sm:w-[min(560px,100vw)]">
+    <DrawerContent
+      title={`Chọn ${noun}`}
+      description={description}
+      className="sm:w-[min(560px,100vw)]"
+      onOpenAutoFocus={(e) => {
+        // On touch screens focusing the search box would open the keyboard over the list.
+        if (window.matchMedia('(pointer: coarse)').matches) e.preventDefault();
+      }}
+    >
       <div className="flex shrink-0 flex-col gap-3 border-b border-border px-5 py-3">
         <div className="flex gap-2">
           <Input
