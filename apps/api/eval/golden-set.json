@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "description": "30 Vietnamese advisor prompts. `expect` is the correct behaviour of the AI advisor; `fallbackExpect` overrides fields where the rule-based fallback, by design, can only answer with recommend_builds or a question.",
+  "cases": [
+    {
+      "id": "G01",
+      "category": "gaming",
+      "note": "plain budget + purpose",
+      "prompt": "Mình chơi game, ngân sách 25 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "gaming", "budget": 25000000, "builds": true }
+    },
+    {
+      "id": "G02",
+      "category": "gaming",
+      "note": "game titles as purpose, 'tr' shorthand",
+      "prompt": "build pc chơi valorant với csgo tầm 15tr",
+      "expect": { "tool": "recommend_builds", "purpose": "gaming", "budget": 15000000, "builds": true }
+    },
+    {
+      "id": "G03",
+      "category": "gaming",
+      "note": "2K is a resolution, not money; CPU brand preference",
+      "prompt": "chơi game 2K 30tr, thích AMD",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 30000000,
+        "builds": true,
+        "preferences": { "cpuBrand": "AMD", "resolution": "1440p" }
+      }
+    },
+    {
+      "id": "G04",
+      "category": "gaming",
+      "note": "budget range takes the upper bound; GPU brand",
+      "prompt": "tầm 20-25 triệu chơi game AAA, card NVIDIA",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 25000000,
+        "builds": true,
+        "preferences": { "gpuBrand": "NVIDIA" }
+      }
+    },
+    {
+      "id": "G05",
+      "category": "gaming",
+      "note": "'củ' slang, 4K, white case",
+      "prompt": "dưới 40 củ chơi game 4K, case trắng",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 40000000,
+        "builds": true,
+        "preferences": { "color": "white", "resolution": "4k" }
+      }
+    },
+    {
+      "id": "G06",
+      "category": "gaming",
+      "note": "budget written in words",
+      "prompt": "hai mươi triệu chơi PUBG",
+      "expect": { "tool": "recommend_builds", "purpose": "gaming", "budget": 20000000, "builds": true }
+    },
+    {
+      "id": "G07",
+      "category": "gaming",
+      "note": "streaming + gaming, Wi-Fi requirement",
+      "prompt": "Máy stream và chơi game khoảng 35 triệu, cần có wifi",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 35000000,
+        "builds": true,
+        "preferences": { "needWifi": true }
+      }
+    },
+    {
+      "id": "G08",
+      "category": "gaming",
+      "note": "infeasible budget: must explain the minimum feasible budget",
+      "prompt": "chơi game 8 triệu",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 8000000,
+        "builds": false,
+        "infeasible": true
+      }
+    },
+    {
+      "id": "D01",
+      "category": "graphics",
+      "note": "video editing",
+      "prompt": "Làm đồ họa, dựng phim Premiere, ngân sách 30 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "graphics", "budget": 30000000, "builds": true }
+    },
+    {
+      "id": "D02",
+      "category": "graphics",
+      "note": "3D rendering",
+      "prompt": "render blender 3D tầm 45tr",
+      "expect": { "tool": "recommend_builds", "purpose": "graphics", "budget": 45000000, "builds": true }
+    },
+    {
+      "id": "D03",
+      "category": "graphics",
+      "note": "2D design",
+      "prompt": "máy làm photoshop, illustrator 18 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "graphics", "budget": 18000000, "builds": true }
+    },
+    {
+      "id": "D04",
+      "category": "graphics",
+      "note": "4K editing (not a gaming resolution) with CPU brand",
+      "prompt": "edit video 4K bằng DaVinci Resolve, 60 triệu, thích Intel",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "graphics",
+        "budget": 60000000,
+        "builds": true,
+        "preferences": { "cpuBrand": "Intel" }
+      }
+    },
+    {
+      "id": "D05",
+      "category": "graphics",
+      "note": "CAD / architecture",
+      "prompt": "thiết kế kiến trúc autocad, sketchup khoảng 28 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "graphics", "budget": 28000000, "builds": true }
+    },
+    {
+      "id": "A01",
+      "category": "ai",
+      "note": "deep learning training",
+      "prompt": "train model AI, deep learning, 50 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "ai", "budget": 50000000, "builds": true }
+    },
+    {
+      "id": "A02",
+      "category": "ai",
+      "note": "local LLM, high VRAM",
+      "prompt": "lập trình, chạy LLM local tầm 70tr, cần nhiều VRAM",
+      "expect": { "tool": "recommend_builds", "purpose": "ai", "budget": 70000000, "builds": true }
+    },
+    {
+      "id": "A03",
+      "category": "ai",
+      "note": "machine learning study",
+      "prompt": "học machine learning, ngân sách 25 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "ai", "budget": 25000000, "builds": true }
+    },
+    {
+      "id": "A04",
+      "category": "ai",
+      "note": "programming maps to the ai purpose",
+      "prompt": "máy lập trình web, chạy docker 20tr",
+      "expect": { "tool": "recommend_builds", "purpose": "ai", "budget": 20000000, "builds": true }
+    },
+    {
+      "id": "A05",
+      "category": "ai",
+      "note": "image generation, GPU brand",
+      "prompt": "chạy Stable Diffusion, tầm 40 củ, card NVIDIA",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "ai",
+        "budget": 40000000,
+        "builds": true,
+        "preferences": { "gpuBrand": "NVIDIA" }
+      }
+    },
+    {
+      "id": "O01",
+      "category": "office",
+      "note": "accounting office PC",
+      "prompt": "Máy văn phòng làm kế toán, word excel, 10 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "office", "budget": 10000000, "builds": true }
+    },
+    {
+      "id": "O02",
+      "category": "office",
+      "note": "study PC at the low end (feasible on integrated graphics)",
+      "prompt": "pc cho con học online, 8 triệu",
+      "expect": { "tool": "recommend_builds", "purpose": "office", "budget": 8000000, "builds": true }
+    },
+    {
+      "id": "O03",
+      "category": "office",
+      "note": "small form factor",
+      "prompt": "máy văn phòng nhỏ gọn ITX khoảng 15 triệu",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "office",
+        "budget": 15000000,
+        "builds": true,
+        "preferences": { "formFactor": "ITX" }
+      }
+    },
+    {
+      "id": "O04",
+      "category": "office",
+      "note": "office with Wi-Fi",
+      "prompt": "làm việc văn phòng, cần wifi, 12tr",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "office",
+        "budget": 12000000,
+        "builds": true,
+        "preferences": { "needWifi": true }
+      }
+    },
+    {
+      "id": "M01",
+      "category": "missing-info",
+      "note": "no budget and no purpose: ask one question",
+      "prompt": "Chào shop, tư vấn giúp mình một bộ PC với",
+      "expect": { "tool": null, "builds": false, "question": true }
+    },
+    {
+      "id": "M02",
+      "category": "missing-info",
+      "note": "purpose only: ask for the budget",
+      "prompt": "Mình muốn build máy chơi game",
+      "expect": { "tool": null, "builds": false, "question": true }
+    },
+    {
+      "id": "M03",
+      "category": "missing-info",
+      "note": "budget only: ask for the purpose",
+      "prompt": "Ngân sách 30 triệu thì mua được máy gì?",
+      "expect": { "tool": null, "builds": false, "question": true }
+    },
+    {
+      "id": "F01",
+      "category": "follow-up",
+      "note": "cheaper follow-up on the previous build",
+      "setup": ["chơi game 25 triệu"],
+      "prompt": "rẻ hơn 3 triệu được không",
+      "expect": { "tool": "modify_build", "purpose": "gaming", "budget": 22000000, "builds": true },
+      "fallbackExpect": { "tool": "recommend_builds" }
+    },
+    {
+      "id": "F02",
+      "category": "follow-up",
+      "note": "swap the GPU brand of the previous build",
+      "setup": ["làm đồ họa 30 triệu"],
+      "prompt": "đổi sang card AMD",
+      "expect": {
+        "tool": "modify_build",
+        "purpose": "graphics",
+        "budget": 30000000,
+        "builds": true,
+        "preferences": { "gpuBrand": "AMD" }
+      },
+      "fallbackExpect": { "tool": "recommend_builds" }
+    },
+    {
+      "id": "F03",
+      "category": "follow-up",
+      "note": "slot filling across turns: purpose + resolution first, budget second",
+      "setup": ["mình chơi game 2K"],
+      "prompt": "25 triệu",
+      "expect": {
+        "tool": "recommend_builds",
+        "purpose": "gaming",
+        "budget": 25000000,
+        "builds": true,
+        "preferences": { "resolution": "1440p" }
+      }
+    },
+    {
+      "id": "P01",
+      "category": "product",
+      "note": "price question about one product",
+      "prompt": "Card RTX 4060 bên shop giá bao nhiêu?",
+      "expect": { "tool": "search_products", "builds": false },
+      "fallbackExpect": { "tool": null, "question": true }
+    },
+    {
+      "id": "P02",
+      "category": "product",
+      "note": "filtered product search",
+      "prompt": "Có CPU nào socket AM5 dưới 6 triệu không?",
+      "expect": { "tool": "search_products", "builds": false },
+      "fallbackExpect": { "tool": null, "question": true }
+    }
+  ]
+}
