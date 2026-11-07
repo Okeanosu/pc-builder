@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 import { themeInitScript } from '@/components/layout/theme-script';
 import { Toaster } from '@/components/ui/Toast';
+import { Providers } from './providers';
 import './globals.css';
 
 const beVietnam = Be_Vietnam_Pro({
@@ -45,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         />
       </head>
       <body className="flex min-h-dvh flex-col bg-bg text-fg">
-        {children}
+        <Providers>{children}</Providers>
         <Toaster />
       </body>
     </html>
