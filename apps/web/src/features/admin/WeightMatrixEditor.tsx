@@ -72,7 +72,7 @@ function BandBar({ category, min, max }: { category: CategoryKey; min: string; m
   );
 }
 
-const cellInput = 'text-end';
+const cellInput = 'w-0 text-end';
 
 interface WeightMatrixEditorProps {
   rows: PurposeWeightsDTO[];

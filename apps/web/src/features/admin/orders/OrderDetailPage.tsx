@@ -23,9 +23,9 @@ import { PageSkeleton, QueryError, tableClass, td, th, thEnd } from '../ui';
 import { OrderTimeline } from './OrderTimeline';
 
 const PAYMENT_LABEL: Record<string, { label: string; tone: NonNullable<BadgeProps['tone']> }> = {
-  SUCCESS: { label: 'Khớp, đã ghi nhận', tone: 'ok' },
+  SUCCESS: { label: 'Khớp', tone: 'ok' },
   UNDERPAID: { label: 'Chuyển thiếu', tone: 'warn' },
-  MANUAL_REVIEW: { label: 'Cần đối soát tay', tone: 'warn' },
+  MANUAL_REVIEW: { label: 'Cần đối soát', tone: 'warn' },
 };
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -194,14 +194,16 @@ function PaymentsCard({ order }: { order: AdminOrderDetailDTO }) {
                       <div>{PROVIDER_LABEL[p.provider] ?? p.provider}</div>
                       {p.providerTxnId && (
                         <div
-                          className="max-w-40 truncate font-mono text-xs text-muted"
+                          className="max-w-32 truncate font-mono text-xs text-muted"
                           title={p.providerTxnId}
                         >
                           #{p.providerTxnId}
                         </div>
                       )}
                     </td>
-                    <td className={cn(td, 'font-mono text-xs')}>{p.transferContent ?? '—'}</td>
+                    <td className={cn(td, 'max-w-44 font-mono text-xs break-words')}>
+                      {p.transferContent ?? '—'}
+                    </td>
                     <td className={cn(td, 'text-end')}>
                       <Price amount={p.amount} size="sm" />
                     </td>
