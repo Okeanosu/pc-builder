@@ -21,7 +21,7 @@ declare global {
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 
 export function signAccessToken(user: AuthUser, secret: string): string {
-  return jwt.sign({ sub: user.id, email: user.email, role: user.role }, secret, {
+  return jwt.sign({ sub: user.id, email: user.email, role: user.role, typ: 'access' }, secret, {
     expiresIn: ACCESS_TOKEN_TTL_SECONDS,
   });
 }
@@ -38,7 +38,8 @@ export function optionalAuth(secret: string): RequestHandler {
     if (token) {
       try {
         const p = jwt.verify(token, secret) as jwt.JwtPayload;
-        req.user = { id: String(p.sub), email: String(p.email), role: p.role as Role };
+        if (p.typ === 'access')
+          req.user = { id: String(p.sub), email: String(p.email), role: p.role as Role };
       } catch {
         // expired/invalid token behaves like anonymous; the client refreshes on 401 from protected routes
       }
