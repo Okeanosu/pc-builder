@@ -2,13 +2,13 @@
 id: ALG-AC3
 type: algorithm
 title: "Nhất quán cung AC-3 (tiền xử lý miền)"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-CSP"]
-code: ["packages/engine/src/solver/**"]
-tests: ["packages/engine/src/**/*.test.ts"]
+code: ["packages/engine/src/ac3.ts"]
+tests: ["packages/engine/src/ac3.test.ts"]
 diagrams: []
 ---
 

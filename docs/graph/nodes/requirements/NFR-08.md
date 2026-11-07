@@ -2,7 +2,7 @@
 id: NFR-08
 type: requirement
 title: "Khả năng kiểm thử: Engine đạt tối thiểu 90% branch coverage"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

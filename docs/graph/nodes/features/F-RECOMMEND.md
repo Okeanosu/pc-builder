@@ -2,14 +2,14 @@
 id: F-RECOMMEND
 type: feature
 title: "Gợi ý cấu hình theo form (ngân sách, mục đích, tùy chọn)"
-status: in-progress
+status: done
 chapters: ["CH1", "CH4", "CH5"]
 links:
   realizes: ["FR-08", "UC-04", "NFR-01"]
   dependsOn: ["M-RECOMMENDATION", "F-ENGINE-CORE", "E-PURPOSE-WEIGHT", "E-BUILD"]
   decidedBy: ["ADR-004"]
   shownIn: ["SCR-HOME", "SCR-ADVISOR"]
-code: ["apps/api/src/modules/recommendation/**", "apps/web/src/features/recommend/**"]
+code: ["apps/api/src/modules/recommendation/**", "apps/web/src/features/advisor/**", "apps/web/src/features/builder/**"]
 tests: ["apps/api/src/modules/recommendation/**/*.test.ts"]
 diagrams: []
 ---

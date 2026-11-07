@@ -2,7 +2,7 @@
 id: F-AUTH
 type: feature
 title: "Xác thực JWT và phân quyền RBAC"
-status: in-progress
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["FR-03", "UC-02", "NFR-03"]

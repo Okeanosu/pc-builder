@@ -2,7 +2,7 @@
 id: F-PAYMENT-VIETQR
 type: feature
 title: "Thanh toán VietQR động, webhook SePay và giả lập"
-status: in-progress
+status: done
 chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-06", "UC-10"]

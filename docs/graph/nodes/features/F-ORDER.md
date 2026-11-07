@@ -2,7 +2,7 @@
 id: F-ORDER
 type: feature
 title: "Đặt hàng lẻ / nguyên bộ và vòng đời đơn"
-status: in-progress
+status: done
 chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-05", "UC-09", "UC-11"]

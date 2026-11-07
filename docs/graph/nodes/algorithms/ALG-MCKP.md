@@ -2,13 +2,13 @@
 id: ALG-MCKP
 type: algorithm
 title: "Mô hình Bài toán cái túi đa lựa chọn (MCKP) để phân bổ ngân sách"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-SCORING", "ALG-BNB"]
-code: ["packages/engine/src/**"]
-tests: ["packages/engine/src/**/*.test.ts"]
+code: ["packages/engine/src/search.ts", "packages/engine/src/domains.ts"]
+tests: ["packages/engine/src/strategies.test.ts", "packages/engine/src/domains.test.ts", "packages/engine/bench/equivalence.ts"]
 diagrams: []
 ---
 

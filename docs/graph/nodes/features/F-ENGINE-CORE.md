@@ -2,7 +2,7 @@
 id: F-ENGINE-CORE
 type: feature
 title: "Optimization Engine: bộ giải CSP + MCKP thuần TypeScript"
-status: planned
+status: done
 chapters: ["CH1", "CH4", "CH5"]
 links:
   realizes: ["FR-08", "FR-09", "NFR-01", "NFR-08"]

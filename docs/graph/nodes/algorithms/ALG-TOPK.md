@@ -2,13 +2,13 @@
 id: ALG-TOPK
 type: algorithm
 title: "Chọn top-K cấu hình đa dạng và gắn nhãn"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-BNB"]
-code: ["packages/engine/src/**"]
-tests: ["packages/engine/src/**/*.test.ts"]
+code: ["packages/engine/src/topk.ts"]
+tests: ["packages/engine/src/topk.test.ts", "packages/engine/src/labels.test.ts"]
 diagrams: []
 ---
 

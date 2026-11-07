@@ -2,7 +2,7 @@
 id: F-DEPLOY
 type: feature
 title: "Đóng gói Docker và triển khai lên VPS"
-status: planned
+status: done
 chapters: ["CH4", "CH6"]
 links:
   realizes: ["NFR-07"]

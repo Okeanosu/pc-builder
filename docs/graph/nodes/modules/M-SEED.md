@@ -2,7 +2,7 @@
 id: M-SEED
 type: module
 title: "Dữ liệu mẫu: danh mục, thương hiệu, khoảng 250 sản phẩm, benchmark, trọng số"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-DB"]

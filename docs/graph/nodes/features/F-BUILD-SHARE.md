@@ -2,7 +2,7 @@
 id: F-BUILD-SHARE
 type: feature
 title: "Lưu, chia sẻ và nhân bản cấu hình"
-status: in-progress
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["FR-10", "UC-06"]

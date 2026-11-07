@@ -2,7 +2,7 @@
 id: NFR-06
 type: requirement
 title: "Giao diện tiếng Việt, đáp ứng đa kích thước màn hình và đạt WCAG AA"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

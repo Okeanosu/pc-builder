@@ -8,7 +8,7 @@ links:
   realizes: ["NFR-10"]
   decidedBy: ["ADR-001"]
 code: ["packages/shared/src/**"]
-tests: []
+tests: ["apps/api/src/lib/products.test.ts"]
 diagrams: []
 ---
 

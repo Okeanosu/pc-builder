@@ -2,13 +2,13 @@
 id: ALG-FC
 type: algorithm
 title: "Forward Checking trong lúc gán biến"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-CSP"]
-code: ["packages/engine/src/**"]
-tests: ["packages/engine/src/**/*.test.ts"]
+code: ["packages/engine/src/search.ts"]
+tests: ["packages/engine/src/strategies.test.ts", "packages/engine/src/solve.test.ts"]
 diagrams: []
 ---
 

@@ -2,7 +2,7 @@
 id: M-ENGINE
 type: module
 title: "Package @pc/engine: Optimization Engine thuần TypeScript"
-status: planned
+status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-SHARED", "ALG-CSP", "ALG-MCKP", "ALG-SCORING"]

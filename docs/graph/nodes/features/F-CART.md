@@ -2,7 +2,7 @@
 id: F-CART
 type: feature
 title: "Giỏ hàng (khách vãng lai ở Redis, người dùng ở DB, gộp khi đăng nhập)"
-status: in-progress
+status: done
 chapters: ["CH4"]
 links:
   realizes: ["FR-04", "UC-08"]

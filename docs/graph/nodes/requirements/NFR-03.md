@@ -2,7 +2,7 @@
 id: NFR-03
 type: requirement
 title: "Bảo mật ứng dụng web và xác thực"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

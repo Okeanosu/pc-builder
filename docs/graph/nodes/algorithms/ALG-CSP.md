@@ -2,14 +2,14 @@
 id: ALG-CSP
 type: algorithm
 title: "Mô hình CSP và Backtracking với thứ tự biến MRV"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-AC3", "ALG-FC", "ALG-BNB"]
   decidedBy: ["ADR-004"]
-code: ["packages/engine/src/solver/**"]
-tests: ["packages/engine/src/solver/**/*.test.ts"]
+code: ["packages/engine/src/domains.ts", "packages/engine/src/search.ts", "packages/engine/src/solver.ts", "packages/engine/src/bruteforce.ts"]
+tests: ["packages/engine/src/solve.test.ts", "packages/engine/src/solve.infeasible.test.ts", "packages/engine/src/strategies.test.ts", "packages/engine/src/domains.test.ts"]
 diagrams: []
 ---
 

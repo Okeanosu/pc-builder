@@ -2,13 +2,13 @@
 id: ALG-SCORING
 type: algorithm
 title: "Chuẩn hóa điểm hiệu năng theo danh mục và mục đích"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["E-BENCHMARK"]
-code: ["packages/engine/src/scoring/**"]
-tests: ["packages/engine/src/scoring/**/*.test.ts"]
+code: ["packages/engine/src/scoring.ts", "packages/engine/src/profiles.ts"]
+tests: ["packages/engine/src/scoring.test.ts"]
 diagrams: []
 ---
 

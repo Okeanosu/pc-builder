@@ -2,7 +2,7 @@
 id: NFR-05
 type: requirement
 title: "Tính đúng đắn dữ liệu: AI không được bịa linh kiện hoặc giá"
-status: planned
+status: done
 chapters: ["CH2"]
 code: []
 tests: []

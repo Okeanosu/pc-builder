@@ -2,7 +2,7 @@
 id: F-CATALOG
 type: feature
 title: "Danh mục sản phẩm, lọc theo thông số JSONB và trang chi tiết"
-status: in-progress
+status: done
 chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-01", "FR-02", "UC-01"]
