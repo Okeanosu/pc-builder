@@ -2,10 +2,10 @@
 
 import { MessagesSquare, PanelsTopLeft } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WorkshopSurface } from '@/components/layout/WorkshopSurface';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { latestBuilds, useChatStore } from '@/stores/chat';
+import { attachChatView, latestBuilds, useChatStore } from '@/stores/chat';
 import { BuildCompare } from './BuildCompare';
 import { ChatPanel } from './ChatPanel';
 import { useHeaderOffset } from './useHeaderOffset';
@@ -24,24 +24,32 @@ function useCompareState() {
   return { builds: latestBuilds(messages), selectedBuildId, pending: Boolean(pending) };
 }
 
-/** Sends `?q=` once after history has loaded, then drops it from the URL so a reload does not resend. */
+/** The `?q=` being handled; module-level so a remount before the URL update lands cannot send it twice. */
+let handledQuery: string | null = null;
+
+/** Drops `?q=` from the URL first, then sends it once history has loaded, so neither a reload nor a remount resends. */
 function useAutoSendQuery() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const sent = useRef(false);
   const q = params.get('q')?.trim();
   useEffect(() => {
-    if (!q || sent.current) return;
-    sent.current = true;
+    if (!q) {
+      handledQuery = null;
+      return;
+    }
+    if (handledQuery === q) return;
+    handledQuery = q;
+    router.replace(pathname, { scroll: false });
     const { init, send } = useChatStore.getState();
     void init().then(() => send(q));
-    router.replace(pathname, { scroll: false });
   }, [q, router, pathname]);
 }
 
 export function AdvisorWorkspace() {
   useAutoSendQuery();
+  // Leaving the page stops a running answer; arriving from the widget keeps it (see attachChatView).
+  useEffect(() => attachChatView(), []);
   const offset = useHeaderOffset();
   const [tab, setTab] = useState<'chat' | 'builds'>('chat');
   const { builds, selectedBuildId, pending } = useCompareState();

@@ -205,6 +205,20 @@ interface ChatState {
 
 let controller: AbortController | null = null;
 let inflightInit: Promise<void> | null = null;
+let detachTimer: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Called by the /advisor page on mount; the returned function on unmount stops the running answer.
+ * The stop waits one tick so a StrictMode remount or an immediate re-attach keeps the stream alive.
+ * The widget does not attach, so closing it never stops an answer.
+ */
+export function attachChatView(): () => void {
+  clearTimeout(detachTimer);
+  return () => {
+    clearTimeout(detachTimer);
+    detachTimer = setTimeout(() => controller?.abort(), 0);
+  };
+}
 
 export const useChatStore = create<ChatState>((set, get) => {
   const patchAssistant = (id: string, fn: (m: AssistantMessage) => AssistantMessage) =>
@@ -217,10 +231,12 @@ export const useChatStore = create<ChatState>((set, get) => {
     set({ sessionId: id });
   };
 
-  const ensureSession = async (): Promise<string> => {
+  const ensureSession = async (signal: AbortSignal): Promise<string> => {
     const current = get().sessionId;
     if (current) return current;
     const created = await transport.createSession();
+    // A reset or stop during creation means this session is no longer wanted; do not resurrect it.
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
     adoptSession(created.id);
     set({ mode: created.mode });
     return created.id;
@@ -241,7 +257,7 @@ export const useChatStore = create<ChatState>((set, get) => {
       if (event.type === 'done') set({ mode: event.mode });
     };
     const sendOnce = async () => {
-      const sessionId = await ensureSession();
+      const sessionId = await ensureSession(signal);
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
       await transport.sendMessage(sessionId, text, { signal, onEvent });
     };
@@ -251,6 +267,65 @@ export const useChatStore = create<ChatState>((set, get) => {
       if (!isGone(err) || signal.aborted) throw err;
       adoptSession(null);
       await sendOnce();
+    }
+  };
+
+  /** One turn: appends `user` (unless re-sending an existing message) and a streaming assistant reply. */
+  const startTurn = async (text: string, user: UserMessage | null) => {
+    const assistantId = localId('a');
+    const assistant: AssistantMessage = {
+      id: assistantId,
+      role: 'assistant',
+      text: '',
+      builds: [],
+      products: [],
+      tools: [],
+      streaming: true,
+      mode: null,
+      error: null,
+      stopped: false,
+    };
+    controller?.abort();
+    const own = new AbortController();
+    controller = own;
+    set((s) => ({
+      messages: user ? [...s.messages, user, assistant] : [...s.messages, assistant],
+      status: 'streaming',
+    }));
+
+    try {
+      await authSettled();
+      await runTurn(assistantId, text, own.signal);
+      patchAssistant(assistantId, (m) => ({
+        ...m,
+        streaming: false,
+        tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
+      }));
+      if (controller === own) set({ status: 'idle' });
+    } catch (err) {
+      if (own.signal.aborted || isAbort(err)) {
+        patchAssistant(assistantId, (m) => ({
+          ...m,
+          streaming: false,
+          stopped: true,
+          tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
+        }));
+        if (controller === own) set({ status: 'idle' });
+        return;
+      }
+      const message =
+        err instanceof ChatStreamError || err instanceof ApiError
+          ? err.message
+          : 'Trợ lý chưa trả lời được. Gửi lại tin nhắn để thử lần nữa.';
+      patchAssistant(assistantId, (m) => ({
+        ...m,
+        streaming: false,
+        error: message,
+        tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
+      }));
+      if (controller === own) set({ status: 'error' });
+    } finally {
+      if (controller === own) controller = null;
     }
   };
 
@@ -291,69 +366,17 @@ export const useChatStore = create<ChatState>((set, get) => {
     async send(raw) {
       const text = raw.trim();
       if (!text || get().status === 'streaming') return;
-      const assistantId = localId('a');
-      const user: UserMessage = { id: localId('u'), role: 'user', text };
-      const assistant: AssistantMessage = {
-        id: assistantId,
-        role: 'assistant',
-        text: '',
-        builds: [],
-        products: [],
-        tools: [],
-        streaming: true,
-        mode: null,
-        error: null,
-        stopped: false,
-      };
-      controller?.abort();
-      const own = new AbortController();
-      controller = own;
-      set((s) => ({ messages: [...s.messages, user, assistant], status: 'streaming' }));
-
-      try {
-        await authSettled();
-        await runTurn(assistantId, text, own.signal);
-        patchAssistant(assistantId, (m) => ({
-          ...m,
-          streaming: false,
-          tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
-        }));
-        if (controller === own) set({ status: 'idle' });
-      } catch (err) {
-        if (own.signal.aborted || isAbort(err)) {
-          patchAssistant(assistantId, (m) => ({
-            ...m,
-            streaming: false,
-            stopped: true,
-            tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
-          }));
-          if (controller === own) set({ status: 'idle' });
-          return;
-        }
-        const message =
-          err instanceof ChatStreamError || err instanceof ApiError
-            ? err.message
-            : 'Trợ lý chưa trả lời được. Gửi lại tin nhắn để thử lần nữa.';
-        patchAssistant(assistantId, (m) => ({
-          ...m,
-          streaming: false,
-          error: message,
-          tools: m.tools.map((t) => ({ ...t, status: 'done' as const })),
-        }));
-        if (controller === own) set({ status: 'error' });
-      } finally {
-        if (controller === own) controller = null;
-      }
+      await startTurn(text, { id: localId('u'), role: 'user', text });
     },
 
+    // Only the latest failed answer is retried, in place: the user's message stays and is not repeated.
+    // The server does store the re-sent text as a second user row; history shows it twice after a reload.
     async retry(assistantId) {
       const { messages, status } = get();
-      if (status === 'streaming') return;
-      const idx = messages.findIndex((m) => m.id === assistantId);
-      const user = messages[idx - 1];
-      if (idx < 1 || user?.role !== 'user') return;
-      set({ messages: messages.filter((_, i) => i !== idx && i !== idx - 1) });
-      await get().send(user.text);
+      const user = messages.at(-2);
+      if (status === 'streaming' || messages.at(-1)?.id !== assistantId || user?.role !== 'user') return;
+      set({ messages: messages.slice(0, -1) });
+      await startTurn(user.text, null);
     },
 
     stop() {

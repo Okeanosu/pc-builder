@@ -8,6 +8,7 @@ import { useAuthStore } from './auth';
 import {
   type AssistantMessage,
   applyChatEvent,
+  attachChatView,
   CHAT_SESSION_KEY,
   doneLabel,
   historyToMessages,
@@ -281,5 +282,99 @@ describe('useChatStore', () => {
     release();
     await first;
     expect(transport.sendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not adopt a session that was created after a reset', async () => {
+    let finishCreate: () => void = () => {};
+    const transport = fakeTransport({
+      createSession: vi.fn(
+        () => new Promise<ChatSessionDTO>((resolve) => (finishCreate = () => resolve(session('orphan')))),
+      ),
+    });
+    setChatTransport(transport);
+    const pending = useChatStore.getState().send('hi');
+    await vi.waitFor(() => expect(transport.createSession).toHaveBeenCalled());
+    useChatStore.getState().reset();
+    finishCreate();
+    await pending;
+    expect(useChatStore.getState().sessionId).toBeNull();
+    expect(localStorage.getItem(CHAT_SESSION_KEY)).toBeNull();
+    expect(transport.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('retry() resends the same text without duplicating the user message', async () => {
+    let calls = 0;
+    setChatTransport(
+      fakeTransport({
+        sendMessage: vi.fn(async (_sid: string, _t: string, { onEvent }) => {
+          calls += 1;
+          if (calls === 1) throw new ChatStreamError('NETWORK', 'Mất mạng');
+          for (const e of REPLY) onEvent(e);
+        }),
+      }),
+    );
+    await useChatStore.getState().send('game 25 triệu');
+    const failed = useChatStore.getState().messages[1] as AssistantMessage;
+    expect(failed.error).toBe('Mất mạng');
+    await useChatStore.getState().retry(failed.id);
+    const { messages, status } = useChatStore.getState();
+    expect(status).toBe('idle');
+    expect(messages.map((m) => m.role)).toEqual(['user', 'assistant']);
+    expect(messages.filter((m) => m.role === 'user')).toHaveLength(1);
+    expect((messages[1] as AssistantMessage).error).toBeNull();
+    expect((messages[1] as AssistantMessage).text).toBe('Đây là 3 cấu hình phù hợp.');
+  });
+
+  it('retry() only acts on the latest answer', async () => {
+    const transport = fakeTransport({
+      sendMessage: vi.fn(async () => {
+        throw new ChatStreamError('NETWORK', 'Mất mạng');
+      }),
+    });
+    setChatTransport(transport);
+    await useChatStore.getState().send('một');
+    const first = useChatStore.getState().messages[1]!.id;
+    await useChatStore.getState().send('hai');
+    await useChatStore.getState().retry(first);
+    expect(useChatStore.getState().messages).toHaveLength(4);
+    expect(transport.sendMessage).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('attachChatView', () => {
+  function hangingTransport() {
+    return fakeTransport({
+      sendMessage: vi.fn(
+        (_sid: string, _t: string, { signal }: { onEvent: (e: ChatEvent) => void; signal?: AbortSignal }) =>
+          new Promise<void>((_resolve, reject) => {
+            signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+          }),
+      ),
+    });
+  }
+
+  it('stops the running answer once the page view is gone', async () => {
+    const transport = hangingTransport();
+    setChatTransport(transport);
+    const detach = attachChatView();
+    const pending = useChatStore.getState().send('hi');
+    await vi.waitFor(() => expect(transport.sendMessage).toHaveBeenCalled());
+    detach();
+    await pending;
+    expect((useChatStore.getState().messages[1] as AssistantMessage).stopped).toBe(true);
+  });
+
+  it('keeps the answer when the view re-attaches right away (remount, widget hand-off)', async () => {
+    const transport = hangingTransport();
+    setChatTransport(transport);
+    const detach = attachChatView();
+    void useChatStore.getState().send('hi');
+    await vi.waitFor(() => expect(transport.sendMessage).toHaveBeenCalled());
+    detach();
+    const detachAgain = attachChatView();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(useChatStore.getState().status).toBe('streaming');
+    detachAgain();
+    await vi.waitFor(() => expect(useChatStore.getState().status).toBe('idle'));
   });
 });

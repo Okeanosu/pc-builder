@@ -80,8 +80,15 @@ function useBuilderBootstrap() {
         try {
           const p = await store.getState().add(addId);
           toast({ tone: 'success', title: 'Đã thêm vào cấu hình', description: p.name });
-        } catch {
-          toast({ tone: 'error', title: 'Không thêm được sản phẩm', description: 'Sản phẩm không còn bán.' });
+        } catch (err) {
+          toast({
+            tone: 'error',
+            title: 'Không thêm được sản phẩm',
+            description:
+              err instanceof ApiError && err.status === 404
+                ? 'Sản phẩm này không còn bán. Chọn món khác trong danh sách.'
+                : 'Không kết nối được máy chủ. Thử tải lại trang.',
+          });
         }
       }
       if (buildId || addId) router.replace('/builder', { scroll: false });
@@ -92,7 +99,7 @@ function useBuilderBootstrap() {
   return ready;
 }
 
-function BudgetInput() {
+function BudgetInput({ disabled }: { disabled: boolean }) {
   const budget = useBuilderStore((s) => s.budget);
   const setBudget = useBuilderStore((s) => s.setBudget);
   return (
@@ -107,6 +114,7 @@ function BudgetInput() {
           setBudget(digits ? Number(digits) : null);
         }}
         trailing="₫"
+        disabled={disabled}
       />
     </Field>
   );
@@ -209,9 +217,10 @@ export function BuilderWorkspace() {
                 value={purpose}
                 onValueChange={(v) => setPurpose(v as Purpose)}
                 options={PURPOSE_OPTIONS}
+                disabled={busy}
               />
             </Field>
-            <BudgetInput />
+            <BudgetInput disabled={busy} />
           </div>
         </div>
 

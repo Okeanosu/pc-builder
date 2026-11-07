@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/cn';
 import { doneLabel, type ToolChip } from '@/stores/chat';
+import { prefersReducedMotion } from './useSmoothText';
 
 const runningLabel = (label: string) => (/(…|\.\.\.)\s*$/u.test(label) ? label : `${label}…`);
 
@@ -12,7 +13,7 @@ const MIN_RUNNING_MS = 700;
 
 export function ToolStatusChip({ chip, className }: { chip: ToolChip; className?: string }) {
   // A chip that appeared live keeps its spinner briefly, so instant tool calls are still visible.
-  const [bornRunning] = useState(chip.status === 'running');
+  const [bornRunning] = useState(() => chip.status === 'running' && !prefersReducedMotion());
   const [held, setHeld] = useState(bornRunning);
   useEffect(() => {
     if (!bornRunning) return;

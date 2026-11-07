@@ -98,26 +98,25 @@ export function BuildCard({ build, selected, onSelect, index = 0, className, sty
       </ul>
 
       <div className="mt-auto flex flex-col gap-2 pt-1">
-        <div className="flex gap-2">
-          <Button asChild size="sm" className="flex-1">
+        <div className="grid gap-2 @min-[30rem]:grid-cols-2">
+          <Button asChild size="sm">
             <Link href={`/builder?build=${encodeURIComponent(build.id)}`}>
               <Wrench aria-hidden />
               Mở trong Customizer
             </Link>
           </Button>
           <Button
-            size="icon-sm"
+            size="sm"
             variant="secondary"
-            aria-label="Thêm cả bộ vào giỏ"
-            title="Thêm cả bộ vào giỏ"
             loading={addToCart.isPending}
             onClick={() => addToCart.mutate(build)}
           >
             {!addToCart.isPending && <ShoppingCart aria-hidden />}
+            Thêm cả bộ vào giỏ
           </Button>
         </div>
-        <div className="flex gap-1">
-          <Button asChild size="sm" variant="ghost" className="flex-1 text-muted hover:text-fg">
+        <div className="grid grid-cols-2 gap-1">
+          <Button asChild size="sm" variant="ghost" className="px-2 text-muted hover:text-fg">
             <a href={quotePdfUrl(build.id)} target="_blank" rel="noopener noreferrer">
               <FileDown aria-hidden />
               Báo giá PDF
@@ -126,7 +125,7 @@ export function BuildCard({ build, selected, onSelect, index = 0, className, sty
           <Button
             size="sm"
             variant="ghost"
-            className="flex-1 text-muted hover:text-fg"
+            className="px-2 text-muted hover:text-fg"
             onClick={() => void copyShareLink(build.id)}
           >
             <Link2 aria-hidden />

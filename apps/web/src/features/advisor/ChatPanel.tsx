@@ -138,7 +138,7 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
             <Welcome compact={compact} onPick={sendAndFollow} />
           ) : (
             <div className="flex flex-col gap-6">
-              {messages.map((m) => (
+              {messages.map((m, i) => (
                 <ChatMessage
                   key={m.id}
                   message={m}
@@ -146,10 +146,14 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
                   selectedBuildId={selectedBuildId}
                   onSelectBuild={selectBuild}
                   onShowBuilds={onShowBuilds}
-                  onRetry={(id) => {
-                    stick.current = true;
-                    void retry(id);
-                  }}
+                  onRetry={
+                    i === messages.length - 1
+                      ? (id) => {
+                          stick.current = true;
+                          void retry(id);
+                        }
+                      : undefined
+                  }
                 />
               ))}
             </div>
