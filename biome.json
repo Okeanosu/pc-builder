@@ -15,7 +15,8 @@
       "!docs/graph/out",
       "!**/drizzle/meta",
       "!**/*.mmd",
-      "!**/*.md"
+      "!**/*.md",
+      "!docs/presentation"
     ]
   },
   "formatter": {

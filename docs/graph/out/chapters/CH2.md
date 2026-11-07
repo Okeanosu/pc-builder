@@ -86,7 +86,7 @@ Tổng cộng **45** node thuộc chương này.
 
 ### FR-01 — Duyệt danh mục linh kiện và lọc theo thông số kỹ thuật động
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (duyệt danh mục linh kiện, xem thông số chi tiết) và mục 3.1 (JSONB + GIN).
 
@@ -96,7 +96,7 @@ Tiêu chí chấp nhận: lọc theo thông số trả kết quả đúng và d�
 
 ### FR-02 — Xem chi tiết sản phẩm với bảng thông số và điểm benchmark
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (xem thông số chi tiết).
 
@@ -104,7 +104,7 @@ Trang chi tiết hiển thị ảnh, giá (giá gốc / giá khuyến mại), t�
 
 ### FR-03 — Đăng ký, đăng nhập và phân quyền theo vai trò
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.2 (JWT, Role-based Access Control) và nội dung 2 (module Xác thực, Phân quyền).
 
@@ -112,7 +112,7 @@ Hệ thống có ba vai trò: khách hàng (CUSTOMER), nhân viên (STAFF) và q
 
 ### FR-04 — Giỏ hàng cho khách vãng lai và khách đã đăng nhập
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (giỏ hàng) và mục 3.2 (Redis quản lý giỏ hàng tạm).
 
@@ -120,7 +120,7 @@ Giỏ hàng cho phép thêm, sửa số lượng, xóa sản phẩm và **thêm 
 
 ### FR-05 — Đặt hàng linh kiện lẻ và đơn lắp ráp nguyên bộ
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (đặt hàng; xử lý trọn vẹn vòng đời đơn hàng, linh kiện lẻ và đơn lắp ráp nguyên bộ) và nội dung 4.
 
@@ -128,7 +128,7 @@ Có hai loại đơn: RETAIL (linh kiện lẻ) và BUILD (nguyên bộ, cộng 
 
 ### FR-06 — Thanh toán VietQR động và tự động xác nhận
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.2 (Cổng thanh toán VietQR động, tự động kiểm tra và xác nhận trạng thái thanh toán đơn hàng).
 
@@ -136,7 +136,7 @@ Mỗi đơn sinh một mã VietQR có đúng số tiền và nội dung chuyển
 
 ### FR-07 — AI PC Advisor: chatbot tiếng Việt tư vấn cấu hình bằng ngôn ngữ tự nhiên
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (Smart PC Builder: người dùng nhập mong muốn, ngân sách, mục đích → đề xuất 2-3 cấu hình tối ưu), mở rộng theo spec §1 bằng hội thoại.
 
@@ -144,7 +144,7 @@ Người dùng chat tự nhiên ("chơi Valorant, edit video nhẹ, tầm 25 tri
 
 ### FR-08 — Gợi ý 2-3 cấu hình tối ưu theo ngân sách và mục đích (Smart PC Builder)
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.1 (CSP, MCKP), 3.4 (Công cụ "Gợi ý cấu hình PC thông minh") và nội dung 4 (thuật toán Backtracking & Forward Checking).
 
@@ -152,7 +152,7 @@ Từ ngân sách tối đa và mục đích (Chơi game / Đồ họa / AI / Vă
 
 ### FR-09 — Lắp ráp PC tương tác với kiểm tra tương thích thời gian thực
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (Interactive PC Customizer) và nội dung 3-4 (bộ quy tắc Socket CPU-Mainboard, chuẩn RAM, công suất PSU, kích thước Case).
 
@@ -160,13 +160,13 @@ Người dùng tự chọn từng linh kiện vào 8 slot; hệ thống kiểm t
 
 ### FR-10 — Lưu và chia sẻ cấu hình PC
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 Cấu hình (từ chatbot, form hoặc customizer) được lưu thành bản ghi `builds` kèm điểm hiệu năng, phân bổ ngân sách, công suất ước tính và cảnh báo. Mỗi cấu hình có đường dẫn chia sẻ `/builds/[id]` xem được không cần đăng nhập, có thể nhân bản để chỉnh sửa tiếp hoặc mua cả bộ.
 
 ### FR-11 — Xuất báo giá cấu hình dạng PDF
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.2 (tích hợp thư viện xuất báo giá cấu hình dạng file PDF chuyên nghiệp).
 
@@ -174,7 +174,7 @@ Từ một cấu hình hoặc giỏ hàng, người dùng tải file PDF báo gi
 
 ### FR-12 — Quản trị sản phẩm với form schema động (JSONB)
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (Admin: Quản lý danh mục linh kiện với Form Schema động - PostgreSQL JSONB).
 
@@ -182,7 +182,7 @@ Admin thêm/sửa/ẩn sản phẩm; form nhập thông số được sinh từ 
 
 ### FR-13 — Quản trị tồn kho và bảng điểm benchmark
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (theo dõi biến động tồn kho thời gian thực và bảng điểm benchmark phần cứng).
 
@@ -190,7 +190,7 @@ Admin/nhân viên nhập kho, điều chỉnh tồn và xem lịch sử biến �
 
 ### FR-14 — Quản trị ma trận trọng số thuật toán và hệ số ưu tiên thương mại
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (Quản lý Thuật toán Cấu hình: ma trận trọng số phân bổ ngân sách theo từng tác vụ và hệ số ưu tiên thương mại) và nội dung 6 (hiệu chỉnh trọng số theo phản hồi).
 
@@ -198,7 +198,7 @@ Admin chỉnh ma trận trọng số `w_purpose[category]` và khoảng phân b�
 
 ### FR-15 — Quản trị đơn hàng và vòng đời đơn
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (xử lý trọn vẹn vòng đời đơn hàng).
 
@@ -206,7 +206,7 @@ Admin/nhân viên xem danh sách đơn, lọc theo trạng thái, xem chi tiết
 
 ### FR-16 — Thống kê doanh thu và đối soát thanh toán
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.4 (đối soát thanh toán VietQR tự động và thống kê doanh thu).
 
@@ -214,7 +214,7 @@ Admin xem doanh thu và số đơn theo ngày/tuần/tháng trong khoảng thờ
 
 ### FR-17 — Chế độ dự phòng của chatbot khi không dùng được Gemini
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** spec §1 (thành công = hết quota hoặc mất mạng vẫn chạy được) và anti-goal "demo phụ thuộc hoàn toàn Gemini".
 
@@ -222,7 +222,7 @@ Khi không có API key, Gemini trả lỗi 429/5xx hoặc quá thời gian chờ
 
 ### FR-18 — Chống bán vượt tồn kho khi đặt hàng đồng thời
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.1 (cơ chế xử lý giao dịch đồng thời) và 3.2 (Redis khóa tồn kho chống bán vượt).
 
@@ -230,7 +230,7 @@ Khi nhiều khách cùng đặt món cuối cùng, chỉ một người thành c
 
 ### NFR-01 — Hiệu năng của Optimization Engine: dưới 300 ms (p95) trên catalog khoảng 250 sản phẩm
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ nội dung 5 (đánh giá thời gian phản hồi và hiệu năng của thuật toán gợi ý) và mục 3.1 (tối ưu hiệu năng truy vấn cho công cụ tương tác thời gian thực).
 
@@ -238,7 +238,7 @@ Engine giải xong trong dưới 300 ms ở phân vị 95 với catalog khoảng
 
 ### NFR-02 — Độ trễ hội thoại: một câu hỏi cho ra 3 cấu hình trong tối đa 8 giây
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** spec §1 (tiêu chí thành công của buổi demo bảo vệ).
 
@@ -246,19 +246,19 @@ Từ lúc gửi tin nhắn đến lúc có 3 cấu hình hiển thị không qu�
 
 ### NFR-03 — Bảo mật ứng dụng web và xác thực
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 Mật khẩu băm bcrypt; JWT access 15 phút và refresh token lưu Redis để thu hồi; cookie httpOnly, SameSite=Lax, Secure ở production; helmet và CORS theo whitelist; giới hạn tần suất đăng nhập (5 lần/phút/IP) và chat (10 tin/phút); mọi đầu vào kiểm tra bằng Zod; truy vấn tham số hóa; không ghi log khóa hay mật khẩu; giá luôn tính lại ở server.
 
 ### NFR-04 — Tính sẵn sàng: hệ thống không phụ thuộc cứng vào dịch vụ AI bên ngoài
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 Chatbot phải hoạt động khi dịch vụ Gemini không khả dụng (hết quota, mất mạng, không cấu hình khóa). Mọi chức năng cốt lõi (gợi ý cấu hình, customizer, mua hàng) hoạt động độc lập với Gemini.
 
 ### NFR-05 — Tính đúng đắn dữ liệu: AI không được bịa linh kiện hoặc giá
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** spec §1 (anti-goal).
 
@@ -266,13 +266,13 @@ Mọi linh kiện và giá trong câu trả lời đến từ Engine hoặc cơ 
 
 ### NFR-06 — Giao diện tiếng Việt, đáp ứng đa kích thước màn hình và đạt WCAG AA
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 Toàn bộ nội dung hiển thị bằng tiếng Việt; layout responsive từ 360 px đến 1440 px; độ tương phản đạt WCAG AA, focus rõ, tôn trọng `prefers-reduced-motion`; có skeleton loading và trạng thái rỗng/lỗi có hướng dẫn.
 
 ### NFR-07 — Đóng gói và triển khai bằng Docker trên máy chủ đám mây
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.2 (Đóng gói bằng Docker và Docker Compose, triển khai trên nền tảng máy chủ đám mây) và nội dung 6.
 
@@ -280,11 +280,11 @@ Hạ tầng dev (PostgreSQL, Redis) chạy bằng Docker Compose; bản producti
 
 ### NFR-08 — Khả năng kiểm thử: Engine đạt tối thiểu 90% branch coverage
 
-Trạng thái: **planned**
+Trạng thái: **done**
 
 **Nguồn:** phiếu giao nhiệm vụ mục 3.3 (viết Unit Test cho các quy tắc ràng buộc phần cứng, Integration Test cho luồng đặt hàng và thanh toán) và nội dung 5.
 
-Engine là hàm thuần nên unit test từng luật C01-C14 (đúng/sai/biên), AC-3, forward checking, Branch & Bound; mục tiêu tối thiểu 90% branch coverage cho `packages/engine`. Có integration test cho các luồng đặt hàng - thanh toán trên Postgres/Redis thật và E2E cho 3 luồng cốt lõi.
+Engine là hàm thuần nên unit test từng luật C01-C15 (đúng/sai/biên), AC-3, forward checking, Branch & Bound; mục tiêu tối thiểu 90% branch coverage cho `packages/engine`. Có integration test cho các luồng đặt hàng - thanh toán trên Postgres/Redis thật và E2E cho 3 luồng cốt lõi.
 
 ### NFR-09 — Khả năng truy vết từ yêu cầu đến code và test (Spec-Code Graph)
 
@@ -312,7 +312,7 @@ Thu thập phản hồi của người dùng và kỹ thuật viên lắp ráp b
 
 ### UC-01 — Duyệt và lọc sản phẩm
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-01, FR-02
 
 **Tác nhân:** khách vãng lai, khách hàng.
@@ -323,7 +323,7 @@ Liên kết — realizes: FR-01, FR-02
 
 ### UC-02 — Đăng ký và đăng nhập
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-03
 
 **Tác nhân:** khách vãng lai.
@@ -334,7 +334,7 @@ Liên kết — realizes: FR-03
 
 ### UC-03 — Tư vấn cấu hình qua chat với AI Advisor
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-07, FR-17
 
 **Tác nhân:** khách vãng lai, khách hàng; hệ thống phụ: Gemini.
@@ -345,7 +345,7 @@ Liên kết — realizes: FR-07, FR-17
 
 ### UC-04 — Gợi ý cấu hình theo form
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-08
 
 **Tác nhân:** khách vãng lai, khách hàng.
@@ -356,7 +356,7 @@ Liên kết — realizes: FR-08
 
 ### UC-05 — Lắp ráp PC tương tác
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-09
 
 **Tác nhân:** khách vãng lai, khách hàng.
@@ -367,7 +367,7 @@ Liên kết — realizes: FR-09
 
 ### UC-06 — Lưu và chia sẻ cấu hình
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-10
 
 **Tác nhân:** khách hàng, khách vãng lai.
@@ -376,7 +376,7 @@ Liên kết — realizes: FR-10
 
 ### UC-07 — Xuất báo giá PDF
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-11
 
 **Tác nhân:** khách hàng.
@@ -385,7 +385,7 @@ Liên kết — realizes: FR-11
 
 ### UC-08 — Quản lý giỏ hàng
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-04
 
 **Tác nhân:** khách vãng lai, khách hàng.
@@ -396,7 +396,7 @@ Liên kết — realizes: FR-04
 
 ### UC-09 — Đặt hàng
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-05, FR-18
 
 **Tác nhân:** khách hàng.
@@ -407,7 +407,7 @@ Liên kết — realizes: FR-05, FR-18
 
 ### UC-10 — Thanh toán đơn hàng bằng VietQR
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-06
 
 **Tác nhân:** khách hàng; hệ thống phụ: ngân hàng/SePay.
@@ -418,7 +418,7 @@ Liên kết — realizes: FR-06
 
 ### UC-11 — Theo dõi và hủy đơn hàng
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-05
 
 **Tác nhân:** khách hàng.
@@ -427,7 +427,7 @@ Liên kết — realizes: FR-05
 
 ### UC-12 — Quản lý sản phẩm (admin)
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-12
 
 **Tác nhân:** quản trị viên.
@@ -438,7 +438,7 @@ Liên kết — realizes: FR-12
 
 ### UC-13 — Quản lý tồn kho và benchmark
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-13
 
 **Tác nhân:** quản trị viên, nhân viên.
@@ -447,7 +447,7 @@ Liên kết — realizes: FR-13
 
 ### UC-14 — Cấu hình thuật toán gợi ý
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-14
 
 **Tác nhân:** quản trị viên.
@@ -456,7 +456,7 @@ Liên kết — realizes: FR-14
 
 ### UC-15 — Xử lý đơn hàng
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-15
 
 **Tác nhân:** quản trị viên, nhân viên.
@@ -467,7 +467,7 @@ Liên kết — realizes: FR-15
 
 ### UC-16 — Xem thống kê doanh thu
 
-Trạng thái: **planned**
+Trạng thái: **done**
 Liên kết — realizes: FR-16
 
 **Tác nhân:** quản trị viên.

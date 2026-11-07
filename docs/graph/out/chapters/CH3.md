@@ -16,7 +16,7 @@ Sinh tự động bởi `pnpm graph` — tư liệu thô để viết báo cáo,
 
 **Liên hệ phiếu giao nhiệm vụ:** Nội dung 2 (tuần 3-5): nghiên cứu công nghệ, thiết kế biểu đồ tuần tự, khởi tạo dự án và Docker, mô-đun Xác thực JWT.
 
-Tổng cộng **6** node thuộc chương này.
+Tổng cộng **7** node thuộc chương này.
 
 ## Quyết định thiết kế
 
@@ -58,7 +58,7 @@ flowchart LR
 
   subgraph PKG[packages]
     SHARED[shared<br/>kiểu, Zod, hằng số]
-    ENG[engine<br/>luật C01-C14, CSP, MCKP]
+    ENG[engine<br/>luật C01-C15, CSP, MCKP]
   end
 
   WEB -->|REST / SSE| MW
@@ -135,3 +135,17 @@ Trạng thái: **done**
 **Hệ quả:** bố cục PDF viết bằng mã (không dùng HTML/CSS) nên thay đổi giao diện báo giá tốn công hơn.
 
 **Code:** `apps/api/package.json`
+
+### ADR-016 — JWT có trường typ (access/refresh) và chính sách refresh-race không xóa cookie
+
+Trạng thái: **done**
+
+**Bối cảnh:** (1) Refresh token và access token cùng ký bằng một khóa nên một refresh token bị lộ có thể bị dùng như access token (và ngược lại). (2) Refresh token xoay vòng một lần dùng (jti trong Redis, ADR-006). Khi người dùng mở hai tab, cả hai cùng gọi refresh: tab thắng nhận token mới, tab thua bị 401 vì jti đã bị tiêu thụ. Nếu server xóa cookie khi gặp 401 này thì phiên vừa được tab thắng làm mới bị hủy và người dùng bị đăng xuất oan.
+
+**Quyết định:** access token mang `typ: 'access'`, refresh token mang `typ: 'refresh'`; `optionalAuth` chỉ chấp nhận `typ === 'access'`, `verifyRefreshToken` bắt buộc `typ === 'refresh'` và kiểm tra trước khi tiêu thụ jti (token sai loại không làm mất jti thật). Về refresh-race: token thật nhưng jti đã bị tiêu thụ trả 401 `INVALID_REFRESH_TOKEN` và **giữ nguyên cookie**; chỉ khi token thiếu, giả, hết hạn, sai `typ` hoặc người dùng đã bị xóa mới xóa cả hai cookie. Phía web dùng refresh single-flight (một yêu cầu refresh chung cho mọi lời gọi đồng thời).
+
+**Hệ quả:** token cũ không có `typ` bị từ chối, nên phiên đang chạy phải đăng nhập lại một lần. Tab thua cuộc lấy lại phiên từ cookie của tab thắng ở lần thử sau. Đổi lại cần test cho cả bốn nhánh xóa cookie (`auth.int.test.ts`), và cần `exposedHeaders` CORS khi web gọi chéo nguồn.
+
+**Code:** `apps/api/src/modules/auth/auth.tokens.ts`, `apps/api/src/modules/auth/auth.service.ts`, `apps/api/src/middleware/auth.ts`, `apps/web/src/stores/auth.ts`
+
+**Test:** `apps/api/src/modules/auth/auth.int.test.ts`

@@ -100,6 +100,7 @@ flowchart LR
   M_SHARED["M-SHARED"]:::module
   M_WEB["M-WEB"]:::module
   M_WEB_STATE["M-WEB-STATE"]:::module
+  API_ADMIN_CHATS["API-ADMIN-CHATS"]:::api
   API_ADMIN_INVENTORY["API-ADMIN-INVENTORY"]:::api
   API_ADMIN_ORDERS["API-ADMIN-ORDERS"]:::api
   API_ADMIN_PRODUCTS["API-ADMIN-PRODUCTS"]:::api
@@ -153,6 +154,7 @@ flowchart LR
   R_C12["R-C12"]:::rule
   R_C13["R-C13"]:::rule
   R_C14["R-C14"]:::rule
+  R_C15["R-C15"]:::rule
   SCR_ACCOUNT["SCR-ACCOUNT"]:::screen
   SCR_ADMIN_CHATLOGS["SCR-ADMIN-CHATLOGS"]:::screen
   SCR_ADMIN_DASH["SCR-ADMIN-DASH"]:::screen
@@ -177,6 +179,7 @@ flowchart LR
   T_API_SPECSCHEMA["T-API-SPECSCHEMA"]:::test
   T_API_VIETQR["T-API-VIETQR"]:::test
   T_DEPLOY_SMOKE["T-DEPLOY-SMOKE"]:::test
+  T_E2E_A11Y["T-E2E-A11Y"]:::test
   T_E2E_ADMIN_WEIGHTS["T-E2E-ADMIN-WEIGHTS"]:::test
   T_E2E_CHAT_CHECKOUT["T-E2E-CHAT-CHECKOUT"]:::test
   T_E2E_CUSTOMIZER["T-E2E-CUSTOMIZER"]:::test
@@ -205,6 +208,16 @@ flowchart LR
   ADR_009["ADR-009"]:::decision
   ADR_010["ADR-010"]:::decision
   ADR_011["ADR-011"]:::decision
+  ADR_012["ADR-012"]:::decision
+  ADR_013["ADR-013"]:::decision
+  ADR_014["ADR-014"]:::decision
+  ADR_015["ADR-015"]:::decision
+  ADR_016["ADR-016"]:::decision
+  ADR_017["ADR-017"]:::decision
+  ADR_018["ADR-018"]:::decision
+  ADR_019["ADR-019"]:::decision
+  ADR_020["ADR-020"]:::decision
+  ADR_021["ADR-021"]:::decision
   CH1["CH1"]:::chapter
   CH2["CH2"]:::chapter
   CH3["CH3"]:::chapter
@@ -222,16 +235,27 @@ flowchart LR
   ALG_CSP -->|dependsOn| ALG_FC
   ALG_CSP -->|dependsOn| ALG_BNB
   ALG_CSP -->|decidedBy| ADR_004
+  ALG_CSP -->|decidedBy| ADR_014
+  ALG_CSP -->|decidedBy| ADR_020
   ALG_FC -->|refines| F_ENGINE_CORE
   ALG_FC -->|dependsOn| ALG_CSP
   ALG_MCKP -->|refines| F_ENGINE_CORE
   ALG_MCKP -->|dependsOn| ALG_SCORING
   ALG_MCKP -->|dependsOn| ALG_BNB
   ALG_NLU_FALLBACK -->|refines| F_FALLBACK_NLU
+  ALG_NLU_FALLBACK -->|decidedBy| ADR_018
+  ALG_NLU_FALLBACK -->|decidedBy| ADR_019
   ALG_SCORING -->|refines| F_ENGINE_CORE
   ALG_SCORING -->|dependsOn| E_BENCHMARK
+  ALG_SCORING -->|decidedBy| ADR_012
+  ALG_SCORING -->|decidedBy| ADR_013
   ALG_TOPK -->|refines| F_ENGINE_CORE
   ALG_TOPK -->|dependsOn| ALG_BNB
+  ALG_TOPK -->|decidedBy| ADR_020
+  API_ADMIN_CHATS -->|realizes| F_AI_ADVISOR
+  API_ADMIN_CHATS -->|dependsOn| M_ADMIN
+  API_ADMIN_CHATS -->|dependsOn| E_CHAT_SESSION
+  API_ADMIN_CHATS -->|dependsOn| E_CHAT_MESSAGE
   API_ADMIN_INVENTORY -->|realizes| F_ADMIN_INVENTORY
   API_ADMIN_INVENTORY -->|dependsOn| M_ADMIN
   API_ADMIN_ORDERS -->|realizes| F_ADMIN_ORDERS
@@ -268,6 +292,7 @@ flowchart LR
   E_BRAND -->|refines| M_DB
   E_BUILD -->|refines| M_DB
   E_CART_ITEM -->|refines| M_DB
+  E_CART_ITEM -->|decidedBy| ADR_017
   E_CART -->|refines| M_DB
   E_CATEGORY -->|refines| M_DB
   E_CHAT_MESSAGE -->|refines| M_DB
@@ -275,7 +300,9 @@ flowchart LR
   E_INVENTORY_MOVEMENT -->|refines| M_DB
   E_ORDER_ITEM -->|refines| M_DB
   E_ORDER -->|refines| M_DB
+  E_ORDER -->|decidedBy| ADR_017
   E_PAYMENT -->|refines| M_DB
+  E_PAYMENT -->|decidedBy| ADR_017
   E_PRODUCT -->|refines| M_DB
   E_PURPOSE_WEIGHT -->|refines| M_DB
   E_USER -->|refines| M_DB
@@ -291,6 +318,7 @@ flowchart LR
   F_ADMIN_ORDERS -->|dependsOn| M_ADMIN
   F_ADMIN_ORDERS -->|dependsOn| F_ORDER
   F_ADMIN_ORDERS -->|dependsOn| F_AUTH
+  F_ADMIN_ORDERS -->|decidedBy| ADR_021
   F_ADMIN_ORDERS -->|shownIn| SCR_ADMIN_ORDERS
   F_ADMIN_PRODUCTS -->|realizes| FR_12
   F_ADMIN_PRODUCTS -->|realizes| UC_12
@@ -330,6 +358,8 @@ flowchart LR
   F_AI_ADVISOR -->|decidedBy| ADR_003
   F_AI_ADVISOR -->|decidedBy| ADR_004
   F_AI_ADVISOR -->|decidedBy| ADR_005
+  F_AI_ADVISOR -->|decidedBy| ADR_018
+  F_AI_ADVISOR -->|decidedBy| ADR_019
   F_AI_ADVISOR -->|shownIn| SCR_ADVISOR
   F_AI_ADVISOR -->|shownIn| SCR_HOME
   F_AI_ADVISOR -->|shownIn| SCR_ADMIN_CHATLOGS
@@ -340,6 +370,7 @@ flowchart LR
   F_AUTH -->|dependsOn| M_API_CORE
   F_AUTH -->|dependsOn| E_USER
   F_AUTH -->|decidedBy| ADR_006
+  F_AUTH -->|decidedBy| ADR_016
   F_AUTH -->|shownIn| SCR_AUTH
   F_AUTH -->|shownIn| SCR_ACCOUNT
   F_BUILD_SHARE -->|realizes| FR_10
@@ -354,6 +385,7 @@ flowchart LR
   F_CART -->|dependsOn| E_CART
   F_CART -->|dependsOn| E_CART_ITEM
   F_CART -->|dependsOn| F_BUILD_SHARE
+  F_CART -->|decidedBy| ADR_017
   F_CART -->|shownIn| SCR_CART
   F_CATALOG -->|realizes| FR_01
   F_CATALOG -->|realizes| FR_02
@@ -363,6 +395,7 @@ flowchart LR
   F_CATALOG -->|dependsOn| E_CATEGORY
   F_CATALOG -->|dependsOn| E_BENCHMARK
   F_CATALOG -->|decidedBy| ADR_002
+  F_CATALOG -->|decidedBy| ADR_015
   F_CATALOG -->|shownIn| SCR_CATEGORY
   F_CATALOG -->|shownIn| SCR_PRODUCT
   F_COMPAT_CHECK -->|realizes| FR_09
@@ -371,6 +404,7 @@ flowchart LR
   F_COMPAT_CHECK -->|dependsOn| M_ENGINE
   F_COMPAT_CHECK -->|dependsOn| ALG_CSP
   F_COMPAT_CHECK -->|decidedBy| ADR_001
+  F_COMPAT_CHECK -->|decidedBy| ADR_014
   F_CUSTOMIZER -->|realizes| FR_09
   F_CUSTOMIZER -->|realizes| UC_05
   F_CUSTOMIZER -->|dependsOn| F_COMPAT_CHECK
@@ -396,18 +430,24 @@ flowchart LR
   F_ENGINE_CORE -->|dependsOn| F_COMPAT_CHECK
   F_ENGINE_CORE -->|decidedBy| ADR_001
   F_ENGINE_CORE -->|decidedBy| ADR_004
+  F_ENGINE_CORE -->|decidedBy| ADR_012
+  F_ENGINE_CORE -->|decidedBy| ADR_013
+  F_ENGINE_CORE -->|decidedBy| ADR_014
+  F_ENGINE_CORE -->|decidedBy| ADR_020
   F_FALLBACK_NLU -->|realizes| FR_17
   F_FALLBACK_NLU -->|realizes| NFR_04
   F_FALLBACK_NLU -->|dependsOn| M_CHAT
   F_FALLBACK_NLU -->|dependsOn| ALG_NLU_FALLBACK
   F_FALLBACK_NLU -->|dependsOn| F_ENGINE_CORE
   F_FALLBACK_NLU -->|decidedBy| ADR_005
+  F_FALLBACK_NLU -->|decidedBy| ADR_018
   F_INVENTORY_LOCK -->|realizes| FR_18
   F_INVENTORY_LOCK -->|realizes| UC_09
   F_INVENTORY_LOCK -->|dependsOn| M_ORDERS
   F_INVENTORY_LOCK -->|dependsOn| E_PRODUCT
   F_INVENTORY_LOCK -->|dependsOn| E_INVENTORY_MOVEMENT
   F_INVENTORY_LOCK -->|decidedBy| ADR_007
+  F_INVENTORY_LOCK -->|decidedBy| ADR_017
   F_ORDER -->|realizes| FR_05
   F_ORDER -->|realizes| UC_09
   F_ORDER -->|realizes| UC_11
@@ -416,6 +456,8 @@ flowchart LR
   F_ORDER -->|dependsOn| E_ORDER_ITEM
   F_ORDER -->|dependsOn| F_INVENTORY_LOCK
   F_ORDER -->|dependsOn| F_CART
+  F_ORDER -->|decidedBy| ADR_017
+  F_ORDER -->|decidedBy| ADR_021
   F_ORDER -->|shownIn| SCR_CHECKOUT
   F_ORDER -->|shownIn| SCR_ACCOUNT
   F_PAYMENT_VIETQR -->|realizes| FR_06
@@ -425,6 +467,7 @@ flowchart LR
   F_PAYMENT_VIETQR -->|dependsOn| F_ORDER
   F_PAYMENT_VIETQR -->|dependsOn| F_INVENTORY_LOCK
   F_PAYMENT_VIETQR -->|decidedBy| ADR_008
+  F_PAYMENT_VIETQR -->|decidedBy| ADR_021
   F_PAYMENT_VIETQR -->|shownIn| SCR_PAY
   F_QUOTE_PDF -->|realizes| FR_11
   F_QUOTE_PDF -->|realizes| UC_07
@@ -439,6 +482,9 @@ flowchart LR
   F_RECOMMEND -->|dependsOn| E_PURPOSE_WEIGHT
   F_RECOMMEND -->|dependsOn| E_BUILD
   F_RECOMMEND -->|decidedBy| ADR_004
+  F_RECOMMEND -->|decidedBy| ADR_013
+  F_RECOMMEND -->|decidedBy| ADR_015
+  F_RECOMMEND -->|decidedBy| ADR_020
   F_RECOMMEND -->|shownIn| SCR_HOME
   F_RECOMMEND -->|shownIn| SCR_ADVISOR
   F_SPEC_GRAPH -->|realizes| NFR_09
@@ -456,6 +502,7 @@ flowchart LR
   M_ADMIN -->|dependsOn| E_PURPOSE_WEIGHT
   M_ADMIN -->|dependsOn| E_INVENTORY_MOVEMENT
   M_ADMIN -->|decidedBy| ADR_002
+  M_ADMIN -->|decidedBy| ADR_021
   M_API_CORE -->|realizes| NFR_03
   M_API_CORE -->|dependsOn| M_DB
   M_API_CORE -->|dependsOn| M_SHARED
@@ -464,6 +511,7 @@ flowchart LR
   M_AUTH -->|dependsOn| M_API_CORE
   M_AUTH -->|dependsOn| E_USER
   M_AUTH -->|decidedBy| ADR_002
+  M_AUTH -->|decidedBy| ADR_016
   M_BUILDS -->|dependsOn| M_COMPATIBILITY
   M_BUILDS -->|dependsOn| E_BUILD
   M_BUILDS -->|decidedBy| ADR_002
@@ -471,12 +519,14 @@ flowchart LR
   M_CART -->|dependsOn| E_CART_ITEM
   M_CART -->|dependsOn| M_BUILDS
   M_CART -->|decidedBy| ADR_002
+  M_CART -->|decidedBy| ADR_017
   M_CATALOG -->|dependsOn| M_API_CORE
   M_CATALOG -->|dependsOn| E_PRODUCT
   M_CATALOG -->|dependsOn| E_CATEGORY
   M_CATALOG -->|dependsOn| E_BRAND
   M_CATALOG -->|dependsOn| E_BENCHMARK
   M_CATALOG -->|decidedBy| ADR_002
+  M_CATALOG -->|decidedBy| ADR_015
   M_CHAT_LLM -->|dependsOn| M_API_CORE
   M_CHAT_LLM -->|decidedBy| ADR_003
   M_CHAT_LLM -->|decidedBy| ADR_005
@@ -484,20 +534,27 @@ flowchart LR
   M_CHAT -->|dependsOn| M_RECOMMENDATION
   M_CHAT -->|dependsOn| M_COMPATIBILITY
   M_CHAT -->|dependsOn| M_CATALOG
+  M_CHAT -->|dependsOn| M_BUILDS
   M_CHAT -->|dependsOn| E_CHAT_SESSION
   M_CHAT -->|dependsOn| E_CHAT_MESSAGE
   M_CHAT -->|decidedBy| ADR_002
+  M_CHAT -->|decidedBy| ADR_018
   M_COMPATIBILITY -->|dependsOn| M_ENGINE
   M_COMPATIBILITY -->|dependsOn| M_CATALOG
   M_COMPATIBILITY -->|decidedBy| ADR_002
   M_DB -->|dependsOn| M_SHARED
   M_DB -->|decidedBy| ADR_002
+  M_DB -->|decidedBy| ADR_017
   M_ENGINE -->|dependsOn| M_SHARED
   M_ENGINE -->|dependsOn| ALG_CSP
   M_ENGINE -->|dependsOn| ALG_MCKP
   M_ENGINE -->|dependsOn| ALG_SCORING
   M_ENGINE -->|decidedBy| ADR_001
   M_ENGINE -->|decidedBy| ADR_004
+  M_ENGINE -->|decidedBy| ADR_012
+  M_ENGINE -->|decidedBy| ADR_013
+  M_ENGINE -->|decidedBy| ADR_014
+  M_ENGINE -->|decidedBy| ADR_020
   M_GRAPH_CLI -->|decidedBy| ADR_010
   M_GRAPH_CLI -->|decidedBy| ADR_011
   M_INFRA -->|decidedBy| ADR_001
@@ -507,9 +564,12 @@ flowchart LR
   M_ORDERS -->|dependsOn| E_INVENTORY_MOVEMENT
   M_ORDERS -->|dependsOn| M_CART
   M_ORDERS -->|decidedBy| ADR_002
+  M_ORDERS -->|decidedBy| ADR_017
+  M_ORDERS -->|decidedBy| ADR_021
   M_PAYMENTS -->|dependsOn| E_PAYMENT
   M_PAYMENTS -->|dependsOn| M_ORDERS
   M_PAYMENTS -->|decidedBy| ADR_002
+  M_PAYMENTS -->|decidedBy| ADR_021
   M_QUOTES -->|dependsOn| M_BUILDS
   M_QUOTES -->|dependsOn| M_CART
   M_QUOTES -->|decidedBy| ADR_002
@@ -518,11 +578,13 @@ flowchart LR
   M_RECOMMENDATION -->|dependsOn| E_PURPOSE_WEIGHT
   M_RECOMMENDATION -->|dependsOn| E_BUILD
   M_RECOMMENDATION -->|decidedBy| ADR_002
+  M_RECOMMENDATION -->|decidedBy| ADR_015
   M_SEED -->|dependsOn| M_DB
   M_SHARED -->|realizes| NFR_10
   M_SHARED -->|decidedBy| ADR_001
   M_WEB_STATE -->|dependsOn| M_SHARED
   M_WEB_STATE -->|dependsOn| M_ENGINE
+  M_WEB_STATE -->|decidedBy| ADR_016
   M_WEB -->|dependsOn| M_SHARED
   M_WEB -->|dependsOn| M_ENGINE
   M_WEB -->|dependsOn| M_WEB_STATE
@@ -555,6 +617,9 @@ flowchart LR
   R_C13 -->|dependsOn| ALG_CSP
   R_C14 -->|refines| F_COMPAT_CHECK
   R_C14 -->|dependsOn| ALG_CSP
+  R_C15 -->|refines| F_COMPAT_CHECK
+  R_C15 -->|dependsOn| ALG_CSP
+  R_C15 -->|decidedBy| ADR_014
   T_AI_GOLDEN -->|verifies| NFR_02
   T_AI_GOLDEN -->|verifies| NFR_05
   T_AI_GOLDEN -->|verifies| FR_07
@@ -577,18 +642,24 @@ flowchart LR
   T_API_VIETQR -->|verifies| F_PAYMENT_VIETQR
   T_DEPLOY_SMOKE -->|verifies| NFR_07
   T_DEPLOY_SMOKE -->|verifies| F_DEPLOY
+  T_E2E_A11Y -->|verifies| NFR_06
+  T_E2E_A11Y -->|verifies| F_UI_DESIGN_SYSTEM
+  T_E2E_ADMIN_WEIGHTS -->|verifies| FR_03
   T_E2E_ADMIN_WEIGHTS -->|verifies| FR_14
   T_E2E_ADMIN_WEIGHTS -->|verifies| UC_14
   T_E2E_ADMIN_WEIGHTS -->|verifies| F_ADMIN_WEIGHTS
   T_E2E_CHAT_CHECKOUT -->|verifies| FR_07
+  T_E2E_CHAT_CHECKOUT -->|verifies| FR_04
   T_E2E_CHAT_CHECKOUT -->|verifies| FR_05
   T_E2E_CHAT_CHECKOUT -->|verifies| FR_06
+  T_E2E_CHAT_CHECKOUT -->|verifies| NFR_05
   T_E2E_CHAT_CHECKOUT -->|verifies| UC_03
   T_E2E_CHAT_CHECKOUT -->|verifies| UC_09
   T_E2E_CHAT_CHECKOUT -->|verifies| UC_10
   T_E2E_CUSTOMIZER -->|verifies| FR_09
   T_E2E_CUSTOMIZER -->|verifies| UC_05
   T_E2E_CUSTOMIZER -->|verifies| F_CUSTOMIZER
+  T_E2E_CUSTOMIZER -->|verifies| R_C01
   T_ENGINE_BENCH -->|verifies| NFR_01
   T_ENGINE_BENCH -->|verifies| ALG_CSP
   T_ENGINE_BENCH -->|verifies| ALG_BNB
@@ -608,6 +679,7 @@ flowchart LR
   T_ENGINE_RULES -->|verifies| R_C12
   T_ENGINE_RULES -->|verifies| R_C13
   T_ENGINE_RULES -->|verifies| R_C14
+  T_ENGINE_RULES -->|verifies| R_C15
   T_ENGINE_SCORING -->|verifies| ALG_SCORING
   T_ENGINE_SCORING -->|verifies| ALG_MCKP
   T_ENGINE_SCORING -->|verifies| FR_14
@@ -642,13 +714,16 @@ flowchart LR
   T_INT_ORDER_PAYMENT -->|verifies| FR_06
   T_INT_ORDER_PAYMENT -->|verifies| F_ORDER
   T_INT_ORDER_PAYMENT -->|verifies| F_PAYMENT_VIETQR
+  T_INT_ORDER_PAYMENT -->|verifies| F_CART
   T_INT_OVERSELL -->|verifies| FR_18
   T_INT_OVERSELL -->|verifies| F_INVENTORY_LOCK
   T_INT_RECO -->|verifies| FR_08
   T_INT_RECO -->|verifies| F_RECOMMEND
   T_INT_RECO -->|verifies| NFR_05
   T_PERF_ENGINE -->|verifies| NFR_01
+  T_PERF_ENGINE -->|verifies| NFR_02
   T_PERF_ENGINE -->|verifies| F_RECOMMEND
+  T_PERF_ENGINE -->|verifies| F_AI_ADVISOR
   T_UAT_SUS -->|verifies| NFR_11
   T_UAT_SUS -->|verifies| F_UAT_SURVEY
   UC_01 -->|realizes| FR_01
