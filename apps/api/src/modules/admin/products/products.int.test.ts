@@ -74,6 +74,14 @@ describe('admin product CRUD', () => {
       .set('Authorization', staff);
     expect(low.body.items.map((p: { id: string }) => p.id)).toContain(gpu.id);
     expect(low.body.items.every((p: { stock: number }) => p.stock <= 3)).toBe(true);
+
+    await request(h.app).delete(`/api/admin/products/${gpu.id}`).set('Authorization', staff);
+    const lowActive = await request(h.app)
+      .get('/api/admin/products?lowStock=true&pageSize=100')
+      .set('Authorization', staff);
+    expect(lowActive.body.items.map((p: { id: string }) => p.id)).not.toContain(gpu.id);
+    const summary = await request(h.app).get('/api/admin/stats/summary').set('Authorization', staff);
+    expect(lowActive.body.total).toBe(summary.body.lowStockCount);
   });
 
   it('creates a product with validated specs, logs the opening stock and bumps the catalog version', async () => {

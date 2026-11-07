@@ -90,7 +90,11 @@ export function createAdminProductsService(deps: AppDeps) {
         const like = `%${f.q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
         conds.push(or(ilike(products.name, like), ilike(products.sku, like))!);
       }
-      if (f.lowStock) conds.push(sql`${products.stock} - ${products.reserved} <= ${LOW_STOCK_THRESHOLD}`);
+      if (f.lowStock) {
+        // Same definition as the dashboard counter: sellable products only, unless a status is asked for.
+        conds.push(sql`${products.stock} - ${products.reserved} <= ${LOW_STOCK_THRESHOLD}`);
+        if (!f.status) conds.push(eq(products.status, 'ACTIVE'));
+      }
       const where = conds.length > 0 ? and(...conds) : undefined;
       const [rows, [{ total } = { total: 0 }]] = await Promise.all([
         baseProductQuery(db)

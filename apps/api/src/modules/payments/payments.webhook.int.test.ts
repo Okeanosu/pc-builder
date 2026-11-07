@@ -206,6 +206,12 @@ describe('POST /api/payments/:orderCode/simulate', () => {
     expect(await h.deps.db.select().from(payments)).toMatchObject([
       { provider: 'SIMULATOR', status: 'SUCCESS' },
     ]);
+
+    const again = await request(h.app).post(`/api/payments/${order.code}/simulate`);
+    expect(again.status).toBe(200);
+    expect(again.body.status).toBe('PAID');
+    expect(await h.deps.db.select().from(payments)).toHaveLength(1);
+    expect(await h.getProduct(gpu.id)).toMatchObject({ stock: 4, reserved: 0 });
   });
 
   it('in production only an ADMIN may simulate', async () => {

@@ -43,6 +43,8 @@ export function createPaymentsRouter(deps: AppDeps): Router {
       }
       const order = await ordersSvc.findByCode(String(req.params.orderCode));
       if (!order) throw notFound('Đơn hàng');
+      // A repeated click on the demo button must not log a stray transfer against a settled order.
+      if (order.status !== 'PENDING_PAYMENT') return res.json(svc.paymentInfo(order));
       const { amount } = simulateSchema.parse(req.body ?? {});
       const now = deps.now();
       await svc.processTransfer(

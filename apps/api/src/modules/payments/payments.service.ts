@@ -83,33 +83,40 @@ export function createPaymentsService(deps: AppDeps) {
       const code = findOrderCode(content) ?? findOrderCode(t.code ?? '');
       if (!code) return 'NO_ORDER';
 
-      let applied: AppliedTransition | null = null;
-      const outcome = await db.transaction(async (tx): Promise<PaymentOutcome> => {
-        const [order] = await tx.select().from(orders).where(eq(orders.code, code)).for('update');
-        if (!order) return 'NO_ORDER';
-        const status: PaymentOutcome =
-          order.status !== 'PENDING_PAYMENT'
-            ? 'MANUAL_REVIEW'
-            : t.transferAmount >= order.total
-              ? 'PAID'
-              : 'UNDERPAID';
-        const inserted = await tx
-          .insert(payments)
-          .values({
-            orderId: order.id,
-            provider,
-            amount: t.transferAmount,
-            transferContent: content,
-            providerTxnId: String(t.id),
-            raw: body as Record<string, unknown>,
-            status: status === 'PAID' ? 'SUCCESS' : status,
-          })
-          .onConflictDoNothing({ target: payments.providerTxnId })
-          .returning({ id: payments.id });
-        if (inserted.length === 0) return 'DUPLICATE';
-        if (status === 'PAID') applied = await applyTransition(tx, order, 'PAID', { now: deps.now() });
-        return status;
-      });
+      const { outcome, applied } = await db.transaction(
+        async (
+          tx,
+        ): Promise<{
+          outcome: PaymentOutcome;
+          applied: AppliedTransition | null;
+        }> => {
+          const [order] = await tx.select().from(orders).where(eq(orders.code, code)).for('update');
+          if (!order) return { outcome: 'NO_ORDER', applied: null };
+          const status: PaymentOutcome =
+            order.status !== 'PENDING_PAYMENT'
+              ? 'MANUAL_REVIEW'
+              : t.transferAmount >= order.total
+                ? 'PAID'
+                : 'UNDERPAID';
+          const inserted = await tx
+            .insert(payments)
+            .values({
+              orderId: order.id,
+              provider,
+              amount: t.transferAmount,
+              transferContent: content,
+              providerTxnId: String(t.id),
+              raw: body as Record<string, unknown>,
+              status: status === 'PAID' ? 'SUCCESS' : status,
+            })
+            .onConflictDoNothing({ target: payments.providerTxnId })
+            .returning({ id: payments.id });
+          if (inserted.length === 0) return { outcome: 'DUPLICATE', applied: null };
+          const paid =
+            status === 'PAID' ? await applyTransition(tx, order, 'PAID', { now: deps.now() }) : null;
+          return { outcome: status, applied: paid };
+        },
+      );
       if (applied) await afterTransitions(redis, [applied]);
       return outcome;
     },
