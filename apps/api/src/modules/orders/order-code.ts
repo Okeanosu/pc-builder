@@ -17,3 +17,9 @@ export const isOrderCode = (value: string) => ORDER_CODE_EXACT.test(value);
 export function findOrderCode(content: string): string | null {
   return ORDER_CODE_IN_TEXT.exec(content.toUpperCase())?.[0] ?? null;
 }
+
+/** Every distinct order code in the text, in order of appearance (customers sometimes paste a wrong one first). */
+export function findOrderCodes(content: string): string[] {
+  const all = content.toUpperCase().match(new RegExp(ORDER_CODE_IN_TEXT.source, 'g')) ?? [];
+  return [...new Set(all)];
+}

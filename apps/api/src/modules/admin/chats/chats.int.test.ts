@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { createCommerceHarness } from '../../../../test/test-support';
 import { chatMessages, chatSessions } from '../../../db/schema';
-import { createCommerceHarness } from '../../cart/test-support';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());

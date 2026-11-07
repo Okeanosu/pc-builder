@@ -21,7 +21,10 @@ const listQuery = pageQuery.extend({
   q: z.string().trim().max(100).optional(),
 });
 
-export function toAdminPaymentDTO(p: typeof payments.$inferSelect, orderCode: string): AdminPaymentDTO {
+export function toAdminPaymentDTO(
+  p: typeof payments.$inferSelect,
+  orderCode: string | null,
+): AdminPaymentDTO {
   return {
     id: p.id,
     orderCode,
@@ -78,13 +81,30 @@ export function createAdminOrdersRouter(deps: AppDeps): Router {
         await svc.changeStatus(String(req.params.code), status, {
           actorId: actor.id,
           guard: (order: typeof orders.$inferSelect) => {
-            if (order.status === 'PAID' && status === 'CANCELLED' && actor.role !== 'ADMIN') {
+            if (actor.role === 'ADMIN') return;
+            if (order.status === 'PAID' && status === 'CANCELLED') {
               throw new AppError(
                 403,
                 'FORBIDDEN',
                 'Chỉ quản trị viên được hủy đơn đã thanh toán (cần hoàn tiền)',
               );
             }
+            if (order.status === 'PENDING_PAYMENT' && status === 'PAID') {
+              throw new AppError(403, 'FORBIDDEN', 'Chỉ quản trị viên được xác nhận thanh toán thủ công');
+            }
+          },
+          // A hand-confirmed payment still leaves a payments row, so reconciliation and revenue stay traceable.
+          onApplied: async (tx, order, applied) => {
+            if (applied.from !== 'PENDING_PAYMENT' || applied.to !== 'PAID') return;
+            await tx.insert(payments).values({
+              orderId: order.id,
+              provider: 'MANUAL',
+              amount: order.total,
+              transferContent: null,
+              providerTxnId: null,
+              raw: { actorId: actor.id, actorEmail: actor.email, confirmedAt: deps.now().toISOString() },
+              status: 'SUCCESS',
+            });
           },
         }),
       );

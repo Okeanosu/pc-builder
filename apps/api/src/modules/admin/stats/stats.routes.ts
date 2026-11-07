@@ -18,7 +18,11 @@ const MAX_RANGE_DAYS = 731;
 const isoDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((s) => new Date(`${s}T00:00:00Z`).toISOString().startsWith(s), 'Ngày không hợp lệ');
+  .refine((s) => {
+    const d = new Date(`${s}T00:00:00Z`);
+    // Invalid dates (month 13) must not reach toISOString, which throws; rollovers (Feb 30) fail the prefix check.
+    return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(s);
+  }, 'Ngày không hợp lệ');
 
 const revenueQuery = z.object({
   from: isoDate.optional(),
@@ -130,7 +134,7 @@ export function createAdminStatsRouter(deps: AppDeps): Router {
         db
           .select({ p: payments, code: orders.code })
           .from(payments)
-          .innerJoin(orders, eq(orders.id, payments.orderId))
+          .leftJoin(orders, eq(orders.id, payments.orderId))
           .where(where)
           .orderBy(desc(payments.createdAt))
           .limit(q.pageSize)

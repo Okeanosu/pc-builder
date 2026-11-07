@@ -2,8 +2,8 @@ import { ORDER_STATUSES } from '@pc/shared';
 import { eq, sql } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { createCommerceHarness } from '../../../../test/test-support';
 import { chatSessions, orders } from '../../../db/schema';
-import { createCommerceHarness } from '../../cart/test-support';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
@@ -75,6 +75,11 @@ describe('GET /api/admin/stats/revenue', () => {
       .get('/api/admin/stats/revenue?from=2026-11-05&to=2026-11-01')
       .set('Authorization', staff);
     expect(reversed.status).toBe(422);
+    for (const bad of ['from=2026-13-01', 'to=2026-02-30', 'from=2026-00-10']) {
+      const res = await request(h.app).get(`/api/admin/stats/revenue?${bad}`).set('Authorization', staff);
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    }
     const yearly = await request(h.app)
       .get('/api/admin/stats/revenue?groupBy=year')
       .set('Authorization', staff);

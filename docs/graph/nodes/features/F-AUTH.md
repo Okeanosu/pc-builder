@@ -9,7 +9,7 @@ links:
   dependsOn: ["M-AUTH", "M-API-CORE", "E-USER"]
   decidedBy: ["ADR-006"]
   shownIn: ["SCR-AUTH", "SCR-ACCOUNT"]
-code: ["apps/api/src/modules/auth/**", "apps/web/src/features/account/**"]
+code: ["apps/api/src/modules/auth/**", "apps/web/src/features/auth/**", "apps/web/src/features/account/**"]
 tests: ["apps/api/src/modules/auth/**/*.int.test.ts"]
 diagrams: []
 ---

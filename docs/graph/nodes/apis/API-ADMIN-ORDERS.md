@@ -17,4 +17,4 @@ diagrams: []
 - `GET /api/admin/orders/:code` (`AdminOrderDetailDTO`: đơn + email khách + giao dịch)
 - `PATCH /api/admin/orders/:code/status` (`{status}`)
 
-Danh sách có lọc và chuyển trạng thái theo máy trạng thái (`409 INVALID_TRANSITION`); hủy đơn đã thanh toán chỉ ADMIN (STAFF nhận 403).
+Danh sách có lọc và chuyển trạng thái theo máy trạng thái (`409 INVALID_TRANSITION`); hủy đơn đã thanh toán và xác nhận thanh toán thủ công (PENDING_PAYMENT → PAID, ghi `payments` provider MANUAL) chỉ ADMIN (STAFF nhận 403).

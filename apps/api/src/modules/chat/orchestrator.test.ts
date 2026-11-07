@@ -163,7 +163,7 @@ describe('runTurn — AI mode', () => {
     });
     expect(rec.calls).toEqual([{ budget: 25_000_000, purpose: 'gaming' }]);
     expect(res.toolCalls).toHaveLength(1);
-    expect(res.toolCalls[0]).toMatchObject({ name: 'recommend_builds', ok: true });
+    expect(res.toolCalls[0]).toMatchObject({ name: 'recommend_builds', ok: true, buildIds: ['b1', 'b2'] });
   });
 
   it('sends the system prompt, registered tool declarations and the user message to the model', async () => {
@@ -180,6 +180,25 @@ describe('runTurn — AI mode', () => {
     expect(first?.system).toBe(SYSTEM_PROMPT);
     expect(first?.toolNames).toEqual(['recommend_builds']);
     expect(first?.history).toEqual([...history, { role: 'user', parts: [{ text: 'tư vấn giúp em' }] }]);
+  });
+
+  it('merges the new message into a trailing user turn (e.g. after a cancelled turn) so roles alternate', async () => {
+    const llm = fakeLlm([[text('Dạ.')]]);
+    const history: LlmMessage[] = [
+      { role: 'user', parts: [{ text: 'xin chào' }] },
+      { role: 'model', parts: [{ text: 'Chào anh/chị' }] },
+      { role: 'user', parts: [{ text: 'chơi game 25 triệu' }] },
+    ];
+    const snapshot = structuredClone(history);
+    await runTurn(
+      { ...base, history, userText: 'alo, còn đó không' },
+      { llm, tools: registry(recommendTool()), emit: () => {} },
+    );
+    expect(llm.calls[0]?.history).toEqual([
+      ...snapshot.slice(0, 2),
+      { role: 'user', parts: [{ text: 'chơi game 25 triệu' }, { text: 'alo, còn đó không' }] },
+    ]);
+    expect(history).toEqual(snapshot);
   });
 
   it('appends functionCall and functionResponse turns before calling the model again', async () => {

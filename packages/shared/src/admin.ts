@@ -135,12 +135,13 @@ export interface PurposeWeightsDTO {
 
 export interface AdminPaymentDTO {
   id: string;
-  orderCode: string;
+  /** Null for bank transfers that matched no order (status NO_ORDER). */
+  orderCode: string | null;
   provider: string;
   amount: number;
   transferContent: string | null;
   providerTxnId: string | null;
-  /** SUCCESS | UNDERPAID | MANUAL_REVIEW */
+  /** SUCCESS | UNDERPAID | MANUAL_REVIEW | NO_ORDER (provider SEPAY, SIMULATOR or MANUAL) */
   status: string;
   createdAt: string;
 }

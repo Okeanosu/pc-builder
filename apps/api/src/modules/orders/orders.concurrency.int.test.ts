@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { CHECKOUT, createCommerceHarness } from '../cart/test-support';
+import { CHECKOUT, createCommerceHarness } from '../../../test/test-support';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());

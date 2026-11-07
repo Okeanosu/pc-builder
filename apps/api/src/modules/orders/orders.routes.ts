@@ -47,7 +47,7 @@ export function createOrdersRouter(deps: AppDeps): Router {
     handler(async (req, res) => {
       const code = String(req.params.code);
       const order = await svc.findByCode(code);
-      if (!order || !(await svc.isOwner(order, req))) throw notFound('Đơn hàng');
+      if (!order || !svc.isOwner(order, req)) throw notFound('Đơn hàng');
       const dto = await svc.changeStatus(code, 'CANCELLED', {
         actorId: req.user?.id ?? null,
         guard: (locked) => {

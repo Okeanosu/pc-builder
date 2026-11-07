@@ -18,7 +18,6 @@ const preferencesSchema = {
       description: 'Dung lượng ổ cứng tối thiểu (GB, 1TB = 1000).',
     },
     needWifi: { type: 'boolean', description: 'Cần mainboard có Wi-Fi.' },
-    rgb: { type: 'boolean', description: 'Thích linh kiện có đèn RGB.' },
     resolution: { type: 'string', enum: RESOLUTIONS, description: 'Độ phân giải màn hình chơi game.' },
     requireDiscreteGpu: { type: 'boolean', description: 'Bắt buộc có card đồ họa rời.' },
   },
@@ -74,9 +73,20 @@ export const TOOL_DECLARATIONS: LlmToolDecl[] = [
         minPrice: { type: 'integer', minimum: 0, description: 'Giá thấp nhất (VND).' },
         maxPrice: { type: 'integer', minimum: 0, description: 'Giá cao nhất (VND).' },
         filters: {
-          type: 'object',
-          additionalProperties: { type: 'string' },
-          description: 'Lọc theo thông số kỹ thuật, ví dụ {"socket":"AM5","memoryType":"DDR5"}.',
+          type: 'array',
+          description:
+            'Lọc theo thông số kỹ thuật, mỗi phần tử là một cặp {key, value}, ví dụ ' +
+            '[{"key":"socket","value":"AM5"},{"key":"memoryType","value":"DDR5"}]. ' +
+            'Khóa thường dùng: socket, memoryType, chipset, chipsetBrand, vramGB, formFactor, wifi, ' +
+            'type, capacityGB, interface, wattage, color.',
+          items: {
+            type: 'object',
+            properties: {
+              key: { type: 'string', description: 'Tên thông số, ví dụ "socket".' },
+              value: { type: 'string', description: 'Giá trị cần khớp, ví dụ "AM5".' },
+            },
+            required: ['key', 'value'],
+          },
         },
       },
       required: ['category'],

@@ -2,12 +2,12 @@
 id: ALG-NLU-FALLBACK
 type: algorithm
 title: "Bộ phân tích ngôn ngữ tiếng Việt theo luật cho chế độ dự phòng"
-status: planned
+status: done
 chapters: ["CH4", "CH5"]
 links:
   refines: ["F-FALLBACK-NLU"]
-code: ["apps/api/src/modules/chat/nlu/**"]
-tests: ["apps/api/src/modules/chat/nlu/**/*.test.ts"]
+code: ["apps/api/src/modules/chat/fallback/**"]
+tests: ["apps/api/src/modules/chat/fallback/**/*.test.ts"]
 diagrams: []
 ---
 

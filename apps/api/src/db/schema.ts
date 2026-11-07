@@ -10,7 +10,7 @@ import {
   real,
   text,
   timestamp,
-  uniqueIndex,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -181,7 +181,8 @@ export const cartItems = pgTable(
     qty: integer('qty').notNull(),
     buildId: uuid('build_id').references(() => builds.id),
   },
-  (t) => [uniqueIndex('cart_items_cart_product_build_uq').on(t.cartId, t.productId, t.buildId)],
+  // NULLS NOT DISTINCT so retail lines (build_id null) also conflict, which makes ON CONFLICT upserts atomic.
+  (t) => [unique('cart_items_cart_product_build_uq').on(t.cartId, t.productId, t.buildId).nullsNotDistinct()],
 );
 
 export const orders = pgTable(
@@ -190,6 +191,8 @@ export const orders = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     code: text('code').notNull().unique(),
     userId: uuid('user_id').references(() => users.id),
+    /** Anonymous visitor (gid cookie) that placed a guest order; null for account orders. */
+    guestId: text('guest_id'),
     type: orderTypeEnum('type').notNull(),
     status: orderStatusEnum('status').notNull().default('PENDING_PAYMENT'),
     paymentStatus: paymentStatusEnum('payment_status').notNull().default('UNPAID'),
@@ -227,19 +230,22 @@ export const orderItems = pgTable('order_items', {
   buildId: uuid('build_id').references(() => builds.id),
 });
 
-export const payments = pgTable('payments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  orderId: uuid('order_id')
-    .notNull()
-    .references(() => orders.id),
-  provider: text('provider').notNull(),
-  amount: money('amount').notNull(),
-  transferContent: text('transfer_content'),
-  providerTxnId: text('provider_txn_id').unique(),
-  raw: jsonb('raw'),
-  status: text('status').notNull(),
-  createdAt: createdAt(),
-});
+export const payments = pgTable(
+  'payments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** Null for bank transfers that matched no order (kept for manual reconciliation). */
+    orderId: uuid('order_id').references(() => orders.id),
+    provider: text('provider').notNull(),
+    amount: money('amount').notNull(),
+    transferContent: text('transfer_content'),
+    providerTxnId: text('provider_txn_id').unique(),
+    raw: jsonb('raw'),
+    status: text('status').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('payments_status_created_idx').on(t.status, t.createdAt)],
+);
 
 export const chatSessions = pgTable('chat_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),

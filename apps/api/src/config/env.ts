@@ -26,6 +26,10 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   if (env.NODE_ENV === 'production' && env.JWT_ACCESS_SECRET.startsWith('dev-')) {
     throw new Error('JWT secrets must be set in production');
   }
+  // The webhook key is the only thing that stops anyone from marking orders as paid.
+  if (env.NODE_ENV === 'production' && env.SEPAY_API_KEY === 'dev-sepay-key') {
+    throw new Error('SEPAY_API_KEY must be set in production');
+  }
   return env;
 }
 

@@ -2,9 +2,9 @@ import { PURPOSES } from '@pc/shared';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { createCommerceHarness } from '../../../../test/test-support';
 import { purposeWeights } from '../../../db/schema';
 import { getCatalogVersion } from '../../../lib/catalog-version';
-import { createCommerceHarness } from '../../cart/test-support';
 
 const h = createCommerceHarness();
 afterAll(() => h.close());
