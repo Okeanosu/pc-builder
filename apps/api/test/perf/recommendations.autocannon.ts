@@ -32,8 +32,9 @@ let counter = 0;
 function variedBody(): string {
   const i = counter++;
   const purpose = PURPOSES[i % PURPOSES.length]!;
-  // 12M..72M in 10k steps: unique per purpose for the first 24,000 requests.
-  const budget = 12_000_000 + (Math.floor(i / PURPOSES.length) % 6000) * 10_000;
+  // 12M..72M in 10k steps, visited in a scattered order (7919 is coprime with 6000) so even a short run
+  // covers the whole range; unique per purpose for the first 24,000 requests.
+  const budget = 12_000_000 + ((Math.floor(i / PURPOSES.length) * 7919) % 6000) * 10_000;
   const preferences = PREFERENCE_VARIANTS[i % PREFERENCE_VARIANTS.length];
   return JSON.stringify(preferences ? { budget, purpose, preferences } : { budget, purpose });
 }
