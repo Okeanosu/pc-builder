@@ -23,10 +23,9 @@ import { apiErrorMessage } from '../auth/form-errors';
 import { ReorderButton } from '../cart/ReorderButton';
 import { clockOffset, receiptTime } from './clock';
 import { formatCountdown, remainingMs } from './countdown';
-import { bankName, isSettled, paymentPhase } from './payment';
+import { bankName, isSettled, paymentPhase, paymentSimulator } from './payment';
 
 const POLL_MS = 3000;
-const SHOW_SIMULATOR = process.env.NODE_ENV !== 'production';
 
 // Only the first payment view in a document can be the hard load the navigation timing entry describes.
 let documentTimingUsed = false;
@@ -130,6 +129,12 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
   const qc = useQueryClient();
   const authReady = useAuthStore((s) => s.status === 'ready');
   const signedIn = useAuthStore((s) => Boolean(s.user));
+  const role = useAuthStore((s) => s.user?.role);
+  const simulator = paymentSimulator({
+    nodeEnv: process.env.NODE_ENV,
+    role,
+    flag: process.env.NEXT_PUBLIC_PAYMENT_SIMULATOR,
+  });
   const payment = useQuery({
     queryKey: queryKeys.payment(code),
     queryFn: () => api<PaymentInfoDTO>(`/orders/${code}/payment`),
@@ -365,7 +370,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
               <Spinner size="sm" label={null} className="text-accent-ink" />
               Đang chờ ngân hàng xác nhận… tự cập nhật mỗi 3 giây
             </p>
-            {SHOW_SIMULATOR && (
+            {simulator.show && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -373,7 +378,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
                 loading={simulate.isPending}
               >
                 {!simulate.isPending && <FlaskConical aria-hidden />}
-                Giả lập thanh toán (dev)
+                {simulator.label}
               </Button>
             )}
           </div>
