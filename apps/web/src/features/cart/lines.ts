@@ -59,10 +59,10 @@ export function assemblableBuildId(
   return build && isBuildComplete(build, group) ? group.buildId : null;
 }
 
-/** Only for an API that predates `CartDTO.assemblyFee`; the server's value always wins. */
+/** Until the cart has loaded (or for an API that predates `CartDTO.assemblyFee`); the server's value wins. */
 export const DEFAULT_ASSEMBLY_FEE = 200_000;
 
 /** The assembly fee the server will charge for a build order, as reported with the cart. */
-export function cartAssemblyFee(cart: (CartDTO & { assemblyFee?: number }) | undefined): number {
+export function cartAssemblyFee(cart: Pick<CartDTO, 'assemblyFee'> | undefined): number {
   return cart?.assemblyFee ?? DEFAULT_ASSEMBLY_FEE;
 }

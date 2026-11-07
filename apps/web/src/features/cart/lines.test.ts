@@ -1,4 +1,4 @@
-import type { CartItemDTO, ProductSummaryDTO } from '@pc/shared';
+import type { CartDTO, CartItemDTO, ProductSummaryDTO } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
 import { assemblableBuildId, cartAssemblyFee, groupCartLines, isBuildComplete } from './lines';
 
@@ -100,12 +100,12 @@ describe('assemblableBuildId', () => {
 
 describe('cartAssemblyFee', () => {
   it('uses the fee the server charges, carried on the cart', () => {
-    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0, assemblyFee: 350_000 })).toBe(350_000);
-    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0, assemblyFee: 0 })).toBe(0);
+    expect(cartAssemblyFee({ assemblyFee: 350_000 })).toBe(350_000);
+    expect(cartAssemblyFee({ assemblyFee: 0 })).toBe(0);
   });
 
-  it('falls back to the default fee for an older API without the field', () => {
-    expect(cartAssemblyFee({ items: [], subtotal: 0, itemCount: 0 })).toBe(200_000);
+  it('falls back to the default fee before the cart loads or for an older API without the field', () => {
     expect(cartAssemblyFee(undefined)).toBe(200_000);
+    expect(cartAssemblyFee({} as Pick<CartDTO, 'assemblyFee'>)).toBe(200_000);
   });
 });

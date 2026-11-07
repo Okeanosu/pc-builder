@@ -1,4 +1,4 @@
-import { recommendationRequestSchema } from '@pc/shared';
+import { type InfeasibleReason, recommendationRequestSchema } from '@pc/shared';
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/api';
 import {
@@ -135,7 +135,9 @@ describe('infeasibleNotice', () => {
   it('covers the search limit, a fixed-part conflict and unknown reasons', () => {
     expect(infeasibleNotice({ builds: [], infeasibleReason: 'SEARCH_LIMIT' })?.body).toMatch(/thử lại/i);
     expect(infeasibleNotice({ builds: [], infeasibleReason: 'FIXED_PART_CONFLICT' })?.title).toBeTruthy();
-    expect(infeasibleNotice({ builds: [], infeasibleReason: 'SOMETHING_NEW' })?.title).toBe(
+    // A newer server may add a reason before the web knows it.
+    const unknown = 'SOMETHING_NEW' as unknown as InfeasibleReason;
+    expect(infeasibleNotice({ builds: [], infeasibleReason: unknown })?.title).toBe(
       'Chưa tìm được cấu hình phù hợp',
     );
     expect(infeasibleNotice({ builds: [] })?.title).toBe('Chưa tìm được cấu hình phù hợp');
