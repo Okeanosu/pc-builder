@@ -48,7 +48,7 @@ describe('checkCompatibility — full builds', () => {
     });
   });
 
-  it('exposes one rule function per code C01..C14', () => {
+  it('exposes one rule function per code C01..C15', () => {
     expect(Object.keys(RULES).sort()).toEqual(
       [
         'C01',
@@ -65,6 +65,7 @@ describe('checkCompatibility — full builds', () => {
         'C12',
         'C13',
         'C14',
+        'C15',
       ].sort(),
     );
   });
@@ -317,6 +318,46 @@ describe('C13 cpu–gpu balance (gaming, soft)', () => {
     const parts = { cpu: byId('cpu-i3-12100f'), gpu: byId('gpu-4070') };
     expect(hasCode(parts, 'C13', { purpose: 'graphics', catalog: CATALOG })).toBe(false);
     expect(hasCode(parts, 'C13', { purpose: 'gaming' })).toBe(false);
+  });
+});
+
+describe('C15 cpu class vs entry chipset (soft)', () => {
+  const tiers: CompatibilityContext = { catalog: CATALOG };
+  it('warns for a 125 W cpu on an H610 board, with the Vietnamese message', () => {
+    const list = issues({ cpu: byId('cpu-i7-14700k'), mainboard: byId('mb-h610m') });
+    expect(list).toContainEqual({
+      code: 'C15',
+      severity: 'warning',
+      message:
+        'Mainboard H610 phân khúc phổ thông, không tối ưu cho CPU Intel Core i7-14700K (VRM/tính năng hạn chế)',
+      categories: ['mainboard', 'cpu'],
+    });
+  });
+  it('boundary: exactly 105 W passes, 106 W warns (no tier reference)', () => {
+    const board = byId('mb-h610m');
+    expect(hasCode({ cpu: variant('cpu-i5-12400', { tdpW: 105 }), mainboard: board }, 'C15')).toBe(false);
+    expect(has({ cpu: variant('cpu-i5-12400', { tdpW: 106 }), mainboard: board }, 'C15', 'warning')).toBe(
+      true,
+    );
+  });
+  it('warns for a tier-4 cpu when a reference catalog provides tiers, and only then', () => {
+    const parts = { cpu: byId('cpu-i5-13400f'), mainboard: byId('mb-h610m') };
+    expect(has(parts, 'C15', 'warning', tiers)).toBe(true);
+    expect(hasCode(parts, 'C15')).toBe(false);
+    expect(hasCode({ cpu: byId('cpu-i5-12400'), mainboard: byId('mb-h610m') }, 'C15', tiers)).toBe(false);
+  });
+  it('passes a high-end cpu on a mid-range or high-end chipset', () => {
+    expect(hasCode({ cpu: byId('cpu-i7-14700k'), mainboard: byId('mb-b760m-white') }, 'C15', tiers)).toBe(
+      false,
+    );
+    expect(hasCode({ cpu: byId('cpu-i7-14700k'), mainboard: byId('mb-z790') }, 'C15', tiers)).toBe(false);
+  });
+  it('treats A520, A620, H610 and H810 as entry chipsets', () => {
+    const cpu = byId('cpu-r7-7800x3d');
+    for (const chipset of ['A520', 'A620', 'H810']) {
+      expect(has({ cpu, mainboard: variant('mb-b650m-white', { chipset }) }, 'C15', 'warning')).toBe(true);
+    }
+    expect(hasCode({ cpu, mainboard: byId('mb-b650m-white') }, 'C15')).toBe(false);
   });
 });
 

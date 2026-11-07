@@ -29,7 +29,8 @@ export type RuleCode =
   | 'C11'
   | 'C12'
   | 'C13'
-  | 'C14';
+  | 'C14'
+  | 'C15';
 
 export interface CompatibilityIssue {
   code: RuleCode;

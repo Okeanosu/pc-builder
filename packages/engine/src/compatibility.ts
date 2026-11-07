@@ -22,6 +22,7 @@ const RULE_ORDER: RuleCode[] = [
   'C12',
   'C13',
   'C14',
+  'C15',
 ];
 
 /** Runs every rule C01–C14 on a (possibly partial) build. Rules whose parts are missing are skipped. */

@@ -284,3 +284,34 @@ describe('solve — purpose policies', () => {
     expect(office.builds[0]!.warnings.map((w) => w.code)).toContain('C14');
   });
 });
+
+describe('solve — cpu class vs board class', () => {
+  it('no longer puts a high-end cpu on an entry board when a mid-range board fits the budget', () => {
+    // Before C15 the 30M performance build paired the i7-14700K with the H610M.
+    const req: SolveRequest = { budget: 30_000_000, purpose: 'gaming', fixed: { cpu: 'cpu-i7-14700k' } };
+    const performance = solve(req, CATALOG).builds[0]!;
+    expect(performance.parts.mainboard!.id).toBe('mb-b760m-white');
+    expect(performance.warnings.map((w) => w.code)).not.toContain('C15');
+  });
+
+  it('keeps an entry board only when the mid-range one would cost a GPU tier, and flags it with C15', () => {
+    const req: SolveRequest = { budget: 25_000_000, purpose: 'gaming', fixed: { cpu: 'cpu-i7-14700k' } };
+    const result = solve(req, CATALOG);
+    expect(result.builds.length).toBeGreaterThan(0);
+    for (const b of result.builds) {
+      const codes = b.warnings.map((w) => w.code);
+      expect(codes.includes('C15')).toBe(b.parts.mainboard!.id === 'mb-h610m');
+    }
+  });
+
+  it('still allows the pairing (with a C15 warning) when it is the only option', () => {
+    const req: SolveRequest = {
+      budget: 40_000_000,
+      purpose: 'gaming',
+      fixed: { cpu: 'cpu-i7-14700k', mainboard: 'mb-h610m' },
+    };
+    const result = solve(req, CATALOG);
+    expect(result.builds.length).toBeGreaterThan(0);
+    expect(result.builds[0]!.warnings.map((w) => w.code)).toContain('C15');
+  });
+});

@@ -8,7 +8,7 @@ strategies; times are wall-clock per `solve()` call (domain building + search + 
 Node limit: 2,000,000 search nodes per call.
 
 - Machine: Apple M3 · Node v22.20.0 · 2026-11-07
-- full p95 on the 250-product catalog: **14.54 ms** (target < 300 ms) → PASS
+- full p95 on the 250-product catalog: **11.5 ms** (target < 300 ms) → PASS
 - † = at least one run hit the node limit (`stats.capped`): the strategy stopped early, so its time is bounded by
   the cap and its builds may be sub-optimal. "optimal" counts runs whose best build has the same score as `full`.
 
@@ -16,40 +16,40 @@ Node limit: 2,000,000 search nodes per call.
 
 | Catalog | Strategy | p50 ms | p95 ms | mean nodes | optimal |
 | --- | --- | ---: | ---: | ---: | --- |
-| 50 (47) | bruteforce | 39.3 | 51.61 | 1,581,865 | 12/12 |
-| 50 (47) | backtracking | 2.55 | 6.51 | 35,315 | 12/12 |
-| 50 (47) | forward-checking | 1.73 | 10.41 | 29,034 | 12/12 |
-| 50 (47) | full | 0.4 | 1.16 | 296 | 100/100 |
-| 100 (87) | bruteforce | 51.62 | 58.89 | 2,000,000† | 0/12 (capped 12/12) |
-| 100 (87) | backtracking | 146.72 | 206.69 | 1,757,769† | 3/12 (capped 9/12) |
-| 100 (87) | forward-checking | 275.4 | 299.35 | 1,531,640† | 6/12 (capped 6/12) |
-| 100 (87) | full | 0.89 | 1.67 | 893 | 100/100 |
-| 250 (221) | bruteforce | 49.79 | 58.09 | 2,000,000† | 0/12 (capped 12/12) |
-| 250 (221) | backtracking | 189.35 | 205.06 | 2,000,000† | 0/12 (capped 12/12) |
-| 250 (221) | forward-checking | 255.68 | 281.28 | 2,000,000† | 0/12 (capped 12/12) |
-| 250 (221) | full | 6.03 | 14.54 | 7,749 | 100/100 |
-| 500 (443) | bruteforce | 52.01 | 59.82 | 2,000,000† | 0/12 (capped 12/12) |
-| 500 (443) | backtracking | 194.63 | 206.25 | 2,000,000† | 0/12 (capped 12/12) |
-| 500 (443) | forward-checking | 246.11 | 256.9 | 2,000,000† | 0/12 (capped 12/12) |
-| 500 (443) | full | 11.41 | 17.96 | 12,000 | 100/100 |
+| 50 (47) | bruteforce | 38.4 | 57.09 | 1,581,865 | 12/12 |
+| 50 (47) | backtracking | 3.09 | 5.87 | 35,315 | 12/12 |
+| 50 (47) | forward-checking | 1.55 | 9.9 | 29,034 | 12/12 |
+| 50 (47) | full | 0.45 | 1.19 | 300 | 100/100 |
+| 100 (87) | bruteforce | 48.39 | 76.37 | 2,000,000† | 0/12 (capped 12/12) |
+| 100 (87) | backtracking | 127.12 | 184.15 | 1,757,769† | 6/12 (capped 9/12) |
+| 100 (87) | forward-checking | 245.36 | 272.19 | 1,531,640† | 6/12 (capped 6/12) |
+| 100 (87) | full | 1.02 | 1.98 | 973 | 100/100 |
+| 250 (221) | bruteforce | 44.56 | 52.42 | 2,000,000† | 0/12 (capped 12/12) |
+| 250 (221) | backtracking | 171.2 | 193.89 | 2,000,000† | 0/12 (capped 12/12) |
+| 250 (221) | forward-checking | 232.01 | 243.38 | 2,000,000† | 0/12 (capped 12/12) |
+| 250 (221) | full | 6.77 | 11.5 | 8,937 | 100/100 |
+| 500 (443) | bruteforce | 52.77 | 69.11 | 2,000,000† | 0/12 (capped 12/12) |
+| 500 (443) | backtracking | 167.49 | 188.08 | 2,000,000† | 0/12 (capped 12/12) |
+| 500 (443) | forward-checking | 228.83 | 260.32 | 2,000,000† | 0/12 (capped 12/12) |
+| 500 (443) | full | 10.84 | 40.29 | 16,775 | 100/100 |
 
 ## Brute-force search space (gaming 25M domains, incl. "no GPU" where allowed)
 
 | Catalog | domain sizes (cpu × mainboard × ram × gpu × storage × psu × case × cooler) | ∏ | brute-force nodes/ms | full enumeration at that rate |
 | --- | --- | ---: | ---: | ---: |
-| 50 (47) | 5 × 7 × 6 × 7 × 6 × 6 × 4 × 6 | 1.27e+6 | 41,495 | ≈ 31 ms |
-| 100 (87) | 12 × 16 × 11 × 11 × 9 × 9 × 10 × 9 | 1.69e+8 | 38,703 | ≈ 4.4 s |
-| 250 (221) | 29 × 34 × 25 × 32 × 27 × 25 × 27 × 22 | 3.16e+11 | 37,939 | ≈ 2.3 h |
-| 500 (443) | 60 × 74 × 48 × 61 × 46 × 52 × 51 × 51 | 8.09e+13 | 37,009 | ≈ 25.3 days |
+| 50 (47) | 5 × 7 × 6 × 7 × 6 × 6 × 4 × 6 | 1.27e+6 | 42,894 | ≈ 30 ms |
+| 100 (87) | 12 × 16 × 11 × 11 × 9 × 9 × 10 × 9 | 1.69e+8 | 40,970 | ≈ 4.1 s |
+| 250 (221) | 29 × 34 × 25 × 32 × 27 × 25 × 27 × 22 | 3.16e+11 | 42,051 | ≈ 2.1 h |
+| 500 (443) | 60 × 74 × 48 × 61 × 46 × 52 × 51 × 51 | 8.09e+13 | 37,667 | ≈ 24.9 days |
 
 ## Pruning breakdown of `full` (mean per solve, all 4 scenarios)
 
 | Catalog | dominance | AC-3 | forward checking | bound | nodes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 50 (47) | 7 | 2 | 349 | 185 | 296 |
-| 100 (87) | 19 | 0 | 2,176 | 652 | 893 |
-| 250 (221) | 69 | 0 | 43,388 | 6,261 | 7,749 |
-| 500 (443) | 169 | 0 | 88,087 | 10,490 | 12,000 |
+| 50 (47) | 7 | 2 | 398 | 173 | 300 |
+| 100 (87) | 19 | 0 | 2,278 | 714 | 973 |
+| 250 (221) | 66 | 0 | 42,068 | 7,411 | 8,937 |
+| 500 (443) | 156 | 0 | 124,110 | 14,638 | 16,775 |
 
 ## Ablation: variable ordering inside `full`
 
@@ -58,34 +58,34 @@ weight). Ablation (`mrv`): smallest remaining domain first. 3 runs per scenario.
 
 | Catalog | order | p50 ms | p95 ms | mean nodes | capped |
 | --- | --- | ---: | ---: | ---: | --- |
-| 50 (47) | mrv | 0.56 | 1.47 | 602 | 0/12 |
-| 50 (47) | weighted | 0.35 | 0.42 | 296 | 0/12 |
-| 100 (87) | mrv | 5.53 | 14.57 | 17,365 | 0/12 |
-| 100 (87) | weighted | 0.83 | 0.99 | 893 | 0/12 |
-| 250 (221) | mrv | 134.11 | 1,078.06 | 577,766 | 0/12 |
-| 250 (221) | weighted | 2.92 | 14.51 | 7,749 | 0/12 |
-| 500 (443) | mrv | 178.1 | 1,855.92 | 578,187 | 3/12 |
-| 500 (443) | weighted | 7.66 | 17.9 | 12,000 | 0/12 |
+| 50 (47) | mrv | 0.75 | 1.71 | 490 | 0/12 |
+| 50 (47) | weighted | 0.34 | 0.71 | 300 | 0/12 |
+| 100 (87) | mrv | 4.9 | 15.02 | 17,100 | 0/12 |
+| 100 (87) | weighted | 0.7 | 0.96 | 973 | 0/12 |
+| 250 (221) | mrv | 126.05 | 1,896.3 | 729,445 | 3/12 |
+| 250 (221) | weighted | 3.12 | 11.78 | 8,937 | 0/12 |
+| 500 (443) | mrv | 135.26 | 2,446.71 | 634,645 | 3/12 |
+| 500 (443) | weighted | 8.63 | 41.56 | 16,775 | 0/12 |
 
 ## Recommended builds (`full`) per scenario
 
 | Catalog | scenario | builds: label total price (triệu ₫) | score | infeasible |
 | --- | --- | --- | --- | --- |
 | 50 | office 20M | performance 17.89 / budget 17.83 | 82.41 / 73.16 |  |
-| 50 | gaming 25M | performance 25 / balanced 20.9 / budget 20.32 | 61.05 / 59.03 / 55.85 |  |
-| 50 | graphics 40M | performance 39.75 / balanced 33.12 / budget 28.73 | 84.03 / 81.31 / 73.16 |  |
-| 50 | ai 60M | performance 47.29 / balanced 39.5 / budget 34.72 | 94.63 / 88.97 / 80.69 |  |
-| 100 | office 20M | performance 17.73 / balanced 14.59 / budget 13.21 | 85.86 / 82.74 / 73.43 |  |
-| 100 | gaming 25M | performance 24.93 / balanced 21.49 / budget 18.68 | 65.54 / 62.18 / 55.91 |  |
+| 50 | gaming 25M | performance 23.62 / balanced 23.6 / budget 20.34 | 60.22 / 57.95 / 55.28 |  |
+| 50 | graphics 40M | performance 39.75 / balanced 33.12 / budget 28.73 | 82.03 / 79.31 / 71.16 |  |
+| 50 | ai 60M | performance 47.29 / balanced 39.5 / budget 33.04 | 92.63 / 86.97 / 79.06 |  |
+| 100 | office 20M | performance 19.42 / balanced 14.59 / budget 13.21 | 85.86 / 82.74 / 73.43 |  |
+| 100 | gaming 25M | performance 24.5 / balanced 21.49 / budget 18.68 | 65.27 / 62.18 / 55.91 |  |
 | 100 | graphics 40M | performance 39.99 / balanced 33.21 / budget 28.41 | 85.43 / 81.01 / 72.7 |  |
 | 100 | ai 60M | performance 54.3 / balanced 42.27 / budget 35.14 | 89.64 / 85.11 / 76.35 |  |
-| 250 | office 20M | performance 19.99 / balanced 14.94 / budget 13.66 | 93.32 / 86.82 / 79.68 |  |
-| 250 | gaming 25M | performance 24.99 / balanced 21.88 / budget 17.83 | 68.74 / 63.92 / 58.57 |  |
-| 250 | graphics 40M | performance 39.76 / balanced 34.22 / budget 29.1 | 85.46 / 79.16 / 72.8 |  |
-| 250 | ai 60M | performance 59.63 / balanced 49.76 / budget 40.75 | 99.23 / 92.9 / 84.39 |  |
-| 500 | office 20M | performance 19.94 / balanced 15.57 / budget 10.92 | 94.41 / 89.38 / 80.6 |  |
+| 250 | office 20M | performance 19.99 / balanced 14.75 / budget 10.49 | 91.32 / 86.22 / 77.84 |  |
+| 250 | gaming 25M | performance 24.67 / balanced 19.67 / budget 17.56 | 68.05 / 63.15 / 58.05 |  |
+| 250 | graphics 40M | performance 39.76 / balanced 34.95 / budget 29.31 | 83.46 / 78.66 / 71.21 |  |
+| 250 | ai 60M | performance 59.56 / balanced 48.49 / budget 39.7 | 97.68 / 90.76 / 83.2 |  |
+| 500 | office 20M | performance 19.94 / balanced 14.18 / budget 10.13 | 92.41 / 86.01 / 78.91 |  |
 | 500 | gaming 25M | performance 24.91 / balanced 19.91 / budget 17.47 | 68.94 / 63.9 / 58.77 |  |
-| 500 | graphics 40M | performance 39.77 / balanced 34.51 / budget 28.86 | 85.34 / 80.56 / 72.81 |  |
-| 500 | ai 60M | performance 59.85 / balanced 48.95 / budget 41.07 | 96.9 / 89.77 / 82.49 |  |
+| 500 | graphics 40M | performance 39.63 / balanced 34.75 / budget 29.48 | 83.76 / 78.07 / 71.3 |  |
+| 500 | ai 60M | performance 59.5 / balanced 47.09 / budget 39.36 | 95.19 / 88.12 / 81.02 |  |
 
 Category order of the domain sizes: cpu, mainboard, ram, gpu, storage, psu, case, cooler.

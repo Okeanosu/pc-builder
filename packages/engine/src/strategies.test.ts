@@ -145,26 +145,36 @@ describe('node limit', () => {
     expect(r.minFeasibleBudget).toBeUndefined();
   });
 
-  // 5M gaming is proven infeasible in 6 nodes; the unbounded cheapest-build search needs more than 10.
-  it('never reports a minFeasibleBudget from a capped diagnosis search', () => {
+  // 5M gaming is proven infeasible in 6 nodes; the diagnosis then needs 34 more for its cheapest-build proof.
+  it('counts diagnosis nodes and caps, and never reports a minFeasibleBudget from a capped diagnosis', () => {
     const req: SolveRequest = { budget: 5_000_000, purpose: 'gaming' };
-    expect(solve(req, CATALOG).minFeasibleBudget).toBe(12_820_000);
-    const foundSome = solve({ ...req, nodeLimit: 10 }, CATALOG);
-    expect(foundSome.stats.capped).toBe(false);
+    const full = solve(req, CATALOG);
+    expect(full).toMatchObject({ infeasibleReason: 'BUDGET_TOO_LOW', minFeasibleBudget: 12_820_000 });
+    expect(full.stats.capped).toBe(false);
+    expect(full.stats.nodesExplored).toBe(40);
+
+    const foundSome = solve({ ...req, nodeLimit: 20 }, CATALOG);
+    expect(foundSome.stats).toMatchObject({ capped: true, nodesExplored: 20 });
     expect(foundSome.infeasibleReason).toBe('BUDGET_TOO_LOW');
     expect(foundSome.minFeasibleBudget).toBeUndefined();
-    const foundNone = solve({ ...req, nodeLimit: 6 }, CATALOG);
+
+    const foundNone = solve({ ...req, nodeLimit: 8 }, CATALOG);
+    expect(foundNone.stats).toMatchObject({ capped: true, nodesExplored: 8 });
     expect(foundNone.infeasibleReason).toBe('SEARCH_LIMIT');
     expect(foundNone.minFeasibleBudget).toBeUndefined();
   });
 
-  it('reports SEARCH_LIMIT when the fixed-part relaxation check is capped', () => {
+  it('reports SEARCH_LIMIT (capped) when the fixed-part relaxation check is capped', () => {
     const req: SolveRequest = {
       budget: 60_000_000,
       purpose: 'gaming',
       fixed: { cpu: 'cpu-r5-7600', mainboard: 'mb-z790' },
     };
-    expect(solve({ ...req, nodeLimit: 6 }, CATALOG).infeasibleReason).toBe('SEARCH_LIMIT');
-    expect(solve(req, CATALOG).infeasibleReason).toBe('FIXED_PART_CONFLICT');
+    const capped = solve({ ...req, nodeLimit: 6 }, CATALOG);
+    expect(capped.infeasibleReason).toBe('SEARCH_LIMIT');
+    expect(capped.stats.capped).toBe(true);
+    const full = solve(req, CATALOG);
+    expect(full.infeasibleReason).toBe('FIXED_PART_CONFLICT');
+    expect(full.stats.capped).toBe(false);
   });
 });

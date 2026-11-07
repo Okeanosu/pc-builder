@@ -15,6 +15,8 @@ import {
 import { profileForRequest } from './profiles';
 import {
   estimateWattage,
+  isEntryChipset,
+  isHighClassCpu,
   lacksPsuHeadroom,
   MAX_TIER_GAP,
   minPsuWattage,
@@ -76,6 +78,8 @@ export interface Problem {
   cpuTier: number[];
   gpuTier: number[];
   coolerRating: number[];
+  highClassCpu: boolean[];
+  entryBoard: boolean[];
   hasFixed: boolean;
 }
 
@@ -198,6 +202,8 @@ export function buildProblem(
     cpuTier: items[CPU]!.map((it) => cpuGpuTier(it.product!, catalog)),
     gpuTier: items[GPU]!.map((it) => (it.product ? cpuGpuTier(it.product, catalog) : 0)),
     coolerRating: specs<CoolerSpecs>(COOLER).map((s) => s!.tdpRatingW),
+    highClassCpu: items[CPU]!.map((it) => isHighClassCpu(it.product!, catalog)),
+    entryBoard: specs<MainboardSpecs>(MAINBOARD).map((s) => isEntryChipset(s!.chipset)),
     hasFixed: Object.keys(req.fixed ?? {}).length > 0,
   };
 }
@@ -216,8 +222,8 @@ export function psuSufficient(problem: Problem, cpu: number, gpu: number, psu: n
 }
 
 /**
- * Soft-rule penalties (C08 headroom, C09 cooler rating, C13 tier gap) already decided by `idx`; unassigned
- * variables (index < 0) contribute nothing, which keeps this an admissible correction inside bounds.
+ * Soft-rule penalties (C08 headroom, C09 cooler, C13 tier gap, C15 board class) already decided by `idx`;
+ * unassigned variables (index < 0) contribute nothing, which keeps this an admissible correction inside bounds.
  */
 export function softPenalty(problem: Problem, idx: ArrayLike<number>): number {
   const cpu = idx[CPU]!;
@@ -231,6 +237,8 @@ export function softPenalty(problem: Problem, idx: ArrayLike<number>): number {
     penalty += SOFT_PENALTY;
   }
   if (cooler >= 0 && problem.coolerRating[cooler]! < tdp) penalty += SOFT_PENALTY;
+  const board = idx[MAINBOARD]!;
+  if (board >= 0 && problem.highClassCpu[cpu] && problem.entryBoard[board]) penalty += SOFT_PENALTY;
   if (
     gpu >= 0 &&
     problem.purpose === 'gaming' &&
@@ -276,7 +284,8 @@ function atLeastAsPermissive(category: CategoryKey, a: EngineProduct, b: EngineP
         x.formFactor === y.formFactor &&
         x.memorySlots >= y.memorySlots &&
         x.maxMemoryGB >= y.maxMemoryGB &&
-        (x.m2Slots >= 1 || y.m2Slots === 0)
+        (x.m2Slots >= 1 || y.m2Slots === 0) &&
+        (!isEntryChipset(x.chipset) || isEntryChipset(y.chipset))
       );
     }
     case 'ram': {

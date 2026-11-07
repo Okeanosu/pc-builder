@@ -5,6 +5,9 @@ import type { CompatibilityContext, CompatibilityIssue, EngineProduct, PartMap, 
 export const BASE_SYSTEM_WATTAGE = 75;
 export const MIN_BUDGET_USE_PERCENT = 85;
 export const MAX_TIER_GAP = 2;
+export const ENTRY_CHIPSETS = ['A520', 'A620', 'H610', 'H810'] as const;
+export const HIGH_CLASS_CPU_TDP_W = 105;
+export const HIGH_CLASS_CPU_TIER = 4;
 
 export function specsOf<K extends CategoryKey>(p: EngineProduct, _category: K): SpecsByCategory[K] {
   return p.specs as SpecsByCategory[K];
@@ -26,6 +29,19 @@ export function recommendedPsuWattage(estimated: number): number {
 /** True when the PSU is below the comfortable ×1.5 headroom. */
 export function lacksPsuHeadroom(wattage: number, estimated: number): boolean {
   return wattage * 2 < estimated * 3;
+}
+
+export function isEntryChipset(chipset: string): boolean {
+  const c = chipset.toUpperCase();
+  return ENTRY_CHIPSETS.some((code) => c.includes(code));
+}
+
+/** High-TDP or top-two-quintile CPUs; the tier part needs a reference catalog. */
+export function isHighClassCpu(cpu: EngineProduct, catalog: readonly EngineProduct[] | undefined): boolean {
+  return (
+    specsOf(cpu, 'cpu').tdpW > HIGH_CLASS_CPU_TDP_W ||
+    (catalog !== undefined && cpuGpuTier(cpu, catalog) >= HIGH_CLASS_CPU_TIER)
+  );
 }
 
 export function needsM2Slot(storage: StorageSpecs): boolean {
@@ -244,6 +260,20 @@ const c14: Rule = (parts, { budget }) => {
   return [];
 };
 
+const c15: Rule = ({ cpu, mainboard }, { catalog }) => {
+  if (!cpu || !mainboard) return [];
+  const chipset = specsOf(mainboard, 'mainboard').chipset;
+  if (!isEntryChipset(chipset) || !isHighClassCpu(cpu, catalog)) return [];
+  return [
+    issue(
+      'C15',
+      'warning',
+      `Mainboard ${chipset} phân khúc phổ thông, không tối ưu cho CPU ${cpu.name} (VRM/tính năng hạn chế)`,
+      ['mainboard', 'cpu'],
+    ),
+  ];
+};
+
 export const RULES: Record<RuleCode, Rule> = {
   C01: c01,
   C02: c02,
@@ -259,6 +289,7 @@ export const RULES: Record<RuleCode, Rule> = {
   C12: c12,
   C13: c13,
   C14: c14,
+  C15: c15,
 };
 
 /** Hard binary rules per unordered category pair, evaluated pairwise by the solver (AC-3 / forward checking). */

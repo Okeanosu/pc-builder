@@ -180,18 +180,23 @@ function solveExhaustive(problem: Problem, strategy: SolveStrategy, run: Run): L
   return selectDiverse(pool.candidates());
 }
 
-/** Cheapest fully compatible build ignoring the budget, found with the full CSP machinery. */
-function cheapestBuild(problem: Problem, nodeLimit: number): { best: Candidate | null; capped: boolean } {
+/**
+ * Cheapest fully compatible build ignoring the budget, found with the full CSP machinery. It draws on the same node
+ * budget as the main search; its nodes and cap count in the stats (its pruning counts do not, to keep attribution).
+ */
+function cheapestBuild(problem: Problem, run: Run): { best: Candidate | null; capped: boolean } {
   const domains = preprocess(problem);
   if (!domains) return { best: null, capped: false };
-  return search(problem, domains, {
+  const result = search(problem, domains, {
     forwardChecking: true,
     variableOrder: 'weighted',
     branchAndBound: true,
     budget: Number.POSITIVE_INFINITY,
     objective: { kind: 'minPrice' },
-    nodeLimit,
+    nodeLimit: run.remaining,
   });
+  run.record({ nodes: result.nodes, capped: result.capped });
+  return result;
 }
 
 type Diagnosis = { infeasibleReason: InfeasibleReason; minFeasibleBudget?: number };
@@ -200,9 +205,9 @@ function diagnose(
   problem: Problem,
   catalog: readonly EngineProduct[],
   profile: PurposeProfile,
-  nodeLimit: number,
+  run: Run,
 ): Diagnosis {
-  const cheapest = cheapestBuild(problem, nodeLimit);
+  const cheapest = cheapestBuild(problem, run);
   if (cheapest.best) {
     // A capped search proves a build exists (so the budget is the problem) but not that it is the cheapest.
     return cheapest.capped
@@ -213,7 +218,7 @@ function diagnose(
   if (problem.hasFixed) {
     const relaxed = cheapestBuild(
       buildProblem({ ...problem.request, fixed: undefined }, catalog, profile),
-      nodeLimit,
+      run,
     );
     if (relaxed.best) return { infeasibleReason: 'FIXED_PART_CONFLICT' };
     if (relaxed.capped) return { infeasibleReason: 'SEARCH_LIMIT' };
@@ -290,7 +295,7 @@ export function solveWithOptions(
   if (builds.length === 0) {
     diagnosis = run.capped
       ? { infeasibleReason: 'SEARCH_LIMIT' }
-      : diagnose(problem, catalog, baseProfile, nodeLimit);
+      : diagnose(problem, catalog, baseProfile, run);
   }
 
   run.stats.timeMs = round(performance.now() - started, 3);
