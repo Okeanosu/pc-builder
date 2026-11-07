@@ -12,3 +12,4 @@ test-results/
 .vercel
 .superpowers/
 .claude/worktrees/
+.playwright-mcp/
