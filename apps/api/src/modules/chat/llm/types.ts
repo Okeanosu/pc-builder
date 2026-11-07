@@ -3,10 +3,14 @@ export interface LlmMessage {
   parts: LlmPart[];
 }
 
+/**
+ * `thoughtSignature` must be echoed back with a function call on Gemini 3 models or the next request is rejected;
+ * a call `id`, when the model sends one, is repeated on the matching functionResponse.
+ */
 export type LlmPart =
   | { text: string }
-  | { functionCall: { name: string; args: Record<string, unknown> } }
-  | { functionResponse: { name: string; response: Record<string, unknown> } };
+  | { functionCall: { id?: string; name: string; args: Record<string, unknown> }; thoughtSignature?: string }
+  | { functionResponse: { id?: string; name: string; response: Record<string, unknown> } };
 
 export interface LlmToolDecl {
   name: string;
@@ -16,7 +20,13 @@ export interface LlmToolDecl {
 
 export type LlmChunk =
   | { type: 'text'; text: string }
-  | { type: 'functionCall'; name: string; args: Record<string, unknown> };
+  | {
+      type: 'functionCall';
+      id?: string;
+      name: string;
+      args: Record<string, unknown>;
+      thoughtSignature?: string;
+    };
 
 export interface LlmClient {
   stream(input: {
