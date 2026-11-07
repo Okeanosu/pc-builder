@@ -10,7 +10,7 @@
 | Độ phủ nhánh `packages/engine` | 98,85% (mục tiêu ≥ 90%) |
 | E2E Playwright | 6 test (5 test chạy ở cả 1440 px và 390 px, smoke chạy 1 khung nhìn) + bước đăng nhập; 3 lần chạy độc lập, mỗi test lặp 3 lần/lần chạy (smoke và a11y có từ lần 2): 87 lượt thực thi, 0 lỗi, 0 lượt chập chờn |
 | Hiệu năng Engine (trích bench) | p95 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms) |
-| Hiệu năng API gợi ý (autocannon, không cache) | 1 kết nối: p95 10,9 ms; 10 kết nối: p95 52,2 ms, 228,2 yêu cầu/s, 0 lỗi |
+| Hiệu năng API gợi ý (autocannon, không cache) | 1 kết nối: p95 10,9 ms; 10 kết nối: p95 52,2 ms, 228,3 yêu cầu/s, 0 lỗi |
 | Độ trễ chat SSE (dự phòng) | sự kiện `builds` p95 19,5 ms; cả lượt p95 23,2 ms (mục tiêu ≤ 8 s) |
 | Chất lượng AI (golden set, chế độ dự phòng) | nghiêm ngặt 26/30; theo khả năng thiết kế của chế độ luật 30/30; cấu hình hợp lệ 69/69 |
 | Test chập chờn ECONNRESET | không tái hiện được: 0 lỗi trong 2.116 lượt ca API, 195 lượt dưới tải CPU nặng, 900 yêu cầu đăng nhập thăm dò |
@@ -165,15 +165,15 @@ Lệnh: `pnpm perf` (`apps/api/test/perf/recommendations.autocannon.ts`), API đ
 
 | Kịch bản | Kết nối | Số yêu cầu | Yêu cầu/s | p50 ms | p95 ms | p99 ms | max ms | Engine p50 / p95 ms | Lỗi |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Không cache | 1 | 3.797 | 126,5 | 7,3 | 10,9 | 14,7 | 37,2 | 2,3 / 4,4 | 0 |
-| Không cache | 10 | 6.848 | 228,2 | 43,4 | 52,2 | 57,4 | 73,1 | 2,3 / 4,3 | 0 |
+| Không cache | 1 | 3.797 | 126,6 | 7,3 | 10,9 | 14,7 | 37,2 | 2,3 / 4,4 | 0 |
+| Không cache | 10 | 6.848 | 228,3 | 43,4 | 52,2 | 57,4 | 73,1 | 2,3 / 4,3 | 0 |
 | Có cache | 10 | 36.597 | 1.219,9 | 7,9 | 10,6 | 13,5 | 69,8 | (giá trị đã cache) | 0 |
 
 Nhận xét:
 - Mọi yêu cầu đều 200; 0 lỗi kết nối, 0 timeout. Ở kịch bản có cache: 10 MISS (10 kết nối đồng thời cùng trượt cache ở lần đầu, xem quan sát O-2) và 36.587 HIT.
 - Với 1 kết nối, p95 toàn trình 10,9 ms, trong đó Engine chỉ chiếm p95 4,4 ms; phần còn lại là HTTP, Redis và ghi 3 cấu hình vào Postgres. Mục tiêu 300 ms của NFR-01 thỏa mãn cả ở mức API.
 - Với 10 kết nối, thông lượng bão hòa quanh 228 yêu cầu/s trên **một** tiến trình Node; độ trễ tăng lên p50 43,4 ms chủ yếu do xếp hàng (10 / 228 ≈ 44 ms), không phải do Engine chậm đi.
-- Cache cho thông lượng gấp ~5,3 lần (1.219,9 so với 228,2 yêu cầu/s) ở cùng 10 kết nối.
+- Cache cho thông lượng gấp ~5,3 lần (1.219,9 so với 228,3 yêu cầu/s) ở cùng 10 kết nối.
 - Engine trên catalog seed thật (p95 4,4 ms) nhanh hơn trên catalog tổng hợp 250 sản phẩm của bench (p95 11,5 ms); hai bộ dữ liệu và tập kịch bản khác nhau nên không so trực tiếp.
 
 ### 5.3 Độ trễ một lượt chat qua SSE (chế độ dự phòng)
