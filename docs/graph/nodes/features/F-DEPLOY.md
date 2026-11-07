@@ -8,7 +8,7 @@ links:
   realizes: ["NFR-07"]
   dependsOn: ["M-INFRA"]
 code: ["infra/docker-compose.prod.yml", "infra/Caddyfile", "infra/.env.prod.example", "apps/api/Dockerfile", "apps/web/Dockerfile", "docs/deploy.md"]
-tests: []
+tests: ["e2e/smoke.spec.ts"]
 diagrams: ["docs/diagrams/deployment.mmd"]
 ---
 
