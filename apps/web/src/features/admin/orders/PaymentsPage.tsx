@@ -157,7 +157,7 @@ export function PaymentsPage() {
                           {order.text}
                         </Link>
                       ) : (
-                        <span className="text-sm font-medium text-danger-ink">{order.text}</span>
+                        <span className="text-sm text-muted italic">{order.text}</span>
                       )}
                     </td>
                     <td className={td}>

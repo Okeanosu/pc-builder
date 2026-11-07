@@ -21,6 +21,8 @@ interface BuildCompareProps {
   badge?: ReactNode;
   /** Copy for the empty panel; defaults to the chat wording. */
   empty?: { title: string; description: string };
+  /** Shown instead of the empty panel, e.g. why a search found nothing. */
+  emptySlot?: ReactNode;
   className?: string;
 }
 
@@ -61,6 +63,7 @@ export function BuildCompare({
   pending,
   badge,
   empty = CHAT_EMPTY,
+  emptySlot,
   className,
 }: BuildCompareProps) {
   const head = builds[0];
@@ -98,9 +101,11 @@ export function BuildCompare({
           ))}
         </div>
       ) : builds.length === 0 ? (
-        <Card className="border-dashed bg-transparent">
-          <EmptyState icon={<Cpu />} title={empty.title} description={empty.description} />
-        </Card>
+        (emptySlot ?? (
+          <Card className="border-dashed bg-transparent">
+            <EmptyState icon={<Cpu />} title={empty.title} description={empty.description} />
+          </Card>
+        ))
       ) : (
         <div
           key={builds.map((b) => b.id).join()}

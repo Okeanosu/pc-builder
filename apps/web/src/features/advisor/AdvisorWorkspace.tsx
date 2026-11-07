@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { attachChatView, latestBuilds, useChatStore } from '@/stores/chat';
 import { BuildCompare } from './BuildCompare';
 import { ChatPanel } from './ChatPanel';
-import { CacheChip, QuickRecommendForm, useQuickRecommend } from './QuickRecommendForm';
+import { CacheChip, InfeasiblePanel, QuickRecommendForm, useQuickRecommend } from './QuickRecommendForm';
 import { QUICK_FORM_DEFAULTS, type QuickFormValues } from './quick-form';
 import { useHeaderOffset } from './useHeaderOffset';
 
@@ -69,9 +69,13 @@ export function AdvisorWorkspace() {
   const [formValues, setFormValues] = useState<QuickFormValues>(QUICK_FORM_DEFAULTS);
   const chat = useCompareState();
   const selectChatBuild = useChatStore((s) => s.selectBuild);
-  const quick = useQuickRecommend(({ result }) => {
-    if (result.builds.length > 0) setTab('builds');
-  });
+  // On mobile the compare tab carries both the builds and the "why nothing fits" notice.
+  const quick = useQuickRecommend(() => setTab('builds'));
+  const retryWithBudget = (millions: number) => {
+    const next = { ...formValues, budget: String(millions) };
+    setFormValues(next);
+    quick.send(next);
+  };
 
   const compare =
     mode === 'chat'
@@ -169,6 +173,11 @@ export function AdvisorWorkspace() {
               mode === 'form' && quick.outcome?.cacheHit && builds.length > 0 ? <CacheChip /> : undefined
             }
             empty={mode === 'form' ? FORM_EMPTY : undefined}
+            emptySlot={
+              mode === 'form' && quick.outcome ? (
+                <InfeasiblePanel outcome={quick.outcome} onUseBudget={retryWithBudget} />
+              ) : undefined
+            }
             className="lg:pt-1"
           />
         </TabsContent>

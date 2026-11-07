@@ -22,7 +22,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -93,11 +93,18 @@ export function useQuickRecommend(onSuccess?: (outcome: QuickOutcome) => void) {
       onSuccess?.(next);
     },
   });
+  /** Validates and sends; returns the field errors when the form cannot be sent. */
+  const send = (values: QuickFormValues): { budget?: string } | null => {
+    const result = validateQuickForm(values);
+    if (!result.ok) return result.errors;
+    mutation.mutate(result.request);
+    return null;
+  };
   return {
     outcome,
     selectedId,
     select: setSelectedId,
-    submit: mutation.mutate,
+    send,
     pending: mutation.isPending,
     error: mutation.error ? quickFormError(mutation.error) : null,
   };
@@ -107,8 +114,8 @@ export type QuickRecommend = ReturnType<typeof useQuickRecommend>;
 
 function PurposePicker({ value, onChange }: { value: Purpose; onChange: (p: Purpose) => void }) {
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-1.5 text-sm font-medium text-fg">Mục đích sử dụng</legend>
+    <fieldset className="flex flex-col">
+      <legend className="mb-2 text-sm font-medium text-fg">Mục đích sử dụng</legend>
       <div className="grid grid-cols-2 gap-2">
         {PURPOSES.map((p) => {
           const Icon = PURPOSE_ICON[p];
@@ -117,7 +124,7 @@ function PurposePicker({ value, onChange }: { value: Purpose; onChange: (p: Purp
             <label
               key={p}
               className={cn(
-                'flex min-h-12 cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
+                'flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
                 checked
                   ? 'border-accent bg-accent/12 text-fg'
                   : 'border-border-strong bg-surface text-muted hover:border-fg/50 hover:text-fg',
@@ -144,17 +151,19 @@ function PurposePicker({ value, onChange }: { value: Purpose; onChange: (p: Purp
   );
 }
 
-function ResultStatus({
-  quick,
-  onUseBudget,
-}: {
-  quick: QuickRecommend;
-  onUseBudget: (millions: number) => void;
-}) {
+/** One line under the submit button; scrolled into view because the button sits at the panel's bottom edge. */
+function ResultStatus({ quick }: { quick: QuickRecommend }) {
   const { outcome, error, pending } = quick;
-  if (pending) return null;
-  if (error) {
-    return (
+  const ref = useRef<HTMLDivElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reveal the line whenever a new result or error lands
+  useEffect(() => {
+    ref.current?.scrollIntoView({ block: 'nearest' });
+  }, [outcome, error]);
+
+  let content: ReactNode = null;
+  if (pending) content = null;
+  else if (error) {
+    content = (
       <div
         role="alert"
         className="flex items-start gap-2.5 rounded-md border border-danger/40 bg-danger/10 px-3 py-2.5 text-sm text-fg"
@@ -163,17 +172,23 @@ function ResultStatus({
         <span>{error}</span>
       </div>
     );
+  } else if (outcome && infeasibleNotice(outcome.result)) {
+    content = (
+      <p className="flex items-center gap-2 text-sm text-warn-ink" role="status">
+        <TriangleAlert className="size-4 shrink-0" aria-hidden />
+        Chưa có cấu hình phù hợp. Xem gợi ý ở khung so sánh.
+      </p>
+    );
+  } else if (outcome) {
+    content = (
+      <p className="flex flex-wrap items-center gap-2 text-sm text-muted" role="status">
+        <CircleCheck className="size-4 text-ok-ink" aria-hidden />
+        Đã chọn {outcome.result.builds.length} cấu hình tương thích từ hàng trong kho
+        {outcome.cacheHit && <CacheChip />}
+      </p>
+    );
   }
-  if (!outcome) return null;
-  if (infeasibleNotice(outcome.result))
-    return <InfeasiblePanel outcome={outcome} onUseBudget={onUseBudget} />;
-  return (
-    <p className="flex flex-wrap items-center gap-2 text-sm text-muted" role="status">
-      <CircleCheck className="size-4 text-ok-ink" aria-hidden />
-      Đã chọn {outcome.result.builds.length} cấu hình tương thích từ hàng trong kho
-      {outcome.cacheHit && <CacheChip />}
-    </p>
-  );
+  return <div ref={ref}>{content}</div>;
 }
 
 export function CacheChip() {
@@ -189,7 +204,8 @@ export function CacheChip() {
   );
 }
 
-function InfeasiblePanel({
+/** Replaces the empty compare panel when the engine found no build. */
+export function InfeasiblePanel({
   outcome,
   onUseBudget,
 }: {
@@ -202,17 +218,17 @@ function InfeasiblePanel({
   return (
     <div
       role="status"
-      className="flex flex-col gap-3 rounded-md border border-warn/45 bg-warn/10 p-4 text-sm text-fg"
+      className="flex flex-col gap-4 rounded-lg border border-warn/45 bg-warn/10 p-5 text-sm text-fg"
     >
-      <div className="flex items-start gap-2.5">
-        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn-ink" aria-hidden />
+      <div className="flex items-start gap-3">
+        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-warn-ink" aria-hidden />
         <div className="flex flex-col gap-1">
-          <p className="font-semibold">{notice.title}</p>
+          <p className="text-base font-semibold">{notice.title}</p>
           <p className="text-muted">{notice.body}</p>
         </div>
       </div>
       {suggest !== null && (
-        <Button size="sm" variant="secondary" className="self-start" onClick={() => onUseBudget(suggest)}>
+        <Button size="sm" className="self-start" onClick={() => onUseBudget(suggest)}>
           Thử với {suggest} triệu
         </Button>
       )}
@@ -236,39 +252,27 @@ export function QuickRecommendForm({
     <K extends 'cpuBrand' | 'gpuBrand' | 'color' | 'formFactor' | 'resolution'>(key: K) =>
     (v: string) =>
       set(key, (v === ANY ? '' : v) as QuickFormValues[K]);
+  const setBudget = (text: string) => {
+    set('budget', text);
+    if (budgetError) setBudgetError(undefined);
+  };
 
   const millions = parseBudgetMillions(values.budget);
-
-  const send = (next: QuickFormValues) => {
-    const result = validateQuickForm(next);
-    if (!result.ok) {
-      setBudgetError(result.errors.budget);
-      return;
-    }
-    setBudgetError(undefined);
-    quick.submit(result.request);
-  };
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    send(values);
-  };
-  const retryWithBudget = (m: number) => {
-    const next = { ...values, budget: String(m) };
-    onChange(next);
-    send(next);
+    setBudgetError(quick.send(values)?.budget);
   };
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-6 px-4 py-5 sm:px-5">
-      <div className="flex flex-col gap-1.5">
+    <form onSubmit={submit} noValidate className="flex flex-col gap-5 px-4 py-5 sm:px-5">
+      <div className="flex flex-col gap-1">
         <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-accent-ink">
           <Sparkles className="size-3.5" aria-hidden />
           Gợi ý nhanh
         </span>
         <h2 className="text-xl font-bold text-fg">Ngân sách và mục đích, nhận 3 cấu hình</h2>
         <p className="max-w-prose text-sm text-muted">
-          Bộ giải chọn linh kiện còn hàng, kiểm tra tương thích và xếp theo hiệu năng trên giá. Không cần gõ
-          câu hỏi.
+          Chọn từ hàng còn trong kho, đã kiểm tra tương thích. Không cần gõ câu hỏi.
         </p>
       </div>
 
@@ -282,39 +286,35 @@ export function QuickRecommendForm({
             : `Từ ${BUDGET_MIN_M} đến ${BUDGET_MAX_M} triệu`
         }
       >
-        <Input
-          name="budget"
-          mono
-          inputMode="decimal"
-          autoComplete="off"
-          value={values.budget}
-          onChange={(e) => {
-            set('budget', e.target.value);
-            if (budgetError) setBudgetError(undefined);
-          }}
-          trailing="triệu"
-          wrapperClassName="sm:max-w-48"
-        />
+        <div className="flex items-center gap-4">
+          <Input
+            name="budget"
+            mono
+            inputMode="decimal"
+            autoComplete="off"
+            value={values.budget}
+            onChange={(e) => setBudget(e.target.value)}
+            trailing="triệu"
+            wrapperClassName="w-32 shrink-0"
+          />
+          <input
+            type="range"
+            min={BUDGET_MIN_M}
+            max={BUDGET_MAX_M}
+            step={1}
+            value={sliderBudget(values.budget)}
+            onChange={(e) => setBudget(e.target.value)}
+            aria-label="Kéo để chọn ngân sách (triệu đồng)"
+            aria-valuetext={`${sliderBudget(values.budget)} triệu đồng`}
+            className="h-10 min-w-0 flex-1 accent-accent"
+          />
+        </div>
       </Field>
-      <input
-        type="range"
-        min={BUDGET_MIN_M}
-        max={BUDGET_MAX_M}
-        step={1}
-        value={sliderBudget(values.budget)}
-        onChange={(e) => {
-          set('budget', e.target.value);
-          setBudgetError(undefined);
-        }}
-        aria-label="Kéo để chọn ngân sách (triệu đồng)"
-        aria-valuetext={`${sliderBudget(values.budget)} triệu đồng`}
-        className="-mt-4 h-8 w-full accent-accent"
-      />
 
       <PurposePicker value={values.purpose} onChange={(p) => set('purpose', p)} />
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-0.5 text-sm font-medium text-fg">
+      <fieldset className="flex flex-col">
+        <legend className="mb-2 text-sm font-medium text-fg">
           Ưu tiên <span className="font-normal text-muted">(không bắt buộc)</span>
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -356,7 +356,7 @@ export function QuickRecommendForm({
           {!quick.pending && <Sparkles aria-hidden />}
           Gợi ý cấu hình
         </Button>
-        <ResultStatus quick={quick} onUseBudget={retryWithBudget} />
+        <ResultStatus quick={quick} />
       </div>
     </form>
   );
