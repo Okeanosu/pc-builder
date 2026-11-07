@@ -60,6 +60,8 @@ docker compose -f infra/docker-compose.prod.yml --env-file infra/.env.prod up -d
 
 (hoặc `pnpm docker:prod` nếu đã cài pnpm). Lần đầu build mất vài phút. Khi khởi động, container `api` tự chạy migration (`node --import tsx src/db/migrate.ts`) rồi mới mở server; migration idempotent nên chạy lại nhiều lần vẫn an toàn.
 
+> **Lưu ý:** migrator của drizzle không dùng advisory lock, nên service `api` phải giữ đúng **1 replica** (không dùng `--scale api=N`). Nếu cần nhiều replica, hãy tách migration thành service chạy một lần (one-off) trước khi khởi động các api.
+
 Kiểm tra:
 
 ```bash

@@ -56,7 +56,7 @@ services:
       context: ..
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://${DOMAIN}${PUBLIC_PORT_SUFFIX:-}/api
+        NEXT_PUBLIC_API_URL: https://${DOMAIN:?set DOMAIN in infra/.env.prod}${PUBLIC_PORT_SUFFIX:-}/api
         NEXT_PUBLIC_SHOW_DESIGN: ${NEXT_PUBLIC_SHOW_DESIGN:-}
     depends_on:
       api: { condition: service_healthy }

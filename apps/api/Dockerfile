@@ -12,9 +12,7 @@ COPY tools/graph/package.json tools/graph/
 RUN pnpm install --frozen-lockfile --filter @pc/api...
 COPY packages packages
 COPY apps/api apps/api
-# The API runs TypeScript through tsx (a devDependency), so promote it to a prod dependency before the prod-only deploy.
-RUN node -e "const f='apps/api/package.json',p=JSON.parse(require('fs').readFileSync(f));p.dependencies.tsx=p.devDependencies.tsx;delete p.devDependencies.tsx;require('fs').writeFileSync(f,JSON.stringify(p))" \
- && pnpm --filter @pc/api deploy --legacy --prod /out
+RUN pnpm --filter @pc/api deploy --legacy --prod /out
 
 FROM node:22-alpine
 ENV NODE_ENV=production PORT=4000

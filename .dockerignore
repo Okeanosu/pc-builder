@@ -15,6 +15,6 @@ test-results
 docs
 **/*.test.ts
 **/*.test.tsx
-**/test
-**/eval
+apps/api/test
+apps/api/eval
 .DS_Store
