@@ -1,26 +1,394 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* `dark:` follows the nearest themed scope: <html data-theme>, a nested [data-theme] pane, or a .workshop surface.
+   Components should prefer semantic tokens over `dark:` so nested scopes stay correct. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .workshop, .workshop *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Light values live here (they are also the default for <html>); the dark scope below overrides them.
+   `static` keeps every variable emitted so pages can read them with var() in inline styles. */
+@theme static {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Raw palette — prefer the semantic tokens below in components. */
+  --color-graphite-950: #12161b;
+  --color-graphite-900: #191e24;
+  --color-graphite-800: #20262e;
+  --color-graphite-700: #29313a;
+  --color-graphite-600: #2c343e;
+  --color-graphite-400: #5f6c7a;
+  --color-graphite-300: #97a3b0;
+  --color-graphite-100: #e8edf2;
+  --color-aluminum-50: #f4f6f8;
+  --color-aluminum-100: #edf0f2;
+  --color-aluminum-200: #e4e8ec;
+  --color-aluminum-300: #d5dbe0;
+  --color-aluminum-500: #87929c;
+  --color-aluminum-700: #56616c;
+  --color-ink: #141a20;
+  --color-cyan: #22d3ee;
+  --color-lime: #a3e635;
+  --color-amber: #f59e0b;
+  --color-red: #ef4444;
+
+  /* Semantic tokens (light). Keep in sync with [data-theme="light"] below. */
+  --color-bg: #edf0f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f6f8;
+  --color-surface-3: #e4e8ec;
+  --color-border: #d5dbe0;
+  --color-border-strong: #87929c;
+  --color-fg: #141a20;
+  --color-muted: #56616c;
+  --color-accent: #22d3ee;
+  --color-accent-hover: #06b6d4;
+  --color-accent-fg: #0b1d22;
+  --color-accent-ink: #0e7490;
+  --color-ring: #0891b2;
+  --color-ok: #a3e635;
+  --color-ok-ink: #3f6212;
+  --color-warn: #f59e0b;
+  --color-warn-ink: #9a4a07;
+  --color-danger: #ef4444;
+  --color-danger-ink: #c81e1e;
+  --color-scrim: rgb(10 13 17 / 0.56);
+
+  /* Category identity (AllocationBar, ProductImage). One set validated on both surfaces; marks only, never text. */
+  --color-cat-cpu: #2a78d6;
+  --color-cat-mainboard: #14a38b;
+  --color-cat-ram: #8b7cf0;
+  --color-cat-gpu: #d55181;
+  --color-cat-storage: #a35ce0;
+  --color-cat-psu: #c0713a;
+  --color-cat-case: #5b5fe0;
+  --color-cat-cooler: #0e9fb8;
+
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 2rem;
+  --text-xl--letter-spacing: -0.01em;
+  --text-2xl: 2rem;
+  --text-2xl--line-height: 2.5rem;
+  --text-2xl--letter-spacing: -0.02em;
+  --text-3xl: 3rem;
+  --text-3xl--line-height: 3.5rem;
+  --text-3xl--letter-spacing: -0.03em;
+
+  --radius-*: initial;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-*: initial;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-fade-in: fade-in 160ms var(--ease-out);
+  --animate-fade-out: fade-out 120ms var(--ease-in);
+  --animate-dialog-in: dialog-in 220ms var(--ease-out);
+  --animate-dialog-out: dialog-out 140ms var(--ease-in);
+  --animate-sheet-in-right: sheet-in-right 280ms var(--ease-out);
+  --animate-sheet-out-right: sheet-out-right 180ms var(--ease-in);
+  --animate-sheet-in-left: sheet-in-left 280ms var(--ease-out);
+  --animate-sheet-out-left: sheet-out-left 180ms var(--ease-in);
+  --animate-sheet-in-bottom: sheet-in-bottom 300ms var(--ease-out);
+  --animate-sheet-out-bottom: sheet-out-bottom 180ms var(--ease-in);
+  --animate-pop-in: pop-in 140ms var(--ease-out);
+  --animate-toast-in: toast-in 260ms var(--ease-out);
+  --animate-toast-out: fade-out 160ms var(--ease-in);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-wipe-in: wipe-in 900ms var(--ease-out) both;
+  --animate-card-in: card-in 520ms var(--ease-out) both;
+  --animate-led-on: led-on 260ms var(--ease-out) both;
+  --animate-caret: caret 1s steps(1) infinite;
+  --animate-blink-dot: blink-dot 1.4s ease-in-out infinite;
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+  @keyframes dialog-out {
+    to {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+  @keyframes sheet-in-right {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheet-out-right {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes sheet-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes sheet-out-left {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes sheet-in-bottom {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes sheet-out-bottom {
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes wipe-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes led-on {
+    from {
+      opacity: 0.15;
+    }
+  }
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes blink-dot {
+    50% {
+      opacity: 0.35;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---- Theme scopes (unlayered so they beat the theme layer) ---- */
+:root {
+  --shadow-raised: 0 1px 2px rgb(20 26 32 / 0.06), 0 3px 8px -2px rgb(20 26 32 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(20 26 32 / 0.28), 0 8px 16px -8px rgb(20 26 32 / 0.16);
+  --mat-ink: rgb(86 97 108 / 0.16);
+  --led-glow: none;
+  --led-shadow: none;
 }
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #edf0f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f6f8;
+  --color-surface-3: #e4e8ec;
+  --color-border: #d5dbe0;
+  --color-border-strong: #87929c;
+  --color-fg: #141a20;
+  --color-muted: #56616c;
+  --color-accent: #22d3ee;
+  --color-accent-hover: #06b6d4;
+  --color-accent-fg: #0b1d22;
+  --color-accent-ink: #0e7490;
+  --color-ring: #0891b2;
+  --color-ok: #a3e635;
+  --color-ok-ink: #3f6212;
+  --color-warn: #f59e0b;
+  --color-warn-ink: #9a4a07;
+  --color-danger: #ef4444;
+  --color-danger-ink: #c81e1e;
+  --shadow-raised: 0 1px 2px rgb(20 26 32 / 0.06), 0 3px 8px -2px rgb(20 26 32 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(20 26 32 / 0.28), 0 8px 16px -8px rgb(20 26 32 / 0.16);
+  --mat-ink: rgb(86 97 108 / 0.16);
+  --led-glow: none;
+  --led-shadow: none;
+}
+
+/* The "workshop": graphite treatment for the dark theme and for Advisor/Builder surfaces on a light site. */
+[data-theme="dark"],
+.workshop {
+  color-scheme: dark;
+  --color-bg: #12161b;
+  --color-surface: #191e24;
+  --color-surface-2: #20262e;
+  --color-surface-3: #29313a;
+  --color-border: #2c343e;
+  --color-border-strong: #5f6c7a;
+  --color-fg: #e8edf2;
+  --color-muted: #97a3b0;
+  --color-accent: #22d3ee;
+  --color-accent-hover: #67e8f9;
+  --color-accent-fg: #0b1d22;
+  --color-accent-ink: #22d3ee;
+  --color-ring: #22d3ee;
+  --color-ok: #a3e635;
+  --color-ok-ink: #a3e635;
+  --color-warn: #f59e0b;
+  --color-warn-ink: #fbbf24;
+  --color-danger: #ef4444;
+  --color-danger-ink: #f87171;
+  --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  --shadow-overlay: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 24px 56px -12px rgb(0 0 0 / 0.72);
+  --mat-ink: rgb(151 163 176 / 0.14);
+  /* Status LEDs glow only on graphite. */
+  --led-glow: drop-shadow(0 0 4px currentColor);
+  --led-shadow: 0 0 8px rgb(34 211 238 / 0.5);
+}
+
+[data-theme],
+.workshop {
+  color: var(--color-fg);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  body {
+    min-height: 100dvh;
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+}
+
+@utility shadow-raised {
+  box-shadow: var(--shadow-raised);
+}
+@utility shadow-overlay {
+  box-shadow: var(--shadow-overlay);
+}
+
+/* One focus style everywhere: 2px ring colour with a 2px gap; meets 3:1 on every surface. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* The anti-static workshop mat: 24px dot grid with a fainter 120px ruling, drawn in the surface's own ink. */
+@utility workshop-mat {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--mat-ink) 1px, transparent 1.5px),
+    linear-gradient(to right, var(--mat-ink) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--mat-ink) 1px, transparent 1px);
+  background-size:
+    24px 24px,
+    120px 120px,
+    120px 120px;
+  background-position:
+    -1px -1px,
+    -1px 0,
+    0 -1px;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: reduced motion must beat every component animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: end of reduced-motion block */
