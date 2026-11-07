@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-CHAT-LLM", "M-RECOMMENDATION", "M-COMPATIBILITY", "M-CATALOG", "M-BUILDS", "E-CHAT-SESSION", "E-CHAT-MESSAGE"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-018"]
 code: ["apps/api/src/modules/chat/**"]
 tests: ["apps/api/src/modules/chat/**/*.test.ts"]
 diagrams: ["docs/diagrams/seq-ai-advisor.mmd"]

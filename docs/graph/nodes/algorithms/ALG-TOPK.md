@@ -5,6 +5,7 @@ title: "Chọn top-K cấu hình đa dạng và gắn nhãn"
 status: done
 chapters: ["CH4", "CH5"]
 links:
+  decidedBy: ["ADR-020"]
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-BNB"]
 code: ["packages/engine/src/topk.ts"]

@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-API-CORE", "E-USER"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-016"]
 code: ["apps/api/src/modules/auth/**"]
 tests: ["apps/api/src/modules/auth/**/*.test.ts"]
 diagrams: []

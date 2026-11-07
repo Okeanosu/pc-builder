@@ -7,7 +7,7 @@ chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-17", "NFR-04"]
   dependsOn: ["M-CHAT", "ALG-NLU-FALLBACK", "F-ENGINE-CORE"]
-  decidedBy: ["ADR-005"]
+  decidedBy: ["ADR-005", "ADR-018"]
 code: ["apps/api/src/modules/chat/fallback/**"]
 tests: ["apps/api/src/modules/chat/fallback/**/*.test.ts"]
 diagrams: []

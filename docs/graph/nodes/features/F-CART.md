@@ -5,6 +5,7 @@ title: "Giỏ hàng (khách vãng lai ở Redis, người dùng ở DB, gộp kh
 status: done
 chapters: ["CH4"]
 links:
+  decidedBy: ["ADR-017"]
   realizes: ["FR-04", "UC-08"]
   dependsOn: ["M-CART", "E-CART", "E-CART-ITEM", "F-BUILD-SHARE"]
   shownIn: ["SCR-CART"]

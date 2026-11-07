@@ -7,7 +7,7 @@ chapters: ["CH1", "CH4", "CH5"]
 links:
   realizes: ["FR-08", "UC-04", "NFR-01"]
   dependsOn: ["M-RECOMMENDATION", "F-ENGINE-CORE", "E-PURPOSE-WEIGHT", "E-BUILD"]
-  decidedBy: ["ADR-004"]
+  decidedBy: ["ADR-004", "ADR-013", "ADR-015", "ADR-020"]
   shownIn: ["SCR-HOME", "SCR-ADVISOR"]
 code: ["apps/api/src/modules/recommendation/**", "apps/web/src/features/advisor/**", "apps/web/src/features/builder/**"]
 tests: ["apps/api/src/modules/recommendation/**/*.test.ts"]

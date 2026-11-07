@@ -5,6 +5,7 @@ title: "Đặt hàng lẻ / nguyên bộ và vòng đời đơn"
 status: done
 chapters: ["CH4", "CH5"]
 links:
+  decidedBy: ["ADR-017", "ADR-021"]
   realizes: ["FR-05", "UC-09", "UC-11"]
   dependsOn: ["M-ORDERS", "E-ORDER", "E-ORDER-ITEM", "F-INVENTORY-LOCK", "F-CART"]
   shownIn: ["SCR-CHECKOUT", "SCR-ACCOUNT"]

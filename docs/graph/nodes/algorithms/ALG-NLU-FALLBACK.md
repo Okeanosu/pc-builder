@@ -5,6 +5,7 @@ title: "Bộ phân tích ngôn ngữ tiếng Việt theo luật cho chế độ 
 status: done
 chapters: ["CH4", "CH5"]
 links:
+  decidedBy: ["ADR-018"]
   refines: ["F-FALLBACK-NLU"]
 code: ["apps/api/src/modules/chat/fallback/**"]
 tests: ["apps/api/src/modules/chat/fallback/**/*.test.ts"]

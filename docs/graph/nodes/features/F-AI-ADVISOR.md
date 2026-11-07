@@ -7,7 +7,7 @@ chapters: ["CH1", "CH4", "CH5"]
 links:
   realizes: ["FR-07", "UC-03", "NFR-02", "NFR-05"]
   dependsOn: ["M-CHAT", "M-CHAT-LLM", "F-ENGINE-CORE", "F-FALLBACK-NLU", "F-RECOMMEND", "E-CHAT-SESSION", "E-CHAT-MESSAGE"]
-  decidedBy: ["ADR-003", "ADR-004", "ADR-005"]
+  decidedBy: ["ADR-003", "ADR-004", "ADR-005", "ADR-018", "ADR-019"]
   shownIn: ["SCR-ADVISOR", "SCR-HOME", "SCR-ADMIN-CHATLOGS"]
 code: ["apps/api/src/modules/chat/**", "apps/web/src/features/advisor/**", "apps/web/src/stores/chat.ts", "apps/web/src/components/ChatWidget.tsx"]
 tests: ["apps/api/src/modules/chat/**/*.test.ts", "apps/api/src/modules/chat/**/*.int.test.ts", "apps/api/eval/**", "apps/web/src/features/advisor/**/*.test.ts", "apps/web/src/stores/chat.test.ts"]
@@ -22,6 +22,6 @@ diagrams: ["docs/diagrams/seq-ai-advisor.mmd"]
 
 **Quyết định chính:** ADR-003 chọn Gemini free tier với function calling; ADR-004 LLM chỉ điều phối, Engine quyết định; ADR-005 chế độ dự phòng khi Gemini không dùng được. Khai báo tool chỉ dùng tập con JSON Schema mà Gemini chấp nhận (bộ lọc thông số của `search_products` là danh sách cặp `{key, value}` thay vì object tự do), có unit test kiểm tra.
 
-**Điểm nhấn cho báo cáo (CH5):** kiến trúc chống ảo giác (guardrails), so sánh với chatbot thuần LLM, kết quả golden-set 30 kịch bản (`apps/api/eval/results.md`). Lần chạy ở chế độ dự phòng (2026-11-07), chấm **nghiêm ngặt** theo kỳ vọng của trợ lý AI: gọi đúng tool **26/30**, tham số đúng 23/25, sở thích 9/10, đạt mọi tiêu chí 26/30; 4 kịch bản trượt là 2 câu chỉnh cấu hình (luật dự phòng gọi lại `recommend_builds` thay vì `modify_build`) và 2 câu hỏi sản phẩm (dự phòng hỏi lại thay vì `search_products`). Nếu chấm theo khả năng thiết kế của chế độ luật (`fallbackExpect`) thì đạt 30/30. Ở cả hai cách chấm, 69/69 cấu hình trả về đều hợp lệ khi kiểm tra lại bằng bộ luật C01–C14 và ngân sách; độ trễ p50 10 ms / p95 22 ms.
+**Điểm nhấn cho báo cáo (CH5):** kiến trúc chống ảo giác (guardrails), so sánh với chatbot thuần LLM, kết quả golden-set 30 kịch bản (`apps/api/eval/results.md`). Lần chạy ở chế độ dự phòng (2026-11-07), chấm **nghiêm ngặt** theo kỳ vọng của trợ lý AI: gọi đúng tool **26/30**, tham số đúng 23/25, sở thích 9/10, đạt mọi tiêu chí 26/30; 4 kịch bản trượt là 2 câu chỉnh cấu hình (luật dự phòng gọi lại `recommend_builds` thay vì `modify_build`) và 2 câu hỏi sản phẩm (dự phòng hỏi lại thay vì `search_products`). Nếu chấm theo khả năng thiết kế của chế độ luật (`fallbackExpect`) thì đạt 30/30. Ở cả hai cách chấm, 69/69 cấu hình trả về đều hợp lệ khi kiểm tra lại bằng bộ luật C01–C15 và ngân sách; độ trễ p50 10 ms / p95 22 ms.
 
 **Hạn chế cần nêu trong báo cáo:** bộ golden set do chính người phát triển viết khi đã biết phạm vi của NLU dự phòng và không mang tính đối kháng, nên điểm chế độ dự phòng là cận trên chứ không phải độ chính xác trên câu hỏi thật; chỉ 30 kịch bản, một lần chạy, trên catalog dev. Hãy dẫn con số nghiêm ngặt (26/30). Kết quả chế độ Gemini thật cần khóa API: chạy `eval/smoke-gemini.ts` rồi `eval:ai`.

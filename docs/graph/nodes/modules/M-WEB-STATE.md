@@ -5,6 +5,7 @@ title: "Kho trạng thái phía web (Zustand) và TanStack Query"
 status: done
 chapters: ["CH4"]
 links:
+  decidedBy: ["ADR-016"]
   dependsOn: ["M-SHARED", "M-ENGINE"]
 code: ["apps/web/src/stores/**"]
 tests: ["apps/web/src/stores/**/*.test.ts"]

@@ -7,7 +7,7 @@ chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-18", "UC-09"]
   dependsOn: ["M-ORDERS", "E-PRODUCT", "E-INVENTORY-MOVEMENT"]
-  decidedBy: ["ADR-007"]
+  decidedBy: ["ADR-007", "ADR-017"]
 code: ["apps/api/src/modules/orders/**", "apps/api/src/jobs/**"]
 tests: ["apps/api/src/modules/orders/**/*.int.test.ts", "apps/api/src/jobs/**/*.int.test.ts"]
 diagrams: []

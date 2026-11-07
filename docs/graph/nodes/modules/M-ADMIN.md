@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-AUTH", "M-CATALOG", "M-ORDERS", "E-PURPOSE-WEIGHT", "E-INVENTORY-MOVEMENT"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-021"]
 code: ["apps/api/src/modules/admin/**"]
 tests: ["apps/api/src/modules/admin/**/*.test.ts"]
 diagrams: []

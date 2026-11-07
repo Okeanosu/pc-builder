@@ -6,7 +6,7 @@ status: done
 chapters: ["CH4"]
 links:
   dependsOn: ["M-SHARED"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-017"]
 code: ["apps/api/src/db/**", "apps/api/drizzle/**", "apps/api/drizzle.config.ts"]
 tests: ["apps/api/src/app.test.ts"]
 diagrams: ["docs/diagrams/erd.mmd"]

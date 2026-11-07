@@ -5,6 +5,7 @@ title: "Chuẩn hóa điểm hiệu năng theo danh mục và mục đích"
 status: done
 chapters: ["CH4", "CH5"]
 links:
+  decidedBy: ["ADR-012", "ADR-013"]
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["E-BENCHMARK"]
 code: ["packages/engine/src/scoring.ts", "packages/engine/src/profiles.ts"]

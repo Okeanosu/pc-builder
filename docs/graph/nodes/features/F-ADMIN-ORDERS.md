@@ -5,6 +5,7 @@ title: "Quản trị đơn hàng"
 status: done
 chapters: ["CH4"]
 links:
+  decidedBy: ["ADR-021"]
   realizes: ["FR-15", "UC-15"]
   dependsOn: ["M-ADMIN", "F-ORDER", "F-AUTH"]
   shownIn: ["SCR-ADMIN-ORDERS"]

@@ -7,7 +7,7 @@ chapters: ["CH4", "CH5"]
 links:
   realizes: ["FR-01", "FR-02", "UC-01"]
   dependsOn: ["M-CATALOG", "E-PRODUCT", "E-CATEGORY", "E-BENCHMARK"]
-  decidedBy: ["ADR-002"]
+  decidedBy: ["ADR-002", "ADR-015"]
   shownIn: ["SCR-CATEGORY", "SCR-PRODUCT"]
 code: ["apps/api/src/modules/catalog/**", "apps/web/src/features/catalog/**"]
 tests: ["apps/api/src/modules/catalog/**/*.test.ts"]

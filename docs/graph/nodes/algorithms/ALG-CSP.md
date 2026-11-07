@@ -7,7 +7,7 @@ chapters: ["CH4", "CH5"]
 links:
   refines: ["F-ENGINE-CORE"]
   dependsOn: ["ALG-AC3", "ALG-FC", "ALG-BNB"]
-  decidedBy: ["ADR-004"]
+  decidedBy: ["ADR-004", "ADR-014", "ADR-020"]
 code: ["packages/engine/src/domains.ts", "packages/engine/src/search.ts", "packages/engine/src/solver.ts", "packages/engine/src/bruteforce.ts"]
 tests: ["packages/engine/src/solve.test.ts", "packages/engine/src/solve.infeasible.test.ts", "packages/engine/src/strategies.test.ts", "packages/engine/src/domains.test.ts"]
 diagrams: []
@@ -16,7 +16,7 @@ diagrams: []
 **Mô hình hóa (phiếu giao nhiệm vụ, nội dung 3):** bài toán chọn linh kiện được phát biểu là một CSP.
 - **Biến:** CPU, MAINBOARD, RAM, GPU, STORAGE, PSU, CASE, COOLER (GPU tùy chọn nếu CPU có đồ họa tích hợp và mục đích là văn phòng).
 - **Miền:** các sản phẩm còn hàng của danh mục, sau khi lọc theo tùy chọn người dùng và loại bỏ các giá trị bị trội (dominance pruning).
-- **Ràng buộc:** các luật C01-C14 (xem các node R-C01..R-C14); ràng buộc nhị phân giữa hai biến dùng cho AC-3 và forward checking, ràng buộc toàn cục (tổng công suất, tổng giá) kiểm tra khi gán đủ biến hoặc dùng làm cận.
+- **Ràng buộc:** các luật C01-C15 (xem các node R-C01..R-C14); ràng buộc nhị phân giữa hai biến dùng cho AC-3 và forward checking, ràng buộc toàn cục (tổng công suất, tổng giá) kiểm tra khi gán đủ biến hoặc dùng làm cận.
 
 **Thuật toán:** backtracking gán lần lượt từng biến. Thứ tự biến theo heuristic MRV (miền nhỏ nhất trước), mặc định `CPU → MAINBOARD → RAM → COOLER → GPU → CASE → PSU → STORAGE`. Sau mỗi phép gán chạy Forward Checking (ALG-FC); miền rỗng thì quay lui. Tiền xử lý bằng AC-3 (ALG-AC3) và cắt nhánh bằng Branch and Bound (ALG-BNB).
 
