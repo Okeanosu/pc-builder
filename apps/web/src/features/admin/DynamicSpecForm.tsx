@@ -10,7 +10,13 @@ import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/cn';
 import { formatNumber } from '@/lib/format';
 import type { FieldErrors } from './errors';
-import { addNumberChip, type SpecDraft, type SpecDraftValue, specPath } from './products/spec-form';
+import {
+  addNumberChip,
+  isIntegerField,
+  type SpecDraft,
+  type SpecDraftValue,
+  specPath,
+} from './products/spec-form';
 
 const COLOR_LABEL: Record<string, string> = { black: 'Đen', white: 'Trắng', other: 'Khác' };
 const optionLabel = (field: SpecField, option: string) =>
@@ -20,6 +26,9 @@ function Hint({ field }: { field: SpecField }) {
   return (
     <span className="inline-flex flex-wrap items-center gap-x-2">
       <span className="font-mono">{field.key}</span>
+      {(field.type === 'number' || field.type === 'number[]') && isIntegerField(field) && (
+        <span>· số nguyên</span>
+      )}
       {field.filterable && <span>· dùng làm bộ lọc</span>}
     </span>
   );
@@ -117,7 +126,7 @@ function NumberChips({
   const [text, setText] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const commit = () => {
-    const res = addNumberChip(value, text);
+    const res = addNumberChip(value, text, isIntegerField(field));
     setLocalError(res.error);
     if (!res.error) {
       onChange(res.list);
