@@ -31,8 +31,7 @@ export function QtyStepper({
     size === 'sm' ? 'size-8' : 'size-10',
   );
   return (
-    <div
-      role="group"
+    <fieldset
       aria-label={label}
       className={cn(
         'inline-flex items-center overflow-hidden rounded-sm border border-border-strong bg-surface',
@@ -64,6 +63,6 @@ export function QtyStepper({
       >
         <Plus className="size-4" aria-hidden />
       </button>
-    </div>
+    </fieldset>
   );
 }
