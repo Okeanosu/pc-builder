@@ -58,7 +58,7 @@ Mọi trường đều bắt buộc về mặt định dạng trừ `links`, `ch
 | api | `API-` | `API-CHAT` |
 | entity | `E-` | `E-PRODUCT` |
 | algorithm | `ALG-` | `ALG-CSP` |
-| rule | `R-` | `R-C05` (luật C01..C14) |
+| rule | `R-` | `R-C05` (luật C01..C15) |
 | screen | `SCR-` | `SCR-BUILDER` |
 | test | `T-` | `T-INT-OVERSELL` |
 | decision | `ADR-` | `ADR-007` |
