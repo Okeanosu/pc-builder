@@ -25,9 +25,13 @@ export type CatalogQuery = Omit<ProductQuery, 'sort' | 'page' | 'pageSize'> &
     specsMax?: Record<string, number>;
   };
 
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
 /**
  * Express 5 defaults to the "simple" query parser, which leaves `specs[socket]=AM5` as a flat key.
- * Fold those keys into nested records so the same schema works with either parser.
+ * Fold those keys into nested records so the same schema works with either parser. Bracket keys win over a
+ * bare `specs=...` of the same group; a bare value alone is left for the schema to reject.
  */
 export function nestBracketParams(query: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -35,11 +39,12 @@ export function nestBracketParams(query: Record<string, unknown>): Record<string
     if (UNSAFE_KEY.test(rawKey)) continue;
     const m = /^(\w+)\[([^\]]+)\](\[\])?$/.exec(rawKey);
     if (!m || !NESTED_PARAMS.has(m[1]!)) {
-      out[rawKey] = value;
+      if (!(NESTED_PARAMS.has(rawKey) && isRecord(out[rawKey]) && !isRecord(value))) out[rawKey] = value;
       continue;
     }
     const [, group, key, arraySuffix] = m as unknown as [string, string, string, string | undefined];
-    const target = (out[group] ?? {}) as Record<string, unknown>;
+    const existing = out[group];
+    const target = isRecord(existing) ? existing : {};
     target[key] = arraySuffix && !Array.isArray(value) ? [value] : value;
     out[group] = target;
   }

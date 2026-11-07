@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalRequest, recommendationCacheKey } from './recommendation.cache';
+import { canonicalRequest, isCacheable, recommendationCacheKey } from './recommendation.cache';
 
 describe('canonicalRequest', () => {
   it('ignores key order, undefined fields, empty containers and exclude order', () => {
@@ -44,5 +44,20 @@ describe('recommendationCacheKey', () => {
     expect(recommendationCacheKey(2, req, { source: 'FORM' })).not.toBe(key);
     expect(recommendationCacheKey(1, req, { source: 'CHAT' })).not.toBe(key);
     expect(recommendationCacheKey(1, req, { source: 'FORM', userId: 'u1' })).not.toBe(key);
+  });
+});
+
+describe('isCacheable', () => {
+  const stats = { capped: false };
+
+  it('caches feasible results and genuine infeasibility', () => {
+    expect(isCacheable({ builds: [{}], stats })).toBe(true);
+    expect(isCacheable({ builds: [], stats, infeasibleReason: 'BUDGET_TOO_LOW' })).toBe(true);
+    expect(isCacheable({ builds: [{}], stats: { capped: true } })).toBe(true);
+  });
+
+  it('does not cache outcomes cut short by the search limit', () => {
+    expect(isCacheable({ builds: [], stats, infeasibleReason: 'SEARCH_LIMIT' })).toBe(false);
+    expect(isCacheable({ builds: [], stats: { capped: true } })).toBe(false);
   });
 });

@@ -48,6 +48,14 @@ describe('nestBracketParams', () => {
     expect(nestBracketParams({ specs: { socket: 'AM5' } })).toEqual({ specs: { socket: 'AM5' } });
   });
 
+  it('lets bracket keys win over a bare scalar of the same group, in either order', () => {
+    const expected = { specs: { socket: 'AM5' } };
+    expect(nestBracketParams({ specs: 'foo', 'specs[socket]': 'AM5' })).toEqual(expected);
+    expect(nestBracketParams({ 'specs[socket]': 'AM5', specs: 'foo' })).toEqual(expected);
+    expect(nestBracketParams({ specs: ['a', 'b'], 'specs[socket]': 'AM5' })).toEqual(expected);
+    expect(nestBracketParams({ specs: 'foo' })).toEqual({ specs: 'foo' });
+  });
+
   it('drops prototype-polluting keys', () => {
     const out = nestBracketParams({
       'specs[__proto__]': ['a', 'b'],

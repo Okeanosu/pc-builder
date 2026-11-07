@@ -87,6 +87,20 @@ describe('POST /api/builds', () => {
     );
   });
 
+  it('rejects HIDDEN products like unknown ones (404 with details.missing)', async () => {
+    const hidden = parts.case!.id;
+    await db.update(products).set({ status: 'HIDDEN' }).where(eq(products.id, hidden));
+    try {
+      const res = await request(app)
+        .post('/api/builds')
+        .send({ purpose: 'gaming', productIds: idsOf(parts) });
+      expect(res.status).toBe(404);
+      expect(res.body.error.details).toEqual({ missing: [hidden] });
+    } finally {
+      await db.update(products).set({ status: 'ACTIVE' }).where(eq(products.id, hidden));
+    }
+  });
+
   it('answers 404 for unknown products and 422 for a bad body', async () => {
     const unknown = await request(app)
       .post('/api/builds')
