@@ -13,17 +13,17 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Price } from '@/components/ui/Price';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { cn } from '@/lib/cn';
 import { formatVnd } from '@/lib/format';
 import { queryKeys } from '@/lib/query-keys';
 import { adminApi, type RevenueGroupBy } from './api';
 import { shopDay } from './format';
 import { formatAxisVnd, periodLabel, periodTitle, revenueRange, revenueTotals } from './revenue';
-import { QueryError, refetchClass, tableClass, td, th, thEnd } from './ui';
+import { flushCells, QueryError, refetchClass, tableClass, td, th, thEnd } from './ui';
 
 const GROUPS: { value: RevenueGroupBy; label: string; window: string }[] = [
   { value: 'day', label: 'Ngày', window: '30 ngày gần nhất' },
@@ -68,10 +68,12 @@ export function RevenueChart() {
   const group = GROUPS.find((g) => g.value === groupBy)!;
 
   return (
-    <Card className="flex flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-3 p-5 pb-2">
+    <section aria-labelledby="dash-revenue" className="flex flex-col">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-fg">Doanh thu</h2>
+          <h2 id="dash-revenue" className="text-lg font-semibold text-fg">
+            Doanh thu
+          </h2>
           <p className="text-sm text-muted">
             {group.window} · đơn đã thanh toán ·{' '}
             {query.data ? (
@@ -95,9 +97,9 @@ export function RevenueChart() {
         </Tabs>
       </div>
 
-      <div className="px-2 pb-2 sm:px-3">
+      <div className="pt-4 pb-2">
         {query.isPending ? (
-          <Skeleton className="mx-3 my-2 h-[260px]" />
+          <Skeleton className="my-2 h-[260px]" />
         ) : query.isError && !query.data ? (
           <QueryError error={query.error} onRetry={() => query.refetch()} />
         ) : totals.revenue === 0 ? (
@@ -143,7 +145,7 @@ export function RevenueChart() {
                   dataKey="revenue"
                   name="Doanh thu"
                   fill="var(--color-ring)"
-                  radius={[4, 4, 0, 0]}
+                  radius={[2, 2, 0, 0]}
                   maxBarSize={24}
                   isAnimationActive={false}
                 />
@@ -155,10 +157,10 @@ export function RevenueChart() {
 
       {rows.length > 0 && totals.revenue > 0 && (
         <details className="group border-t border-border">
-          <summary className="focus-ring cursor-pointer list-none px-5 py-3 text-sm font-medium text-accent-ink hover:underline">
+          <summary className="focus-ring w-fit cursor-pointer list-none rounded-xs py-3 text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current">
             Xem số liệu dạng bảng
           </summary>
-          <div className="max-h-72 overflow-auto">
+          <div className={cn('max-h-72 overflow-auto', flushCells)}>
             <table className={tableClass}>
               <thead>
                 <tr>
@@ -180,6 +182,6 @@ export function RevenueChart() {
           </div>
         </details>
       )}
-    </Card>
+    </section>
   );
 }

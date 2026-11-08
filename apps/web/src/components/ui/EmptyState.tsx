@@ -14,7 +14,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-/** The icon sits in a dashed footprint, like an unpopulated slot on a circuit board. */
+/** The icon sits on a round plate; the error tone tints it with danger. */
 export function EmptyState({
   icon,
   title,

@@ -21,8 +21,7 @@ export function ProductGallery({ images, alt, category }: ProductGalleryProps) {
         alt={alt}
         category={category}
         priority
-        sizes="(min-width: 1024px) 560px, 100vw"
-        className="rounded-md border border-border"
+        sizes="(min-width: 1024px) 640px, 100vw"
       />
       {images.length > 1 && (
         <ul className="flex gap-2 overflow-x-auto" aria-label="Ảnh sản phẩm">
@@ -34,11 +33,13 @@ export function ProductGallery({ images, alt, category }: ProductGalleryProps) {
                 aria-label={`Ảnh ${i + 1}`}
                 aria-current={i === active || undefined}
                 className={cn(
-                  'focus-ring block w-20 overflow-hidden rounded-sm border-2',
-                  i === active ? 'border-accent' : 'border-transparent hover:border-border-strong',
+                  'focus-ring block w-20 overflow-hidden rounded-sm border',
+                  i === active
+                    ? 'border-fg shadow-[0_0_0_1px_var(--color-fg)]'
+                    : 'border-transparent hover:border-border-strong',
                 )}
               >
-                <ProductImage src={src} alt="" category={category} designator={false} sizes="80px" />
+                <ProductImage src={src} alt="" category={category} sizes="80px" />
               </button>
             </li>
           ))}

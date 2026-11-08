@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight, Lock, RotateCw, Search, TriangleExclamationPoint } from 'lucide-react';
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -41,26 +40,31 @@ export function QueryError({
   );
 }
 
-/** Horizontal scroller with the admin table look. Children: a <table>. */
+/** Unframed tables: the outer cells sit flush with the page edge, aligned with the heading above. */
+export const flushCells =
+  '[&_td:first-child]:ps-0 [&_td:last-child]:pe-0 [&_th:first-child]:ps-0 [&_th:last-child]:pe-0';
+
+/** Horizontal scroller with the admin table look: no frame, hairlines above, below and between rows. Children: a <table>. */
 export function TableFrame({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <Card className={cn('overflow-hidden', className)}>
-      <div className="overflow-x-auto">{children}</div>
-    </Card>
+    <div className={cn('border-y border-border', className)}>
+      <div className={cn('overflow-x-auto', flushCells)}>{children}</div>
+    </div>
   );
 }
 
-export const th = 'h-10 whitespace-nowrap px-4 text-start text-xs font-semibold text-muted';
-export const thEnd = 'h-10 whitespace-nowrap px-4 text-end text-xs font-semibold text-muted';
+export const th = 'h-10 whitespace-nowrap px-4 text-start text-xs font-medium text-muted';
+export const thEnd = 'h-10 whitespace-nowrap px-4 text-end text-xs font-medium text-muted';
 export const td = 'px-4 py-3 align-middle';
-export const tableClass = 'w-full border-collapse text-sm [&_tbody_tr]:border-t [&_tbody_tr]:border-border';
+export const tableClass =
+  'w-full border-collapse text-sm tabular-nums [&_tbody_tr]:border-t [&_tbody_tr]:border-border';
 
 export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: number }) {
   return (
     <div className="flex flex-col divide-y divide-border" aria-hidden>
       {Array.from({ length: rows }, (_, r) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows
-        <div key={r} className="flex items-center gap-4 px-4 py-3.5">
+        <div key={r} className="flex items-center gap-4 py-3.5">
           {Array.from({ length: cols }, (_, c) => (
             <Skeleton
               // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder cells
@@ -170,15 +174,15 @@ export function SearchBox({
 /** Shown to STAFF on ADMIN-only editors. */
 export function ReadOnlyNote({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-md border border-warn/45 bg-warn/10 px-4 py-3 text-sm text-fg">
-      <Lock className="mt-0.5 size-4 shrink-0 text-warn-ink" aria-hidden />
+    <div className="flex items-start gap-2.5 text-sm text-warn-ink">
+      <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p>{children}</p>
     </div>
   );
 }
 
 export function SectionTitle({ className, ...props }: ComponentPropsWithRef<'h2'>) {
-  return <h2 className={cn('text-base font-semibold text-fg', className)} {...props} />;
+  return <h2 className={cn('text-lg font-semibold text-fg', className)} {...props} />;
 }
 
 /** Faded while a list refetches, so the frame stays put instead of flashing a skeleton. */
@@ -191,7 +195,7 @@ export function PageSkeleton() {
   return (
     <div className="flex flex-col gap-4" aria-busy>
       <Skeleton className="h-10 w-full max-w-xl" />
-      <Skeleton className="h-[420px] rounded-md" />
+      <Skeleton className="h-[420px]" />
     </div>
   );
 }

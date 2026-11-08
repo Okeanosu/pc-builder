@@ -46,9 +46,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'focus-ring flex h-10 items-center gap-2.5 rounded-sm px-3 text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-surface text-fg shadow-raised'
-                      : 'text-muted hover:bg-surface-2 hover:text-fg',
+                    active ? 'bg-surface-2 text-fg' : 'text-muted hover:bg-surface-2 hover:text-fg',
                   )}
                 >
                   <Icon className="size-4" aria-hidden />

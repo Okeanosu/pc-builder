@@ -16,7 +16,7 @@ export function MoneyInput({
   return (
     <Input
       {...props}
-      mono
+      className="tabular-nums"
       inputMode="numeric"
       autoComplete="off"
       trailing="₫"

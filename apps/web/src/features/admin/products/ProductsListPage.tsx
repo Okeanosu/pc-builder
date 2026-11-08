@@ -160,7 +160,7 @@ export function ProductsListPage() {
                   <td className={cn(td, 'min-w-64')}>
                     <Link
                       href={`/admin/products/${p.id}`}
-                      className="focus-ring line-clamp-2 rounded-xs font-medium text-fg hover:text-accent-ink hover:underline"
+                      className="focus-ring line-clamp-2 rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
                     >
                       {p.name}
                     </Link>

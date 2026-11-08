@@ -18,7 +18,7 @@ export function Section({
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="flex scroll-mt-6 flex-col gap-5">
       <header className="flex max-w-2xl flex-col gap-1.5">
-        <h2 id={`${id}-title`} className="text-xl font-bold text-fg">
+        <h2 id={`${id}-title`} className="text-lg font-semibold text-fg">
           {title}
         </h2>
         {description && <p className="text-sm text-muted">{description}</p>}

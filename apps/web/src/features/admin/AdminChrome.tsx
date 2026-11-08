@@ -29,7 +29,13 @@ export function AdminPageHeader({ title, actions }: { title: ReactNode; actions?
   const ctx = useContext(ChromeContext);
   return (
     <>
-      {ctx?.titleEl && createPortal(<h1 className="truncate">{title}</h1>, ctx.titleEl)}
+      {ctx?.titleEl &&
+        createPortal(
+          <h1 className="truncate text-xl font-semibold font-stretch-expanded tracking-[-0.02em]">
+            {title}
+          </h1>,
+          ctx.titleEl,
+        )}
       {ctx?.actionsEl && actions ? createPortal(actions, ctx.actionsEl) : null}
     </>
   );

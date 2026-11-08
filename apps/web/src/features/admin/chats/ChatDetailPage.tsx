@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { use } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -16,7 +15,7 @@ import { cn } from '@/lib/cn';
 import { queryKeys } from '@/lib/query-keys';
 import { AdminPageHeader } from '../AdminChrome';
 import { adminApi } from '../api';
-import { ChatModeBadge } from '../badges';
+import { ChatModeBadge, StatusText } from '../badges';
 import { formatDateTime } from '../format';
 import { PageSkeleton, QueryError } from '../ui';
 import { compactJson, prettyJson, summarizeToolResult } from './chat-log';
@@ -55,9 +54,9 @@ function ToolCall({ m, index }: { m: ChatLogMessageDTO; index: number }) {
             <span className="flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted">Bước {index}: gọi công cụ</span>
               <code className="font-mono font-semibold text-fg">{m.toolName ?? 'không rõ'}</code>
-              <Badge tone={summary.failed ? 'danger' : 'neutral'} size="sm">
+              <StatusText tone={summary.failed ? 'danger' : 'neutral'} size="sm">
                 {summary.text}
-              </Badge>
+              </StatusText>
               {latency(m.latencyMs) && (
                 <span className="text-xs text-muted tabular-nums">{latency(m.latencyMs)}</span>
               )}
@@ -88,7 +87,7 @@ function BuildLinks({ ids }: { ids: string[] }) {
           key={id}
           href={`/builds/${id}`}
           target="_blank"
-          className="focus-ring inline-flex h-7 items-center gap-1 rounded-xs border border-border bg-surface px-2 text-xs font-medium text-accent-ink hover:border-border-strong"
+          className="focus-ring inline-flex h-7 items-center gap-1 rounded-full border border-border-strong px-2.5 text-xs font-medium text-fg hover:border-fg"
         >
           Cấu hình {i + 1} <span className="tabular-nums text-muted">{id.slice(0, 8)}</span>
           <ExternalLink className="size-3" aria-hidden />
@@ -115,7 +114,7 @@ function Message({ m, toolIndex }: { m: ChatLogMessageDTO; toolIndex: number }) 
   }
   return (
     <li id={`msg-${m.id}`} className="flex flex-col items-start gap-1.5">
-      <div className="max-w-2xl text-base text-fg [&_a]:text-accent-ink [&_a]:underline [&_li]:my-0.5 [&_ol]:list-decimal [&_ol]:ps-5 [&_p]:my-2 [&_strong]:font-semibold [&_table]:my-2 [&_table]:text-sm [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_ul]:list-disc [&_ul]:ps-5">
+      <div className="max-w-2xl text-base text-fg [&_a]:text-fg [&_a]:underline [&_a]:decoration-border-strong [&_a]:underline-offset-4 [&_li]:my-0.5 [&_ol]:list-decimal [&_ol]:ps-5 [&_p]:my-2 [&_strong]:font-semibold [&_table]:my-2 [&_table]:text-sm [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_ul]:list-disc [&_ul]:ps-5">
         <Markdown remarkPlugins={[remarkGfm]}>{m.content}</Markdown>
       </div>
       <BuildLinks ids={m.buildIds} />
@@ -123,9 +122,9 @@ function Message({ m, toolIndex }: { m: ChatLogMessageDTO; toolIndex: number }) 
         <Bot className="size-3" aria-hidden /> Trợ lý · {time}
         {latency(m.latencyMs) && <span className="tabular-nums">· {latency(m.latencyMs)}</span>}
         {m.mode === 'FALLBACK' && (
-          <Badge tone="warn" size="sm">
+          <StatusText tone="warn" size="sm">
             Dự phòng
-          </Badge>
+          </StatusText>
         )}
       </span>
     </li>

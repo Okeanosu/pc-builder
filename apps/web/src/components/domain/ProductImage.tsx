@@ -12,8 +12,6 @@ interface ProductImageProps {
   /** Sizes hint for next/image; match the rendered width. */
   sizes?: string;
   priority?: boolean;
-  /** @deprecated Kept for call-site compatibility; the plate no longer shows a label. */
-  designator?: boolean;
   /** Set an aspect ratio or fixed size here; defaults to 4:3. */
   className?: string;
 }

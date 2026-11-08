@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Đơn hàng của tôi' };
 
 export default function MyOrdersPage() {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
       <MyOrders />
     </Suspense>
   );

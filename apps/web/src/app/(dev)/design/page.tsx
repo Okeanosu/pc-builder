@@ -1,5 +1,5 @@
 import { BUILD_LABEL_TEXT, CATEGORY_KEYS, CATEGORY_LABELS } from '@pc/shared';
-import { Check, CloudOff, Download, Info, PackageOpen, Plus, SearchX, ShoppingCart } from 'lucide-react';
+import { CloudOff, Download, Info, PackageOpen, Plus, SearchX, ShoppingCart } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -16,7 +16,6 @@ import { Logo } from '@/components/layout/Logo';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { WorkshopSurface } from '@/components/layout/WorkshopSurface';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -36,11 +35,9 @@ import {
   BUILD_TOTAL,
   CPU_FIELDS,
   CPU_SPECS,
-  DEMO_BUILDS,
   ISSUES_ERROR,
   ISSUES_WARNING,
   PRODUCTS,
-  TOKENS,
 } from './_fixtures';
 import { Section, Specimen, ThemePanes } from './_showcase';
 
@@ -52,7 +49,7 @@ export const metadata: Metadata = {
 const TOC = [
   { id: 'mau-sac', label: 'Màu sắc' },
   { id: 'chu', label: 'Chữ' },
-  { id: 'hinh-khoi', label: 'Bo góc, bóng, khoảng cách' },
+  { id: 'hinh-khoi', label: 'Bo góc, lớp phủ, khoảng cách' },
   { id: 'nut', label: 'Nút bấm' },
   { id: 'bieu-mau', label: 'Biểu mẫu' },
   { id: 'nhan', label: 'Nhãn, giá, tải' },
@@ -60,14 +57,51 @@ const TOC = [
   { id: 'dieu-huong', label: 'Tabs, tooltip' },
   { id: 'lop-phu', label: 'Lớp phủ' },
   { id: 'nghiep-vu', label: 'Thành phần nghiệp vụ' },
-  { id: 'workshop', label: 'Bề mặt Workshop' },
   { id: 'bo-cuc', label: 'Bố cục trang' },
 ];
 
+/** Bench tokens, mirrored from globals.css (light / dark). */
+const TOKENS: { token: string; light: string; dark: string; use: string }[] = [
+  { token: 'bg', light: '#ffffff', dark: '#000000', use: 'Nền trang' },
+  { token: 'surface', light: '#ffffff', dark: '#000000', use: 'Panel trên trang, tách bằng đường kẻ' },
+  { token: 'surface-2', light: '#f1f2f3', dark: '#17181a', use: 'Tấm sản phẩm, dòng nhóm, ô nhập khi nghỉ' },
+  { token: 'surface-3', light: '#e6e8ea', dark: '#232528', use: 'Hover, nhấn' },
+  { token: 'border', light: '#e3e5e8', dark: '#2a2c2f', use: 'Đường kẻ mảnh' },
+  { token: 'border-strong', light: '#8a9097', dark: '#6b7077', use: 'Viền ô nhập, đường chia cần 3:1' },
+  { token: 'fg', light: '#000000', dark: '#ffffff', use: 'Mực: chữ chính' },
+  { token: 'muted', light: '#5f656c', dark: '#a2a7ad', use: 'Chữ phụ (≥ 4.5:1)' },
+  {
+    token: 'accent',
+    light: '#000000',
+    dark: '#ffffff',
+    use: 'Màu hành động duy nhất: nút đen, tab đang chọn',
+  },
+  { token: 'accent-fg', light: '#ffffff', dark: '#000000', use: 'Chữ trên nền accent' },
+  { token: 'ok', light: '#1f8a4c', dark: '#34c77b', use: 'Dấu trạng thái tốt; chữ dùng ok-ink' },
+  { token: 'warn', light: '#d97706', dark: '#f59e0b', use: 'Dấu cảnh báo; chữ dùng warn-ink' },
+  { token: 'danger', light: '#dc2626', dark: '#f04438', use: 'Dấu xung đột, lỗi; chữ dùng danger-ink' },
+  { token: 'ring', light: '#000000', dark: '#ffffff', use: 'Vòng focus' },
+];
+
 const TYPE_SCALE = [
-  { px: 48, cls: 'text-3xl font-extrabold', name: 'text-3xl', sample: 'Cấu hình chuẩn, đúng ngân sách' },
-  { px: 32, cls: 'text-2xl font-bold', name: 'text-2xl', sample: 'Gợi ý 3 cấu hình cho 25 triệu' },
-  { px: 24, cls: 'text-xl font-semibold', name: 'text-xl', sample: 'Card đồ họa' },
+  {
+    px: 48,
+    cls: 'text-3xl font-bold font-stretch-expanded tracking-[-0.03em]',
+    name: 'text-3xl',
+    sample: 'Cấu hình đúng nhu cầu, đúng ngân sách.',
+  },
+  {
+    px: 32,
+    cls: 'text-2xl font-semibold font-stretch-expanded tracking-[-0.03em]',
+    name: 'text-2xl',
+    sample: 'Giỏ hàng',
+  },
+  {
+    px: 24,
+    cls: 'text-xl font-semibold font-stretch-expanded tracking-[-0.02em]',
+    name: 'text-xl',
+    sample: 'Tổng quan (tiêu đề trang quản trị)',
+  },
   { px: 20, cls: 'text-lg font-semibold', name: 'text-lg', sample: 'Thông số kỹ thuật' },
   {
     px: 16,
@@ -80,10 +114,11 @@ const TYPE_SCALE = [
 ];
 
 const RADII = [
-  { cls: 'rounded-xs', px: 4, use: 'Nhãn, checkbox' },
-  { cls: 'rounded-sm', px: 8, use: 'Nút, ô nhập' },
-  { cls: 'rounded-md', px: 12, use: 'Thẻ' },
-  { cls: 'rounded-lg', px: 16, use: 'Hộp thoại, panel' },
+  { cls: 'rounded-xs', label: '3px', use: 'Checkbox, vạch phân bổ' },
+  { cls: 'rounded-sm', label: '6px', use: 'Ô nhập, tấm sản phẩm' },
+  { cls: 'rounded-md', label: '8px', use: 'Thẻ khi cần khung' },
+  { cls: 'rounded-lg', label: '12px', use: 'Hộp thoại' },
+  { cls: 'rounded-full', label: 'pill', use: 'Mọi nút hành động' },
 ];
 
 const SPACING = [1, 2, 3, 4, 6, 8, 12, 16];
@@ -125,11 +160,13 @@ export default function DesignSystemPage() {
 
         <main className="flex min-w-0 flex-col gap-16">
           <header className="flex max-w-3xl flex-col gap-4">
-            <h1 className="text-2xl font-extrabold text-fg sm:text-3xl">Tech Workshop</h1>
+            <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+              Bench
+            </h1>
             <p className="text-base text-muted">
-              Cửa hàng dùng nền nhôm sáng để đọc thông số cho dễ. Khu AI tư vấn và Tự build PC đặt trên tấm
-              thảm than chì của bàn lắp ráp, kể cả khi trang đang ở giao diện sáng. Cyan dành cho hành động,
-              lime chỉ dùng cho “tương thích”, amber cho cảnh báo, đỏ cho xung đột.
+              Bàn làm việc sáng dưới đèn: nền trắng và xám lạnh, mực đen, đường kẻ mảnh, số liệu xếp cột thẳng
+              hàng. Màu duy nhất đến từ dữ liệu: tám màu danh mục cho biết ngân sách chia cho CPU, card đồ
+              họa, RAM… Đen nghĩa là “làm đi”: một kiểu nút chính, còn lại là chữ, viền hoặc nút trong suốt.
             </p>
             <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
               {TOC.map((t) => (
@@ -148,7 +185,7 @@ export default function DesignSystemPage() {
           <Section
             id="mau-sac"
             title="Màu sắc"
-            description="Thành phần chỉ dùng token ngữ nghĩa (bg-surface, text-muted…), không dùng mã màu trực tiếp, nên tự đổi theo vùng sáng, tối hoặc Workshop."
+            description="Thành phần chỉ dùng token ngữ nghĩa (bg-surface, text-muted…), không dùng mã màu trực tiếp, nên tự đổi theo vùng sáng hoặc tối. Trạng thái nói bằng màu mực (ok-ink, warn-ink, danger-ink), không bằng khung màu."
           >
             <ThemePanes>
               {(t) => (
@@ -185,7 +222,7 @@ export default function DesignSystemPage() {
           <Section
             id="chu"
             title="Chữ"
-            description="Be Vietnam Pro cho giao diện (dấu tiếng Việt chồng tầng vẫn thoáng), JetBrains Mono cho giá và thông số. Thang 12/14/16/20/24/32/48."
+            description="Archivo (biến thiên độ đậm và độ rộng) cho mọi chữ. Tiêu đề trang dùng bản rộng 125%, chữ thường giữ độ rộng chuẩn. Số liệu dùng tabular-nums; JetBrains Mono chỉ cho thứ người dùng sao chép như nội dung chuyển khoản. Thang 12/14/16/20/24/32/48."
           >
             <Card className="divide-y divide-border">
               {TYPE_SCALE.map((s) => (
@@ -193,55 +230,61 @@ export default function DesignSystemPage() {
                   key={s.px}
                   className="grid gap-2 px-5 py-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-baseline"
                 >
-                  <span className="font-mono text-xs text-muted">
+                  <span className="text-xs text-muted tabular-nums">
                     {s.px}px <span className="ms-1 text-fg">{s.name}</span>
                   </span>
                   <span className={`${s.cls} min-w-0 text-fg`}>{s.sample}</span>
                 </div>
               ))}
               <div className="grid gap-2 px-5 py-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-baseline">
-                <span className="font-mono text-xs text-muted">
-                  mono <span className="ms-1 text-fg">font-mono</span>
+                <span className="text-xs text-muted">
+                  số <span className="ms-1 text-fg">tabular-nums</span>
                 </span>
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-5 gap-y-1 font-mono text-base text-fg tabular-nums">
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-5 gap-y-1 text-base text-fg tabular-nums">
                   <Price amount={BUILD_TOTAL} size="lg" />
                   <span>AM5</span>
                   <span>DDR5-6000 CL30</span>
                   <span>850W 80+ Gold</span>
                 </span>
               </div>
+              <div className="grid gap-2 px-5 py-4 sm:grid-cols-[112px_minmax(0,1fr)] sm:items-baseline">
+                <span className="text-xs text-muted">
+                  mã <span className="ms-1 text-fg">font-mono</span>
+                </span>
+                <span className="min-w-0 font-mono text-base font-semibold text-fg">PCB20261108A7K2</span>
+              </div>
             </Card>
           </Section>
 
           <Section
             id="hinh-khoi"
-            title="Bo góc, bóng, khoảng cách"
-            description="Bo góc theo cấp bậc: phần tử nhỏ bo ít, khối chứa bo nhiều. Chỉ hai mức bóng; thẻ thường dựa vào viền thay vì bóng. Khoảng cách theo lưới 4 px."
+            title="Bo góc, lớp phủ, khoảng cách"
+            description="Nút hành động là viên thuốc; ô nhập và tấm sản phẩm bo 6 px; panel không bo, tách nhau bằng đường kẻ và khoảng trống. Không có bóng, trừ lớp phủ (hộp thoại, ngăn kéo, popover). Khoảng cách theo lưới 4 px."
           >
             <ThemePanes>
               {() => (
                 <>
                   <Specimen label="Bo góc">
                     {RADII.map((r) => (
-                      <div key={r.px} className="flex flex-col items-start gap-1.5">
-                        <div className={`${r.cls} size-16 border border-border-strong bg-surface-2`} />
-                        <span className="font-mono text-xs text-fg">{r.px}px</span>
+                      <div key={r.cls} className="flex w-24 flex-col items-start gap-1.5">
+                        <div className={`${r.cls} h-16 w-20 bg-surface-2`} />
+                        <span className="text-xs text-fg tabular-nums">{r.label}</span>
                         <span className="text-xs text-muted">{r.use}</span>
                       </div>
                     ))}
                   </Specimen>
-                  <Specimen label="Bóng">
-                    <div className="flex h-20 w-40 items-center justify-center rounded-md border border-border bg-surface text-xs text-muted shadow-raised">
-                      shadow-raised
-                    </div>
-                    <div className="flex h-20 w-40 items-center justify-center rounded-md border border-border bg-surface text-xs text-muted shadow-overlay">
+                  <Specimen label="Bóng: chỉ cho lớp phủ">
+                    <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-surface text-xs text-muted shadow-overlay">
                       shadow-overlay
+                    </div>
+                    <div className="flex h-20 w-40 items-center justify-center border-y border-border text-xs text-muted">
+                      panel: đường kẻ
                     </div>
                   </Specimen>
                   <Specimen label="Khoảng cách (bội số 4 px)" className="flex-col items-start gap-1.5">
                     {SPACING.map((s) => (
                       <div key={s} className="flex items-center gap-3">
-                        <span className="w-12 font-mono text-xs text-muted">{s * 4}px</span>
+                        <span className="w-12 text-xs text-muted tabular-nums">{s * 4}px</span>
                         <span className="h-2.5 rounded-[2px] bg-accent" style={{ width: s * 4 }} />
                       </div>
                     ))}
@@ -254,7 +297,7 @@ export default function DesignSystemPage() {
           <Section
             id="nut"
             title="Nút bấm"
-            description="Nút chính màu cyan với chữ than chì và gờ phím phía dưới. Nút Workshop luôn màu than chì để dẫn vào khu AI. Mọi nút có vòng focus 2 px."
+            description="Nút chính màu mực (đen trên nền sáng, trắng trên nền tối), mỗi bước chỉ một nút chính. Còn lại là secondary, outline, ghost hoặc liên kết gạch chân. Mọi nút có vòng focus 2 px."
           >
             <ThemePanes>
               {() => (
@@ -268,10 +311,6 @@ export default function DesignSystemPage() {
                     <Button variant="outline">So sánh</Button>
                     <Button variant="ghost">Để sau</Button>
                     <Button variant="danger">Xóa sản phẩm</Button>
-                    <Button variant="workshop">
-                      <span aria-hidden className="size-1.5 rounded-full bg-cyan" />
-                      AI tư vấn cấu hình
-                    </Button>
                     <Button variant="link">Xem chi tiết</Button>
                   </Specimen>
                   <Specimen label="Kích thước">
@@ -315,7 +354,12 @@ export default function DesignSystemPage() {
                     <Input defaultValue="09123" inputMode="tel" />
                   </Field>
                   <Field label="Ngân sách" hint="Từ 5 đến 200 triệu">
-                    <Input mono defaultValue="25.000.000" trailing="₫" inputMode="numeric" />
+                    <Input
+                      className="tabular-nums"
+                      defaultValue="25.000.000"
+                      trailing="₫"
+                      inputMode="numeric"
+                    />
                   </Field>
                   <Field label="Mã giảm giá">
                     <Input placeholder="Chưa áp dụng" disabled />
@@ -370,7 +414,7 @@ export default function DesignSystemPage() {
                     <Badge tone="solid">Cân bằng</Badge>
                     <Badge tone="outline">Giá tham khảo</Badge>
                   </Specimen>
-                  <Specimen label="Badge mono cho mã và số">
+                  <Specimen label="Badge tabular-nums cho mã và số">
                     <Badge mono>AM5</Badge>
                     <Badge mono>DDR5</Badge>
                     <Badge mono tone="danger">
@@ -393,7 +437,7 @@ export default function DesignSystemPage() {
                     <Spinner size="lg" className="text-accent-ink" />
                   </Specimen>
                   <Specimen label="Skeleton (thẻ sản phẩm đang tải)">
-                    <div className="flex w-56 flex-col gap-3 rounded-md border border-border bg-surface p-3">
+                    <div className="flex w-56 flex-col gap-3">
                       <Skeleton className="aspect-[4/3] w-full" />
                       <Skeleton className="h-3 w-16" />
                       <SkeletonText lines={2} />
@@ -446,8 +490,8 @@ export default function DesignSystemPage() {
                       description="Thêm linh kiện từ danh mục, hoặc để AI tư vấn một cấu hình trọn bộ theo ngân sách của bạn."
                       actions={
                         <>
-                          <Button variant="workshop">AI tư vấn cấu hình</Button>
-                          <Button variant="secondary">Xem linh kiện</Button>
+                          <Button>AI tư vấn cấu hình</Button>
+                          <Button variant="outline">Xem linh kiện</Button>
                         </>
                       }
                     />
@@ -653,79 +697,6 @@ export default function DesignSystemPage() {
           </Section>
 
           <Section
-            id="workshop"
-            title="Bề mặt Workshop"
-            description="WorkshopSurface giữ màu than chì cho AI tư vấn và Tự build PC ngay cả trên trang sáng. Bản dựng dưới đây là tham chiếu cho khoảnh khắc demo: chip trạng thái công cụ, 3 cấu hình trượt vào, thanh phân bổ chạy, lời giải thích stream."
-          >
-            <WorkshopSurface className="flex flex-col gap-5 rounded-lg border border-border p-4 sm:p-6">
-              <div className="ms-auto max-w-md rounded-md rounded-ee-xs bg-accent px-4 py-2.5 text-sm font-medium text-accent-fg">
-                Chơi game 2K, tầm 25 triệu, thích case trắng
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs text-muted">
-                  <Check className="size-3.5 text-ok-ink" aria-hidden />
-                  Đã hiểu nhu cầu: chơi game, 2K, 25 triệu
-                </span>
-                <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 text-xs text-accent-ink">
-                  <Spinner size="sm" label={null} />
-                  Đang chọn linh kiện trong kho…
-                </span>
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                {DEMO_BUILDS.map((b, i) => (
-                  <Card
-                    key={b.label}
-                    variant={b.label === 'balanced' ? 'selected' : 'default'}
-                    className="flex animate-card-in flex-col gap-4 p-5"
-                    style={{ animationDelay: `${i * 110}ms` }}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <Badge tone={b.label === 'balanced' ? 'accent' : 'neutral'}>
-                        {BUILD_LABEL_TEXT[b.label]}
-                      </Badge>
-                      <CompatibilityBadge size="sm" issues={b.warnings} />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <Price amount={b.total} size="xl" />
-                      <span className="text-xs text-muted">Còn dư {formatVnd(25_000_000 - b.total)}</span>
-                    </div>
-                    <PerfMeter
-                      size="sm"
-                      score={b.score}
-                      label={`Điểm hiệu năng ${BUILD_LABEL_TEXT[b.label]}`}
-                    />
-                    <AllocationBar allocation={b.allocation} size="sm" legend="compact" />
-                    <ul className="flex flex-col gap-1.5 border-t border-border pt-3 text-sm">
-                      {b.parts.map((p) => (
-                        <li key={p.category} className="flex items-baseline justify-between gap-3">
-                          <span className="text-muted">{CATEGORY_LABELS[p.category]}</span>
-                          <span className="truncate text-end font-medium text-fg">{p.name}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-auto flex gap-2">
-                      <Button size="sm" className="flex-1">
-                        Mở trong Customizer
-                      </Button>
-                      <Button size="icon-sm" variant="secondary" aria-label="Thêm cả bộ vào giỏ">
-                        <ShoppingCart aria-hidden />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <p className="max-w-3xl text-sm text-fg">
-                Cấu hình Cân bằng dồn 40% ngân sách cho card đồ họa vì chơi game ở 2K phụ thuộc GPU nhiều
-                nhất, CPU 6 nhân vẫn đủ để không nghẽn
-                <span
-                  aria-hidden
-                  className="ms-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-caret bg-accent"
-                />
-              </p>
-            </WorkshopSurface>
-          </Section>
-
-          <Section
             id="bo-cuc"
             title="Bố cục trang"
             description="Header, footer và khung quản trị chỉ nhận dữ liệu qua props (số lượng giỏ, người dùng, danh mục); không tự gọi API."
@@ -754,28 +725,26 @@ export default function DesignSystemPage() {
                       </div>
                     }
                   >
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <dl className="grid gap-px border-y border-border bg-border sm:grid-cols-3">
                       {[
                         { label: 'Doanh thu hôm nay', value: formatVnd(48_630_000) },
                         { label: 'Đơn chờ thanh toán', value: '7' },
                         { label: 'Hội thoại AI hôm nay', value: '132' },
                       ].map((s) => (
-                        <Card key={s.label} className="flex flex-col gap-1 p-4">
-                          <span className="text-sm text-muted">{s.label}</span>
-                          <span className="font-mono text-xl font-semibold text-fg tabular-nums">
-                            {s.value}
-                          </span>
-                        </Card>
+                        <div key={s.label} className="flex flex-col gap-1 bg-bg py-4 pe-5 sm:not-first:ps-5">
+                          <dt className="text-sm text-muted">{s.label}</dt>
+                          <dd className="text-xl font-semibold text-fg tabular-nums">{s.value}</dd>
+                        </div>
                       ))}
-                    </div>
-                    <Card className="mt-4">
+                    </dl>
+                    <div className="mt-6 border-y border-border">
                       <EmptyState
                         compact
                         icon={<PackageOpen />}
                         title="Chưa có đơn hàng mới"
                         description="Đơn mới sẽ hiện ở đây ngay khi khách thanh toán xong."
                       />
-                    </Card>
+                    </div>
                   </AdminShell>
                 </div>
               )}

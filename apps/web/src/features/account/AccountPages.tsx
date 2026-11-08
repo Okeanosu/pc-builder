@@ -1,12 +1,11 @@
 'use client';
 
 import { BUILD_LABEL_TEXT, type BuildDTO, type OrderDTO, PURPOSE_LABELS, type Role } from '@pc/shared';
-import { ChevronRight, Cpu, Package, ShoppingCart } from 'lucide-react';
+import { Cpu, Package, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AllocationBar } from '@/components/domain/AllocationBar';
 import { PerfMeter } from '@/components/domain/PerfMeter';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Price } from '@/components/ui/Price';
@@ -27,15 +26,14 @@ const ROLE_TEXT: Record<Role, string> = {
 
 function SectionTitle({ title, href, linkText }: { title: string; href?: string; linkText?: string }) {
   return (
-    <div className="flex items-end justify-between gap-3">
+    <div className="flex items-baseline justify-between gap-3 border-b border-border pb-3">
       <h2 className="text-lg font-semibold text-fg">{title}</h2>
       {href && (
         <Link
           href={href}
-          className="focus-ring inline-flex items-center gap-0.5 rounded-xs text-sm font-medium text-accent-ink hover:underline"
+          className="focus-ring shrink-0 rounded-xs text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
         >
           {linkText}
-          <ChevronRight className="size-4" aria-hidden />
         </Link>
       )}
     </div>
@@ -45,22 +43,22 @@ function SectionTitle({ title, href, linkText }: { title: string; href?: string;
 function OrderRow({ order }: { order: OrderDTO }) {
   const count = order.items.reduce((s, i) => s + i.qty, 0);
   return (
-    <li className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-md border border-border bg-surface px-4 py-3 transition-colors hover:border-border-strong has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring">
+    <li className="group relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border py-3.5 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring">
       <div className="flex min-w-0 flex-col gap-1">
         <Link
           href={`/orders/${order.code}`}
-          className="tabular-nums text-sm font-semibold text-fg outline-none after:absolute after:inset-0"
+          className="text-sm font-semibold text-fg tabular-nums decoration-1 underline-offset-[3px] outline-none after:absolute after:inset-0 group-hover:underline"
         >
           {order.code}
         </Link>
-        <span className="text-xs text-muted">
+        <span className="text-xs text-muted tabular-nums">
           {orderDate.format(new Date(order.createdAt))} · {count} sản phẩm
           {order.type === 'BUILD' && ' · lắp ráp nguyên bộ'}
         </span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <OrderStatusBadge status={order.status} size="sm" />
-        <Price amount={order.total} size="md" />
+        <Price amount={order.total} size="md" className="min-w-28 justify-end" />
         {order.status === 'PENDING_PAYMENT' && (
           <Button asChild size="sm" className="relative z-10">
             <Link href={`/orders/${order.code}/pay`}>Thanh toán</Link>
@@ -76,7 +74,7 @@ function ListSkeleton({ rows = 3, className = 'h-16' }: { rows?: number; classNa
     <div className="flex flex-col gap-2" aria-busy>
       {Array.from({ length: rows }, (_, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
-        <Skeleton key={i} className={`${className} w-full rounded-md`} />
+        <Skeleton key={i} className={`${className} w-full`} />
       ))}
     </div>
   );
@@ -89,7 +87,7 @@ const noOrders = (
     title="Bạn chưa có đơn hàng nào"
     description="Đơn bạn đặt khi đã đăng nhập sẽ hiện ở đây, kèm tiến độ giao và lắp ráp."
     actions={
-      <Button asChild variant="workshop">
+      <Button asChild>
         <Link href="/advisor">Hỏi AI tư vấn cấu hình</Link>
       </Button>
     }
@@ -114,40 +112,41 @@ export function AccountOverview() {
   if (!user) {
     return (
       <div className="flex flex-col gap-4" aria-busy>
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-10 w-56" />
+        <Skeleton className="h-16 w-full" />
         <ListSkeleton />
       </div>
     );
   }
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">Xin chào, {user.fullName}</h1>
-        <p className="text-sm text-muted">Quản lý đơn hàng và các cấu hình bạn đã lưu.</p>
+    <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+            Xin chào, {user.fullName}
+          </h1>
+          <p className="text-sm text-muted">Quản lý đơn hàng và các cấu hình bạn đã lưu.</p>
+        </div>
+        <section
+          aria-label="Hồ sơ"
+          className="grid gap-x-8 gap-y-4 border-y border-border py-4 sm:grid-cols-3"
+        >
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-sm text-muted">Email</span>
+            <span className="truncate text-sm font-medium text-fg">{user.email}</span>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:border-s sm:border-border sm:ps-8">
+            <span className="text-sm text-muted">Số điện thoại</span>
+            <span className="text-sm font-medium text-fg tabular-nums">{user.phone ?? 'Chưa có'}</span>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:border-s sm:border-border sm:ps-8">
+            <span className="text-sm text-muted">Vai trò</span>
+            <span className="text-sm font-medium text-fg">{ROLE_TEXT[user.role]}</span>
+          </div>
+        </section>
       </div>
 
-      <section
-        aria-label="Hồ sơ"
-        className="grid gap-4 rounded-lg border border-border bg-surface p-5 sm:grid-cols-3"
-      >
-        <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-muted">Email</span>
-          <span className="truncate text-sm font-medium text-fg">{user.email}</span>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-xs text-muted">Số điện thoại</span>
-          <span className="tabular-nums text-sm text-fg">{user.phone ?? 'Chưa có'}</span>
-        </div>
-        <div className="flex flex-col items-start gap-1">
-          <span className="text-xs text-muted">Vai trò</span>
-          <Badge tone={user.role === 'CUSTOMER' ? 'neutral' : 'accent'} size="sm">
-            {ROLE_TEXT[user.role]}
-          </Badge>
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-3" aria-label="Đơn hàng gần đây">
+      <section className="flex flex-col gap-1" aria-label="Đơn hàng gần đây">
         <SectionTitle title="Đơn hàng gần đây" href="/account/orders" linkText="Tất cả đơn hàng" />
         {orders.isPending ? (
           <ListSkeleton />
@@ -156,7 +155,7 @@ export function AccountOverview() {
         ) : orders.data.items.length === 0 ? (
           noOrders
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col">
             {orders.data.items.map((o) => (
               <OrderRow key={o.id} order={o} />
             ))}
@@ -164,7 +163,7 @@ export function AccountOverview() {
         )}
       </section>
 
-      <section className="flex flex-col gap-3" aria-label="Cấu hình đã lưu">
+      <section className="flex flex-col gap-5" aria-label="Cấu hình đã lưu">
         <SectionTitle title="Cấu hình đã lưu" href="/account/builds" linkText="Xem tất cả" />
         {builds.isPending ? (
           <ListSkeleton rows={2} className="h-40" />
@@ -187,11 +186,13 @@ export function MyOrders() {
   const orders = useMyOrders(page, 10);
   const totalPages = orders.data ? Math.max(1, Math.ceil(orders.data.total / orders.data.pageSize)) : 1;
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">Đơn hàng của tôi</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+          Đơn hàng của tôi
+        </h1>
         {orders.data && orders.data.total > 0 && (
-          <p className="text-sm text-muted">{orders.data.total} đơn hàng</p>
+          <p className="text-sm text-muted tabular-nums">{orders.data.total} đơn hàng</p>
         )}
       </div>
       {orders.isPending ? (
@@ -202,7 +203,7 @@ export function MyOrders() {
         noOrders
       ) : (
         <>
-          <ul className="flex flex-col gap-2" aria-busy={orders.isFetching || undefined}>
+          <ul className="flex flex-col border-t border-border" aria-busy={orders.isFetching || undefined}>
             {orders.data.items.map((o) => (
               <OrderRow key={o.id} order={o} />
             ))}
@@ -231,7 +232,7 @@ function NoBuilds() {
       description="Cấu hình AI đề xuất hoặc bạn tự lắp khi đã đăng nhập sẽ được lưu ở đây để mua sau."
       actions={
         <>
-          <Button asChild variant="workshop">
+          <Button asChild>
             <Link href="/advisor">Hỏi AI tư vấn</Link>
           </Button>
           <Button asChild variant="outline">
@@ -246,20 +247,18 @@ function NoBuilds() {
 function SavedBuildCard({ build }: { build: BuildDTO }) {
   const addBuild = useAddBuildToCart();
   return (
-    <li className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        {build.label && (
-          <Badge tone="solid" size="sm">
-            {BUILD_LABEL_TEXT[build.label]}
-          </Badge>
-        )}
-        <Badge size="sm">{PURPOSE_LABELS[build.purpose]}</Badge>
-        <span className="ms-auto text-xs text-muted">{orderDate.format(new Date(build.createdAt))}</span>
+    <li className="flex min-w-0 flex-col gap-4 border-t border-fg pt-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+        {build.label && <span className="font-medium text-fg">{BUILD_LABEL_TEXT[build.label]}</span>}
+        <span className="text-muted">{PURPOSE_LABELS[build.purpose]}</span>
+        <span className="ms-auto text-xs text-muted tabular-nums">
+          {orderDate.format(new Date(build.createdAt))}
+        </span>
       </div>
       <div className="flex flex-col gap-1">
         <Link
           href={`/builds/${build.id}`}
-          className="focus-ring w-fit rounded-xs text-base font-semibold text-fg hover:text-accent-ink"
+          className="focus-ring w-fit rounded-xs text-base font-semibold text-fg decoration-1 underline-offset-[3px] hover:underline"
         >
           {build.name}
         </Link>
@@ -273,7 +272,7 @@ function SavedBuildCard({ build }: { build: BuildDTO }) {
         legend="compact"
         animate={false}
       />
-      <div className="mt-auto flex flex-wrap gap-2">
+      <div className="mt-auto flex flex-wrap gap-2 pt-1">
         <Button asChild variant="outline" size="sm">
           <Link href={`/builds/${build.id}`}>Xem chi tiết</Link>
         </Button>
@@ -296,7 +295,7 @@ function SavedBuildCard({ build }: { build: BuildDTO }) {
 
 function BuildGrid({ builds }: { builds: BuildDTO[] }) {
   return (
-    <ul className="grid gap-4 md:grid-cols-2">
+    <ul className="grid gap-x-10 gap-y-10 md:grid-cols-2">
       {builds.map((b) => (
         <SavedBuildCard key={b.id} build={b} />
       ))}
@@ -307,9 +306,11 @@ function BuildGrid({ builds }: { builds: BuildDTO[] }) {
 export function MyBuilds() {
   const builds = useMyBuilds();
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">Cấu hình đã lưu</h1>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+          Cấu hình đã lưu
+        </h1>
         <p className="text-sm text-muted">Mở lại, chia sẻ liên kết hoặc mua cả bộ bất cứ lúc nào.</p>
       </div>
       {builds.isPending ? (

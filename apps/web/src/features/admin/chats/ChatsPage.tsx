@@ -84,7 +84,7 @@ export function ChatsPage() {
                   <td className={cn(td, 'min-w-56')}>
                     <Link
                       href={`/admin/chats/${s.id}`}
-                      className="focus-ring line-clamp-2 rounded-xs font-medium text-fg hover:text-accent-ink hover:underline"
+                      className="focus-ring line-clamp-2 rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
                     >
                       {s.title || 'Phiên chưa đặt tên'}
                     </Link>

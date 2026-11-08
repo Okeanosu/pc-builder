@@ -1,19 +1,19 @@
 'use client';
 
-import { BUILD_LABEL_TEXT, type BuildDTO, type CartItemDTO } from '@pc/shared';
+import { BUILD_LABEL_TEXT, type BuildDTO, CATEGORY_LABELS, type CartItemDTO } from '@pc/shared';
 import {
   ArrowRight,
   CircleCheck,
-  Cpu,
   FileText,
   PackageOpen,
   ShoppingCart,
   Trash2,
+  TriangleAlert,
   Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
+import { CATEGORY_COLOR } from '@/components/domain/category';
 import { ProductImage } from '@/components/domain/ProductImage';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Price } from '@/components/ui/Price';
@@ -42,23 +42,29 @@ function CartLine({ item }: { item: CartItemDTO }) {
   const busy = update.isPending || remove.isPending;
 
   return (
-    <li className={cn('flex gap-3 py-4 first:pt-0 last:pb-0 sm:gap-4', busy && 'opacity-60')}>
+    <li className={cn('flex gap-3 border-b border-border py-4 sm:gap-4', busy && 'opacity-60')}>
       <Link href={`/p/${product.slug}`} className="focus-ring shrink-0 rounded-sm" tabIndex={-1} aria-hidden>
         <ProductImage
           src={product.image}
           alt=""
           category={product.category}
-          designator={false}
           sizes="96px"
           className="w-20 sm:w-24"
         />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-xs text-muted">{product.brand}</span>
+          <span className="flex items-center gap-2 text-xs text-muted">
+            <span
+              aria-hidden
+              className="size-2 shrink-0 rounded-[2px]"
+              style={{ backgroundColor: CATEGORY_COLOR[product.category] }}
+            />
+            {CATEGORY_LABELS[product.category]} · {product.brand}
+          </span>
           <Link
             href={`/p/${product.slug}`}
-            className="focus-ring line-clamp-2 rounded-xs text-sm font-semibold text-fg hover:text-accent-ink"
+            className="focus-ring line-clamp-2 rounded-xs text-sm font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
           >
             {product.name}
           </Link>
@@ -101,61 +107,54 @@ function CartLine({ item }: { item: CartItemDTO }) {
 function BuildGroupCard({ group, build }: { group: BuildGroup; build?: BuildDTO }) {
   const complete = build ? isBuildComplete(build, group) : null;
   return (
-    <section
-      aria-label={build ? `Cấu hình ${build.name}` : 'Cấu hình PC'}
-      className="rounded-md border border-border bg-surface"
-    >
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-4 py-3 sm:px-5">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-graphite-950 text-cyan">
-            <Cpu className="size-4" aria-hidden />
-          </span>
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold text-fg">{build?.name ?? 'Cấu hình PC'}</span>
-            <span className="text-xs text-muted">{group.items.length} linh kiện</span>
-          </div>
+    <section aria-label={build ? `Cấu hình ${build.name}` : 'Cấu hình PC'} className="flex flex-col">
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-fg pb-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className="truncate text-lg font-semibold text-fg">{build?.name ?? 'Cấu hình PC'}</h2>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            <span className="tabular-nums">{group.items.length} linh kiện</span>
+            {build?.label && <span>{BUILD_LABEL_TEXT[build.label]}</span>}
+            {complete === true && (
+              <span className="inline-flex items-center gap-1 font-medium text-ok-ink">
+                <CircleCheck className="size-3.5" aria-hidden />
+                Đủ bộ
+              </span>
+            )}
+            {complete === false && (
+              <span className="inline-flex items-center gap-1 font-medium text-warn-ink">
+                <TriangleAlert className="size-3.5" aria-hidden />
+                Thiếu linh kiện
+              </span>
+            )}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {build?.label && <Badge size="sm">{BUILD_LABEL_TEXT[build.label]}</Badge>}
-          {complete === true && (
-            <Badge tone="ok" size="sm">
-              <CircleCheck aria-hidden />
-              Đủ bộ
-            </Badge>
-          )}
-          {complete === false && (
-            <Badge tone="warn" size="sm">
-              Thiếu linh kiện
-            </Badge>
-          )}
-          <Link
-            href={`/builds/${group.buildId}`}
-            className="focus-ring rounded-xs text-sm font-medium text-accent-ink hover:underline"
-          >
-            Xem cấu hình
-          </Link>
-        </div>
+        <Link
+          href={`/builds/${group.buildId}`}
+          className="focus-ring shrink-0 rounded-xs text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
+        >
+          Xem cấu hình
+        </Link>
       </header>
-      <ul className="divide-y divide-border px-4 py-4 sm:px-5">
+      <ul className="flex flex-col">
         {group.items.map((item) => (
           <CartLine key={item.id} item={item} />
         ))}
       </ul>
-      <footer className="flex items-center justify-between border-t border-border px-4 py-3 text-sm sm:px-5">
+      <div className="flex items-baseline justify-between gap-3 py-3 text-sm">
         <span className="text-muted">Tạm tính cấu hình</span>
         <Price amount={group.subtotal} size="md" />
-      </footer>
+      </div>
     </section>
   );
 }
 
 function CartSkeleton() {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]" aria-busy>
-      <div className="flex flex-col gap-4 rounded-md border border-border bg-surface p-5">
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12" aria-busy>
+      <div className="flex flex-col border-t border-border">
         {Array.from({ length: 3 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
-          <div key={i} className="flex gap-4">
+          <div key={i} className="flex gap-4 border-b border-border py-4">
             <Skeleton className="aspect-[4/3] w-24 rounded-sm" />
             <div className="flex flex-1 flex-col gap-2">
               <Skeleton className="h-3 w-16" />
@@ -165,7 +164,13 @@ function CartSkeleton() {
           </div>
         ))}
       </div>
-      <Skeleton className="h-64 w-full rounded-lg" />
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-12 w-full rounded-full" />
+      </div>
     </div>
   );
 }
@@ -179,17 +184,19 @@ export function CartView() {
   const assemblyFee = cartAssemblyFee(cart);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 lg:px-6 lg:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">Giỏ hàng</h1>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+            Giỏ hàng
+          </h1>
           {cart && cart.itemCount > 0 && (
-            <p className="text-sm text-muted">{formatNumber(cart.itemCount)} sản phẩm</p>
+            <p className="text-sm text-muted tabular-nums">{formatNumber(cart.itemCount)} sản phẩm</p>
           )}
         </div>
         {cart && cart.items.length > 0 && (
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => void openPersonalPdf('/quotes/cart.pdf', 'bao-gia-gio-hang.pdf')}
           >
             <FileText aria-hidden />
@@ -215,7 +222,7 @@ export function CartView() {
           description="Chọn linh kiện lẻ, hoặc để AI dựng cả bộ máy đúng ngân sách rồi bấm “Mua cả bộ”."
           actions={
             <>
-              <Button asChild variant="workshop">
+              <Button asChild>
                 <Link href="/advisor">Hỏi AI tư vấn cấu hình</Link>
               </Button>
               <Button asChild variant="outline">
@@ -225,20 +232,17 @@ export function CartView() {
           }
         />
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-8">
-          <div className="flex min-w-0 flex-col gap-4">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+          <div className="flex min-w-0 flex-col gap-10">
             {grouped.builds.map((g) => (
               <BuildGroupCard key={g.buildId} group={g} build={builds.get(g.buildId)} />
             ))}
             {grouped.retail.length > 0 && (
-              <section aria-labelledby="cart-retail" className="rounded-md border border-border bg-surface">
-                <h2
-                  id="cart-retail"
-                  className="border-b border-border px-4 py-3 text-sm font-semibold text-fg sm:px-5"
-                >
+              <section aria-labelledby="cart-retail" className="flex flex-col">
+                <h2 id="cart-retail" className="border-b border-fg pb-3 text-lg font-semibold text-fg">
                   {grouped.builds.length > 0 ? 'Linh kiện mua lẻ' : 'Sản phẩm'}
                 </h2>
-                <ul className="divide-y divide-border px-4 py-4 sm:px-5">
+                <ul className="flex flex-col">
                   {grouped.retail.map((item) => (
                     <CartLine key={item.id} item={item} />
                   ))}
@@ -247,24 +251,21 @@ export function CartView() {
             )}
           </div>
 
-          <aside
-            aria-label="Tóm tắt đơn hàng"
-            className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 lg:sticky lg:top-32"
-          >
-            <h2 className="text-lg font-semibold text-fg">Tóm tắt</h2>
-            <dl className="flex flex-col gap-2.5 text-sm">
-              <div className="flex items-baseline justify-between gap-3">
+          <aside aria-label="Tóm tắt đơn hàng" className="flex flex-col gap-5 lg:sticky lg:top-32">
+            <h2 className="border-b border-border pb-3 text-lg font-semibold text-fg">Tóm tắt</h2>
+            <dl className="flex flex-col text-sm">
+              <div className="flex items-baseline justify-between gap-3 border-b border-border py-2.5">
                 <dt className="text-muted">Tạm tính</dt>
                 <dd>
                   <Price amount={cart.subtotal} size="md" />
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="flex items-baseline justify-between gap-3 py-2.5">
                 <dt className="text-muted">Phí vận chuyển</dt>
                 <dd className="font-medium text-ok-ink">Miễn phí</dd>
               </div>
-              <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
-                <dt className="font-semibold text-fg">Tổng</dt>
+              <div className="flex items-baseline justify-between gap-3 border-t-2 border-fg pt-3">
+                <dt className="font-medium text-fg">Tổng</dt>
                 <dd>
                   <Price amount={cart.subtotal} size="xl" />
                 </dd>
@@ -278,30 +279,24 @@ export function CartView() {
             </Button>
 
             {assembleId && assembleGroup && (
-              <div className="flex flex-col gap-3 rounded-md border border-accent/40 bg-accent/8 p-4">
-                <div className="flex items-start gap-2.5">
-                  <Wrench className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-fg">Đặt lắp ráp nguyên bộ</span>
-                    <span className="text-sm text-muted">
-                      Kỹ thuật viên lắp sẵn, đi dây gọn và test máy trước khi giao. Phí lắp ráp{' '}
-                      <Price amount={assemblyFee} size="sm" className="text-fg" />.
-                    </span>
-                    {grouped.retail.length > 0 && (
-                      <span className="text-xs text-muted">
-                        Linh kiện mua lẻ vẫn ở lại giỏ để bạn đặt riêng.
-                      </span>
-                    )}
-                  </div>
+              <div className="flex flex-col gap-3 border-t border-border pt-5">
+                <div className="flex flex-col gap-1">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-fg">
+                    <Wrench className="size-4 shrink-0" aria-hidden />
+                    Đặt lắp ráp nguyên bộ
+                  </h3>
+                  <p className="text-sm text-muted">
+                    Kỹ thuật viên lắp sẵn, đi dây gọn và test máy trước khi giao. Phí lắp ráp{' '}
+                    <Price amount={assemblyFee} size="sm" />.
+                  </p>
+                  {grouped.retail.length > 0 && (
+                    <p className="text-xs text-muted">Linh kiện mua lẻ vẫn ở lại giỏ để bạn đặt riêng.</p>
+                  )}
                 </div>
-                <Button asChild variant="workshop">
+                <Button asChild variant="outline" size="lg">
                   <Link href={`/checkout?build=${assembleId}`}>
                     Đặt lắp ráp ·{' '}
-                    <Price
-                      amount={assembleGroup.subtotal + assemblyFee}
-                      size="sm"
-                      className="text-graphite-100"
-                    />
+                    <Price amount={assembleGroup.subtotal + assemblyFee} size="sm" className="text-current" />
                   </Link>
                 </Button>
               </div>

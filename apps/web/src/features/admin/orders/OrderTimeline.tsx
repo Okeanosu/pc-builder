@@ -5,7 +5,7 @@ import { type StepState, timelineSteps } from './order-state';
 
 const DOT: Record<StepState, string> = {
   done: 'bg-fg',
-  current: 'bg-accent shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-accent)_30%,transparent)]',
+  current: 'bg-fg outline-2 outline-offset-2 outline-fg outline-solid',
   upcoming: 'border border-border-strong bg-surface',
   cancelled: 'bg-danger',
 };
@@ -17,7 +17,7 @@ const STATE_TEXT: Record<StepState, string> = {
   cancelled: 'đã hủy',
 };
 
-/** Order progress as 8px dots on a rail; the current step is the accent dot. */
+/** Order progress as 8px dots on a rail; the current step is ringed in ink. */
 export function OrderTimeline({
   order,
 }: {
@@ -42,7 +42,8 @@ export function OrderTimeline({
             <span
               className={cn(
                 'text-sm',
-                s.state === 'upcoming' ? 'text-muted' : 'font-medium text-fg',
+                s.state === 'upcoming' ? 'text-muted' : 'text-fg',
+                s.state === 'current' && 'font-semibold',
                 s.state === 'cancelled' && 'text-danger-ink',
               )}
             >
@@ -50,7 +51,7 @@ export function OrderTimeline({
               <span className="sr-only"> ({STATE_TEXT[s.state]})</span>
             </span>
             {s.at && <span className="text-xs text-muted tabular-nums">{formatDateTime(s.at)}</span>}
-            {s.state === 'current' && !s.at && <span className="text-xs text-accent-ink">Bước hiện tại</span>}
+            {s.state === 'current' && !s.at && <span className="text-xs text-muted">Bước hiện tại</span>}
           </div>
         </li>
       ))}

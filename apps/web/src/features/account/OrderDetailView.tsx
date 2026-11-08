@@ -51,7 +51,7 @@ export function OrderDetailView({ code }: { code: string }) {
   const back = signedIn ? (
     <Link
       href="/account/orders"
-      className="focus-ring inline-flex w-fit items-center gap-1 rounded-xs text-sm text-accent-ink hover:underline"
+      className="focus-ring inline-flex w-fit items-center gap-1 rounded-xs text-sm text-muted hover:text-fg"
     >
       <ArrowLeft className="size-4" aria-hidden />
       Đơn hàng của tôi
@@ -62,9 +62,9 @@ export function OrderDetailView({ code }: { code: string }) {
     return (
       <div className="flex flex-col gap-4" aria-busy>
         <Skeleton className="h-8 w-72" />
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <Skeleton className="h-80 w-full rounded-lg" />
-          <Skeleton className="h-64 w-full rounded-lg" />
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     );
@@ -100,17 +100,17 @@ export function OrderDetailView({ code }: { code: string }) {
   const pending = order.status === 'PENDING_PAYMENT';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {back}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
               Đơn <span className="tabular-nums">{order.code}</span>
             </h1>
             <OrderStatusBadge status={order.status} />
           </div>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted tabular-nums">
             Đặt lúc {orderDate.format(new Date(order.createdAt))} ·{' '}
             {order.type === 'BUILD' ? 'Lắp ráp nguyên bộ' : 'Mua linh kiện'}
           </p>
@@ -131,21 +131,15 @@ export function OrderDetailView({ code }: { code: string }) {
         )}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-8">
-        <section
-          aria-labelledby="order-items"
-          className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5"
-        >
-          <h2 id="order-items" className="text-base font-semibold text-fg">
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+        <section aria-labelledby="order-items" className="flex flex-col gap-4">
+          <h2 id="order-items" className="border-b border-border pb-3 text-lg font-semibold text-fg">
             Sản phẩm
           </h2>
           <OrderSummary order={order} />
         </section>
-        <section
-          aria-labelledby="order-progress"
-          className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5"
-        >
-          <h2 id="order-progress" className="text-base font-semibold text-fg">
+        <section aria-labelledby="order-progress" className="flex flex-col gap-4">
+          <h2 id="order-progress" className="border-b border-border pb-3 text-lg font-semibold text-fg">
             Tiến trình
           </h2>
           <OrderTimeline order={order} />

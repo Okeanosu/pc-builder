@@ -1,7 +1,7 @@
 'use client';
 
 import { loginSchema, registerSchema } from '@pc/shared';
-import { Eye, EyeOff } from 'lucide-react';
+import { CircleAlert, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type ComponentProps, type FormEvent, useEffect, useRef, useState } from 'react';
@@ -59,11 +59,9 @@ export function PasswordInput(props: Omit<ComponentProps<typeof Input>, 'type' |
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p
-      role="alert"
-      className="rounded-sm border border-danger/40 bg-danger/8 px-3 py-2.5 text-sm text-danger-ink"
-    >
-      {message}
+    <p role="alert" className="flex items-start gap-2 text-sm font-medium text-danger-ink">
+      <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>{message}</span>
     </p>
   );
 }
@@ -128,14 +126,14 @@ export function LoginForm() {
         Chưa có tài khoản?{' '}
         <Link
           href={`/register?redirect=${encodeURIComponent(target)}`}
-          className="focus-ring rounded-xs font-semibold text-accent-ink hover:underline"
+          className="focus-ring rounded-xs font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
         >
           Tạo tài khoản
         </Link>
       </p>
       {SHOW_DEMO_ACCOUNTS && (
-        <div className="flex flex-col gap-2 rounded-md border border-dashed border-border-strong p-3">
-          <span className="text-xs font-semibold text-muted">Tài khoản demo (chỉ hiện khi chạy dev)</span>
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
+          <span className="text-xs text-muted">Tài khoản demo (chỉ hiện khi chạy dev)</span>
           <div className="flex flex-wrap gap-2">
             {DEMO_ACCOUNTS.map((a) => (
               <Button
@@ -227,7 +225,7 @@ export function RegisterForm() {
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          mono
+          className="tabular-nums"
           value={values.phone}
           onChange={(e) => set('phone')(e.target.value)}
           placeholder="0912345678"
@@ -250,7 +248,7 @@ export function RegisterForm() {
         Đã có tài khoản?{' '}
         <Link
           href={`/login?redirect=${encodeURIComponent(target)}`}
-          className="focus-ring rounded-xs font-semibold text-accent-ink hover:underline"
+          className="focus-ring rounded-xs font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
         >
           Đăng nhập
         </Link>

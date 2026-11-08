@@ -2,10 +2,11 @@
 
 import type { CheckoutInput, OrderDTO } from '@pc/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Cpu, LockKeyhole, PackageOpen, QrCode } from 'lucide-react';
+import { ArrowLeft, LockKeyhole, PackageOpen, QrCode, TriangleAlert, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { CATEGORY_COLOR } from '@/components/domain/category';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Field, Input, Textarea } from '@/components/ui/Input';
@@ -92,9 +93,9 @@ export function CheckoutView() {
 
   if (isPending) {
     return (
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]" aria-busy>
-        <Skeleton className="h-96 w-full rounded-lg" />
-        <Skeleton className="h-80 w-full rounded-lg" />
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12" aria-busy>
+        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-80 w-full" />
       </div>
     );
   }
@@ -134,14 +135,11 @@ export function CheckoutView() {
       method="post"
       onSubmit={submit}
       noValidate
-      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-8"
+      className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-12"
     >
-      <div className="flex min-w-0 flex-col gap-6">
-        <section
-          aria-labelledby="checkout-contact"
-          className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-5 sm:p-6"
-        >
-          <div className="flex flex-col gap-1">
+      <div className="flex min-w-0 flex-col gap-10">
+        <section aria-labelledby="checkout-contact" className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1 border-b border-border pb-3">
             <h2 id="checkout-contact" className="text-lg font-semibold text-fg">
               Thông tin người nhận
             </h2>
@@ -150,7 +148,7 @@ export function CheckoutView() {
                 Không cần tài khoản để đặt hàng.{' '}
                 <Link
                   href={`/login?redirect=${encodeURIComponent(buildId ? `/checkout?build=${buildId}` : '/checkout')}`}
-                  className="focus-ring rounded-xs font-medium text-accent-ink hover:underline"
+                  className="focus-ring rounded-xs font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
                 >
                   Đăng nhập
                 </Link>{' '}
@@ -179,7 +177,7 @@ export function CheckoutView() {
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
-                mono
+                className="tabular-nums"
                 value={values.phone}
                 onChange={(e) => set('phone')(e.target.value)}
                 maxLength={14}
@@ -208,18 +206,13 @@ export function CheckoutView() {
           </Field>
         </section>
 
-        <section
-          aria-labelledby="checkout-payment"
-          className="flex items-start gap-4 rounded-lg border border-border bg-surface p-5 sm:p-6"
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-accent/12 text-accent-ink">
-            <QrCode className="size-5" aria-hidden />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h2 id="checkout-payment" className="text-base font-semibold text-fg">
-              Thanh toán: chuyển khoản VietQR
-            </h2>
-            <p className="text-sm text-muted">
+        <section aria-labelledby="checkout-payment" className="flex flex-col gap-3">
+          <h2 id="checkout-payment" className="border-b border-border pb-3 text-lg font-semibold text-fg">
+            Thanh toán: chuyển khoản VietQR
+          </h2>
+          <div className="flex items-start gap-3">
+            <QrCode className="mt-0.5 size-5 shrink-0 text-fg" aria-hidden />
+            <p className="max-w-xl text-sm text-muted">
               Sau khi đặt, bạn nhận mã QR có sẵn số tiền và nội dung. Quét bằng app ngân hàng bất kỳ, đơn được
               xác nhận tự động. Hàng được giữ cho bạn trong 15 phút.
             </p>
@@ -227,64 +220,74 @@ export function CheckoutView() {
         </section>
       </div>
 
-      <aside
-        aria-label="Đơn hàng"
-        className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 lg:sticky lg:top-32"
-      >
-        <div className="flex items-center justify-between gap-3">
+      <aside aria-label="Đơn hàng" className="flex flex-col gap-4 lg:sticky lg:top-32">
+        <div className="flex items-baseline justify-between gap-3 border-b border-border pb-3">
           <h2 className="text-lg font-semibold text-fg">Đơn hàng</h2>
           <Link
             href="/cart"
-            className="focus-ring inline-flex items-center gap-1 rounded-xs text-sm text-accent-ink hover:underline"
+            className="focus-ring inline-flex items-center gap-1 rounded-xs text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
           >
             <ArrowLeft className="size-4" aria-hidden />
             Sửa giỏ
           </Link>
         </div>
         {buildId && (
-          <div className="flex items-center gap-2.5 rounded-sm bg-surface-2 px-3 py-2.5">
-            <Cpu className="size-4 shrink-0 text-accent-ink" aria-hidden />
-            <span className="min-w-0 text-sm text-fg">Lắp ráp nguyên bộ{build ? `: ${build.name}` : ''}</span>
-          </div>
-        )}
-        {incomplete && (
-          <p className="rounded-sm border border-warn/45 bg-warn/10 px-3 py-2 text-sm text-fg">
-            Cấu hình trong giỏ đang thiếu linh kiện so với bản gốc. Kỹ thuật viên sẽ lắp theo đúng các linh
-            kiện bên dưới.
+          <p className="flex items-center gap-2 text-sm font-medium text-fg">
+            <Wrench className="size-4 shrink-0" aria-hidden />
+            <span className="min-w-0">Lắp ráp nguyên bộ{build ? `: ${build.name}` : ''}</span>
           </p>
         )}
-        <ul className="flex max-h-72 flex-col gap-2.5 overflow-y-auto pe-1">
+        {incomplete && (
+          <p className="flex items-start gap-2 text-sm text-warn-ink">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              Cấu hình trong giỏ đang thiếu linh kiện so với bản gốc. Kỹ thuật viên sẽ lắp theo đúng các linh
+              kiện bên dưới.
+            </span>
+          </p>
+        )}
+        <ul className="flex max-h-80 flex-col overflow-y-auto pe-1">
           {lines.map((l) => (
-            <li key={l.id} className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="min-w-0 text-fg">
-                <span className="line-clamp-2">{l.product.name}</span>
-                <span className="tabular-nums text-xs text-muted">× {l.qty}</span>
+            <li
+              key={l.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border py-2 text-sm"
+            >
+              <span className="flex min-w-0 items-baseline gap-2 text-fg">
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 translate-y-[-1px] rounded-[2px]"
+                  style={{ backgroundColor: CATEGORY_COLOR[l.product.category] }}
+                />
+                <span className="min-w-0">
+                  <span className="line-clamp-2">{l.product.name}</span>
+                  <span className="text-xs text-muted tabular-nums">× {l.qty}</span>
+                </span>
               </span>
-              <Price amount={l.lineTotal} size="sm" className="shrink-0" />
+              <Price amount={l.lineTotal} size="sm" className="font-normal" />
             </li>
           ))}
         </ul>
-        <dl className="flex flex-col gap-2.5 border-t border-border pt-4 text-sm">
-          <div className="flex items-baseline justify-between gap-3">
+        <dl className="flex flex-col text-sm">
+          <div className="flex items-baseline justify-between gap-3 py-1.5">
             <dt className="text-muted">Tạm tính</dt>
             <dd>
               <Price amount={subtotal} size="sm" />
             </dd>
           </div>
           {buildId && (
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline justify-between gap-3 py-1.5">
               <dt className="text-muted">Phí lắp ráp</dt>
               <dd>
                 <Price amount={assemblyFee} size="sm" />
               </dd>
             </div>
           )}
-          <div className="flex items-baseline justify-between gap-3">
+          <div className="flex items-baseline justify-between gap-3 pt-1.5 pb-3">
             <dt className="text-muted">Phí vận chuyển</dt>
             <dd className="font-medium text-ok-ink">Miễn phí</dd>
           </div>
-          <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
-            <dt className="font-semibold text-fg">Tổng thanh toán</dt>
+          <div className="flex items-baseline justify-between gap-3 border-t-2 border-fg pt-3">
+            <dt className="font-medium text-fg">Tổng thanh toán</dt>
             <dd>
               <Price amount={subtotal + assemblyFee} size="xl" />
             </dd>

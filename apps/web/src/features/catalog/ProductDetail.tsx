@@ -1,6 +1,7 @@
 import { type Benchmark, CATEGORY_LABELS, type ProductDTO, type SpecField } from '@pc/shared';
 import { PackageCheck, QrCode, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import { CATEGORY_COLOR } from '@/components/domain/category';
 import { PerfMeter } from '@/components/domain/PerfMeter';
 import { SpecTable } from '@/components/domain/SpecTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -80,7 +81,7 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
   const tabClass = 'data-[state=inactive]:hidden';
 
   return (
-    <article className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 lg:px-6 lg:py-8">
+    <article className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-6 lg:px-6 lg:py-10">
       <nav aria-label="Đường dẫn" className="text-sm text-muted">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li>
@@ -88,37 +89,44 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
               Trang chủ
             </Link>
           </li>
-          <li aria-hidden>›</li>
+          <li aria-hidden>/</li>
           <li>
             <Link href={`/c/${product.category}`} className="focus-ring rounded-xs hover:text-fg">
               {categoryName}
             </Link>
           </li>
-          <li aria-hidden>›</li>
+          <li aria-hidden>/</li>
           <li aria-current="page" className="min-w-0 truncate text-fg">
             {product.name}
           </li>
         </ol>
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
+      <div className="grid gap-8 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
         <ProductGallery images={product.images} alt={product.name} category={product.category} />
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-muted">{product.brand}</span>
-            <h1 className="text-2xl font-bold tracking-[-0.02em] text-balance text-fg">{product.name}</h1>
-            <span className="tabular-nums text-xs text-muted">Mã SP: {product.sku}</span>
+            <span className="flex items-center gap-2 text-sm text-muted">
+              <span
+                aria-hidden
+                className="size-2 shrink-0 rounded-[2px]"
+                style={{ backgroundColor: CATEGORY_COLOR[product.category] }}
+              />
+              {product.brand}
+            </span>
+            <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-balance text-fg sm:text-3xl">
+              {product.name}
+            </h1>
+            <span className="text-sm text-muted tabular-nums">Mã SP: {product.sku}</span>
           </div>
           {chips.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5" aria-label="Thông số nổi bật">
+            <ul
+              className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-fg tabular-nums [&>li+li]:before:me-2 [&>li+li]:before:text-border-strong [&>li+li]:before:content-['/']"
+              aria-label="Thông số nổi bật"
+            >
               {chips.map((c) => (
-                <li
-                  key={c}
-                  className="rounded-xs border border-border bg-surface px-2 py-1 tabular-nums text-xs text-fg"
-                >
-                  {c}
-                </li>
+                <li key={c}>{c}</li>
               ))}
             </ul>
           )}
@@ -127,7 +135,7 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
             {ASSURANCES.map((a) => (
               <li
                 key={a.text}
-                className="flex items-center gap-2.5 text-sm text-muted [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-accent-ink"
+                className="flex items-center gap-2.5 text-sm text-muted [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-fg"
               >
                 {a.icon}
                 {a.text}
@@ -137,7 +145,7 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
         </div>
       </div>
 
-      <Tabs variant="line" defaultValue="specs">
+      <Tabs variant="line" defaultValue="specs" className="gap-6">
         <TabsList aria-label="Thông tin sản phẩm">
           <TabsTrigger value="specs">Thông số kỹ thuật</TabsTrigger>
           {hasBench && <TabsTrigger value="bench">Hiệu năng</TabsTrigger>}
@@ -149,12 +157,13 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
             fields={fields}
             specs={product.specs}
             caption={`Thông số ${CATEGORY_LABELS[product.category]}`}
+            variant="plain"
             className="max-w-3xl"
           />
         </TabsContent>
         {hasBench && product.benchmark && (
           <TabsContent value="bench" forceMount className={tabClass}>
-            <div className="max-w-xl rounded-md border border-border bg-surface p-5">
+            <div className="max-w-xl">
               <BenchmarkBars benchmark={product.benchmark} reference={benchmarkReference} />
             </div>
           </TabsContent>

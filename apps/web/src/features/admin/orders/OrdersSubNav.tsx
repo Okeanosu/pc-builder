@@ -13,7 +13,7 @@ const LINKS = [
 export function OrdersSubNav({ current }: { current: (typeof LINKS)[number]['href'] }) {
   return (
     <nav aria-label="Đơn hàng và thanh toán">
-      <ul className="flex w-fit max-w-full gap-1 overflow-x-auto rounded-sm border border-border bg-surface-2 p-1">
+      <ul className="no-scrollbar flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-surface-2 p-1">
         {LINKS.map(({ href, label, icon: Icon }) => {
           const active = href === current;
           return (
@@ -22,8 +22,10 @@ export function OrdersSubNav({ current }: { current: (typeof LINKS)[number]['hre
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'focus-ring inline-flex h-8 items-center gap-2 rounded-xs px-3 text-sm font-medium transition-colors [&_svg]:size-4',
-                  active ? 'bg-surface text-fg shadow-raised' : 'text-muted hover:text-fg',
+                  'focus-ring inline-flex h-8 items-center gap-2 rounded-full px-3.5 text-sm font-medium transition-colors [&_svg]:size-4',
+                  active
+                    ? 'bg-bg text-fg shadow-[0_0_0_1px_var(--color-border)]'
+                    : 'text-muted hover:text-fg',
                 )}
               >
                 <Icon aria-hidden />

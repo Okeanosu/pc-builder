@@ -11,7 +11,7 @@ const timeFmt = new Intl.DateTimeFormat('vi-VN', {
   timeZone: 'Asia/Ho_Chi_Minh',
 });
 
-/** Vertical lifecycle: 8 px dots, the current step in accent, a cancelled end in red. */
+/** Vertical lifecycle: 8 px dots, done steps filled, the current one ringed in ink, a cancelled end in red. */
 export function OrderTimeline({
   order,
   className,
@@ -42,7 +42,7 @@ export function OrderTimeline({
             className={cn(
               'relative mt-1.5 size-2 shrink-0 rounded-full',
               step.state === 'done' && 'bg-fg',
-              step.state === 'current' && 'bg-accent shadow-[0_0_0_4px_rgb(34_211_238/0.25)]',
+              step.state === 'current' && 'bg-fg outline-2 outline-offset-2 outline-fg outline-solid',
               step.state === 'upcoming' && 'border border-border-strong bg-surface',
               step.state === 'cancelled' && 'bg-danger',
             )}
@@ -51,7 +51,8 @@ export function OrderTimeline({
             <span
               className={cn(
                 'text-sm',
-                step.state === 'upcoming' ? 'text-muted' : 'font-medium text-fg',
+                step.state === 'upcoming' ? 'text-muted' : 'text-fg',
+                step.state === 'current' && 'font-semibold',
                 step.state === 'cancelled' && 'text-danger-ink',
               )}
             >

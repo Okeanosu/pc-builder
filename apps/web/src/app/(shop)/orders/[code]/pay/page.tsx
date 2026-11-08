@@ -15,8 +15,8 @@ async function PayContent({ params }: Pick<PageProps<'/orders/[code]/pay'>, 'par
 
 export default function PayPage({ params }: PageProps<'/orders/[code]/pay'>) {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
-      <Suspense fallback={<Skeleton className="h-96 w-full rounded-lg" />}>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 lg:px-6 lg:py-10">
+      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
         <PayContent params={params} />
       </Suspense>
     </div>

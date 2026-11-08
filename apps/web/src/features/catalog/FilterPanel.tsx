@@ -2,6 +2,7 @@
 
 import { CATEGORY_KEYS, CATEGORY_LABELS, type CategoryKey } from '@pc/shared';
 import { type FormEvent, type ReactNode, useState } from 'react';
+import { CATEGORY_COLOR } from '@/components/domain/category';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/lib/cn';
@@ -19,9 +20,9 @@ import {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="py-4 first:pt-0">
+    <div className="py-5 first:pt-0">
       <fieldset className="min-w-0">
-        <legend className="text-sm font-semibold text-fg">{title}</legend>
+        <legend className="text-sm font-medium text-fg">{title}</legend>
         <div className="mt-3">{children}</div>
       </fieldset>
     </div>
@@ -56,7 +57,7 @@ function CheckList({ options, selected, onToggle }: CheckListProps) {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="focus-ring w-fit rounded-xs text-sm font-medium text-accent-ink hover:underline"
+          className="focus-ring w-fit rounded-xs text-sm text-muted underline decoration-border-strong underline-offset-4 hover:text-fg hover:decoration-current"
           aria-expanded={expanded}
         >
           {expanded ? 'Thu gọn' : `Xem thêm ${hidden} lựa chọn`}
@@ -124,7 +125,7 @@ function RangeInputs({
     >
       <Input
         size="sm"
-        mono
+        className="tabular-nums"
         inputMode={money ? 'numeric' : 'decimal'}
         aria-label={`${label} từ`}
         placeholder={placeholderMin ?? 'Từ'}
@@ -139,7 +140,7 @@ function RangeInputs({
       </span>
       <Input
         size="sm"
-        mono
+        className="tabular-nums"
         inputMode={money ? 'numeric' : 'decimal'}
         aria-label={`${label} đến`}
         placeholder={placeholderMax ?? 'Đến'}
@@ -171,7 +172,7 @@ export function FilterPanel({ query, onChange, fields, brands, showCategory, cla
     <div className={cn('flex flex-col divide-y divide-border', className)}>
       {showCategory && (
         <Section title="Danh mục">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="-mx-2 flex flex-col">
             {[undefined, ...CATEGORY_KEYS].map((key: CategoryKey | undefined) => {
               const active = query.category === key;
               return (
@@ -181,12 +182,19 @@ export function FilterPanel({ query, onChange, fields, brands, showCategory, cla
                   aria-pressed={active}
                   onClick={() => onChange(setCategory(query, key))}
                   className={cn(
-                    'focus-ring inline-flex h-8 items-center rounded-xs border px-2.5 text-sm transition-colors',
+                    'focus-ring flex h-8 items-center gap-2 rounded-sm px-2 text-start text-sm transition-colors',
                     active
-                      ? 'border-accent bg-accent/12 font-semibold text-fg'
-                      : 'border-border text-muted hover:border-border-strong hover:text-fg',
+                      ? 'bg-surface-2 font-medium text-fg'
+                      : 'text-muted hover:bg-surface-2 hover:text-fg',
                   )}
                 >
+                  {key && (
+                    <span
+                      aria-hidden
+                      className="size-2 shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: CATEGORY_COLOR[key] }}
+                    />
+                  )}
                   {key ? CATEGORY_LABELS[key] : 'Tất cả'}
                 </button>
               );

@@ -308,7 +308,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                 <Link
                   href={`/p/${product.slug}`}
                   target="_blank"
-                  className="focus-ring inline-flex items-center gap-1 rounded-xs text-accent-ink hover:underline"
+                  className="focus-ring inline-flex items-center gap-1 rounded-xs text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
                 >
                   Xem trên cửa hàng <ExternalLink className="size-3.5" aria-hidden />
                 </Link>
@@ -457,7 +457,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                     </div>
                     <Link
                       href={`/admin/inventory?q=${encodeURIComponent(product.sku)}`}
-                      className="focus-ring mt-1 w-fit rounded-xs text-xs font-medium text-accent-ink hover:underline"
+                      className="focus-ring mt-1 w-fit rounded-xs text-xs font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
                     >
                       Nhập hoặc điều chỉnh ở trang Tồn kho
                     </Link>
@@ -469,7 +469,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                     hint="Ghi thành một lần nhập kho; sau đó chỉ đổi qua trang Tồn kho."
                   >
                     <Input
-                      mono
+                      className="tabular-nums"
                       inputMode="numeric"
                       value={draft.stock === null ? '' : String(draft.stock)}
                       onChange={(e) => {

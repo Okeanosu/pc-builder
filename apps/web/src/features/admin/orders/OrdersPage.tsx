@@ -130,7 +130,7 @@ export function OrdersPage() {
                   <td className={td}>
                     <Link
                       href={`/admin/orders/${o.code}`}
-                      className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
+                      className="focus-ring rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
                     >
                       {o.code}
                     </Link>

@@ -5,7 +5,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { CircleCheck, PackagePlus, ScrollText, Warehouse } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Select } from '@/components/ui/Select';
@@ -13,6 +12,7 @@ import { cn } from '@/lib/cn';
 import { queryKeys } from '@/lib/query-keys';
 import { AdminPageHeader } from '../AdminChrome';
 import { adminApi } from '../api';
+import { StatusText } from '../badges';
 import {
   Pagination,
   QueryError,
@@ -37,9 +37,9 @@ const LIVE_MS = 15_000;
 
 function LevelBadge({ sellable }: { sellable: number }) {
   const level = stockLevel(sellable);
-  if (level === 'out') return <Badge tone="danger">Hết hàng</Badge>;
-  if (level === 'low') return <Badge tone="warn">Sắp hết</Badge>;
-  return <Badge tone="ok">Còn hàng</Badge>;
+  if (level === 'out') return <StatusText tone="danger">Hết hàng</StatusText>;
+  if (level === 'low') return <StatusText tone="warn">Sắp hết</StatusText>;
+  return <StatusText tone="ok">Còn hàng</StatusText>;
 }
 
 function StockTable({
@@ -72,11 +72,11 @@ function StockTable({
             <td className={cn(td, 'min-w-60')}>
               <Link
                 href={`/admin/products/${p.id}`}
-                className="focus-ring line-clamp-2 rounded-xs font-medium text-fg hover:text-accent-ink hover:underline"
+                className="focus-ring line-clamp-2 rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
               >
                 {p.name}
               </Link>
-              <div className="mt-0.5 tabular-nums text-xs text-muted">{p.sku}</div>
+              <div className="mt-0.5 text-xs text-muted">{p.sku}</div>
             </td>
             <td className={cn(td, 'whitespace-nowrap')}>{CATEGORY_LABELS[p.category]}</td>
             <td className={cn(td, 'text-end tabular-nums')}>{p.stockOnHand}</td>
@@ -85,9 +85,9 @@ function StockTable({
             </td>
             <td className={cn(td, 'text-end font-semibold tabular-nums')}>{p.stock}</td>
             <td className={td}>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <LevelBadge sellable={p.stock} />
-                {p.status === 'HIDDEN' && <Badge tone="neutral">Đã ẩn</Badge>}
+                {p.status === 'HIDDEN' && <StatusText tone="neutral">Đã ẩn</StatusText>}
               </div>
             </td>
             <td className={cn(td, 'text-end')}>

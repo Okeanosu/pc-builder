@@ -14,7 +14,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronRight, CircleCheck, RotateCcw, Save, TriangleExclamationPoint, Undo2 } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { CATEGORY_COLOR } from '@/components/domain/category';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -73,7 +72,7 @@ function BandBar({ category, min, max }: { category: CategoryKey; min: string; m
   );
 }
 
-const cellInput = 'w-0 text-end';
+const cellInput = 'w-0 text-end tabular-nums';
 
 interface WeightMatrixEditorProps {
   rows: PurposeWeightsDTO[];
@@ -173,11 +172,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                   <th key={p} scope="col" className="px-3 py-3 text-start align-bottom">
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-fg">
                       {PURPOSE_LABELS[p]}
-                      {dirty && (
-                        <Badge tone="accent" size="sm">
-                          Chưa lưu
-                        </Badge>
-                      )}
+                      {dirty && <span className="text-xs font-medium text-warn-ink">Chưa lưu</span>}
                     </div>
                     <div className="text-xs font-normal text-muted">
                       {saved
@@ -221,7 +216,6 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                     return (
                       <td key={p} className="px-3 py-2 align-top">
                         <Input
-                          mono
                           size="sm"
                           inputMode="decimal"
                           value={drafts[p].weights[c]}
@@ -252,7 +246,6 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                         <td key={p} className="px-3 py-2.5 align-top">
                           <div className="flex items-center gap-1.5">
                             <Input
-                              mono
                               size="sm"
                               inputMode="decimal"
                               value={a.min}
@@ -267,7 +260,6 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                               –
                             </span>
                             <Input
-                              mono
                               size="sm"
                               inputMode="decimal"
                               value={a.max}

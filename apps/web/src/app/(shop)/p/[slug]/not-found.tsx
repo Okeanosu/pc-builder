@@ -15,7 +15,7 @@ export default function ProductNotFound() {
             <Button asChild>
               <Link href="/search">Tìm sản phẩm khác</Link>
             </Button>
-            <Button asChild variant="workshop">
+            <Button asChild variant="outline">
               <Link href="/advisor">Hỏi AI tư vấn</Link>
             </Button>
           </>

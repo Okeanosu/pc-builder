@@ -108,10 +108,7 @@
   --animate-toast-out: fade-out 160ms var(--ease-in);
   --animate-shimmer: shimmer 1.6s linear infinite;
   --animate-wipe-in: wipe-in 900ms var(--ease-out) both;
-  --animate-card-in: card-in 520ms var(--ease-out) both;
-  --animate-led-on: led-on 260ms var(--ease-out) both;
   --animate-caret: caret 1s steps(1) infinite;
-  --animate-blink-dot: blink-dot 1.4s ease-in-out infinite;
 
   @keyframes spin {
     to {
@@ -198,25 +195,9 @@
       clip-path: inset(0 0 0 0);
     }
   }
-  @keyframes card-in {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-  }
-  @keyframes led-on {
-    from {
-      opacity: 0.15;
-    }
-  }
   @keyframes caret {
     50% {
       opacity: 0;
-    }
-  }
-  @keyframes blink-dot {
-    50% {
-      opacity: 0.35;
     }
   }
 }

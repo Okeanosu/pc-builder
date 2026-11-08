@@ -78,7 +78,7 @@ export function AdminLayoutClient({ children }: { children: ReactNode }) {
   if (user.role === 'CUSTOMER') {
     return (
       <CenteredScreen>
-        <div className="w-full max-w-md rounded-lg border border-border bg-surface">
+        <div className="w-full max-w-md">
           <EmptyState
             tone="error"
             icon={<ShieldExclamationPoint />}

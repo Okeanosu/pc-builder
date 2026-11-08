@@ -7,12 +7,14 @@ export const metadata: Metadata = { title: 'Đăng nhập', robots: { index: fal
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">Đăng nhập</h1>
+        <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+          Đăng nhập
+        </h1>
         <p className="text-sm text-muted">Giỏ hàng hiện tại sẽ được gộp vào tài khoản của bạn.</p>
       </div>
-      <Suspense fallback={<Skeleton className="h-72 w-full rounded-md" />}>
+      <Suspense fallback={<Skeleton className="h-72 w-full" />}>
         <LoginForm />
       </Suspense>
     </div>

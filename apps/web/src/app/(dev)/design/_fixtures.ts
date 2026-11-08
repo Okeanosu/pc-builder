@@ -1,22 +1,5 @@
 import type { CategoryKey, CompatibilityIssueDTO, ProductSummaryDTO, SpecField } from '@pc/shared';
 
-export const TOKENS: { token: string; light: string; dark: string; use: string }[] = [
-  { token: 'bg', light: '#edf0f2', dark: '#12161b', use: 'Nền trang' },
-  { token: 'surface', light: '#ffffff', dark: '#191e24', use: 'Thẻ, bảng' },
-  { token: 'surface-2', light: '#f4f6f8', dark: '#20262e', use: 'Nền phụ, hover' },
-  { token: 'surface-3', light: '#e4e8ec', dark: '#29313a', use: 'Rãnh, skeleton' },
-  { token: 'border', light: '#d5dbe0', dark: '#2c343e', use: 'Đường chia' },
-  { token: 'border-strong', light: '#87929c', dark: '#5f6c7a', use: 'Viền ô nhập (≥ 3:1)' },
-  { token: 'fg', light: '#141a20', dark: '#e8edf2', use: 'Chữ chính' },
-  { token: 'muted', light: '#56616c', dark: '#97a3b0', use: 'Chữ phụ (≥ 4.5:1)' },
-  { token: 'accent', light: '#22d3ee', dark: '#22d3ee', use: 'Electric Cyan, nền nút chính' },
-  { token: 'accent-ink', light: '#0e7490', dark: '#22d3ee', use: 'Liên kết, chữ nhấn' },
-  { token: 'ok', light: '#a3e635', dark: '#a3e635', use: 'Signal Lime, tương thích' },
-  { token: 'warn', light: '#f59e0b', dark: '#f59e0b', use: 'Amber, cảnh báo' },
-  { token: 'danger', light: '#ef4444', dark: '#ef4444', use: 'Red, xung đột' },
-  { token: 'ring', light: '#0891b2', dark: '#22d3ee', use: 'Vòng focus' },
-];
-
 export const CPU_FIELDS: SpecField[] = [
   { key: 'socket', label: 'Socket', type: 'enum', required: true, filterable: true },
   { key: 'cores', label: 'Số nhân', type: 'number', required: true, filterable: true },
@@ -166,74 +149,4 @@ export const ISSUES_ERROR: Pick<CompatibilityIssueDTO, 'code' | 'severity' | 'me
 ];
 export const ISSUES_WARNING: Pick<CompatibilityIssueDTO, 'code' | 'severity' | 'message'>[] = [
   { code: 'C13', severity: 'warning', message: 'CPU yếu hơn GPU 3 bậc, dễ nghẽn cổ chai khi chơi game.' },
-];
-
-export interface DemoBuild {
-  label: 'performance' | 'balanced' | 'budget';
-  total: number;
-  score: number;
-  caption: string;
-  parts: { category: CategoryKey; name: string }[];
-  allocation: Partial<Record<CategoryKey, number>>;
-  warnings: Pick<CompatibilityIssueDTO, 'code' | 'severity' | 'message'>[];
-}
-
-export const DEMO_BUILDS: DemoBuild[] = [
-  {
-    label: 'performance',
-    total: 24_960_000,
-    score: 88,
-    caption: 'Khoảng 120 FPS ở 2K',
-    parts: [
-      { category: 'cpu', name: 'Ryzen 5 7600X' },
-      { category: 'gpu', name: 'RTX 5070 12GB' },
-      { category: 'ram', name: '32GB DDR5 6000' },
-    ],
-    allocation: {
-      cpu: 0.18,
-      mainboard: 0.11,
-      ram: 0.09,
-      gpu: 0.43,
-      storage: 0.06,
-      psu: 0.06,
-      case: 0.05,
-      cooler: 0.02,
-    },
-    warnings: [],
-  },
-  {
-    label: 'balanced',
-    total: 22_480_000,
-    score: 81,
-    caption: 'Khoảng 100 FPS ở 2K',
-    parts: [
-      { category: 'cpu', name: 'Ryzen 5 7600' },
-      { category: 'gpu', name: 'RTX 5060 Ti 16GB' },
-      { category: 'ram', name: '32GB DDR5 5600' },
-    ],
-    allocation: BUILD_ALLOCATION,
-    warnings: [],
-  },
-  {
-    label: 'budget',
-    total: 19_890_000,
-    score: 72,
-    caption: 'Khoảng 90 FPS ở 1080p',
-    parts: [
-      { category: 'cpu', name: 'Core i5-12400F' },
-      { category: 'gpu', name: 'RX 9060 XT 16GB' },
-      { category: 'ram', name: '16GB DDR4 3200' },
-    ],
-    allocation: {
-      cpu: 0.15,
-      mainboard: 0.12,
-      ram: 0.07,
-      gpu: 0.4,
-      storage: 0.08,
-      psu: 0.08,
-      case: 0.07,
-      cooler: 0.03,
-    },
-    warnings: ISSUES_WARNING,
-  },
 ];

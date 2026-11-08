@@ -13,7 +13,7 @@ interface PaginationProps {
 }
 
 const cell =
-  'focus-ring inline-flex h-10 min-w-10 items-center justify-center rounded-sm px-2 text-sm tabular-nums transition-colors';
+  'focus-ring inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2 text-sm tabular-nums transition-colors';
 
 /** Real links (crawlable, open in new tab) that switch pages in place on a plain click. */
 export function Pagination({ page, totalPages, hrefFor, onNavigate }: PaginationProps) {
@@ -58,7 +58,9 @@ export function Pagination({ page, totalPages, hrefFor, onNavigate }: Pagination
                 aria-label={`Trang ${p}`}
                 className={cn(
                   cell,
-                  p === page ? 'bg-fg font-semibold text-bg' : 'text-fg hover:bg-surface-2',
+                  p === page
+                    ? 'border border-fg font-semibold text-fg'
+                    : 'text-muted hover:bg-surface-2 hover:text-fg',
                 )}
               >
                 {p}

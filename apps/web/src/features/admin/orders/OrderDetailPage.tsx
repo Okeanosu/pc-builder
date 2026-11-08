@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ExternalLink, QrCode, Receipt } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -16,7 +15,7 @@ import { formatVnd } from '@/lib/format';
 import { queryKeys } from '@/lib/query-keys';
 import { AdminPageHeader } from '../AdminChrome';
 import { adminApi } from '../api';
-import { OrderStatusBadge, OrderTypeBadge, PaymentStatusBadge } from '../badges';
+import { OrderStatusBadge, OrderTypeBadge, PaymentStatusBadge, StatusText } from '../badges';
 import { formatDateTime } from '../format';
 import { OrderStatusControl } from '../OrderStatusControl';
 import { PageSkeleton, QueryError, tableClass, td, th, thEnd } from '../ui';
@@ -56,7 +55,7 @@ function ItemsCard({ order }: { order: AdminOrderDetailDTO }) {
                     <Link
                       href={`/builds/${g.buildId}`}
                       target="_blank"
-                      className="focus-ring inline-flex items-center gap-1 rounded-xs tabular-nums text-accent-ink hover:underline"
+                      className="focus-ring inline-flex items-center gap-1 rounded-xs text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
                     >
                       {g.buildId.slice(0, 8)} <ExternalLink className="size-3" aria-hidden />
                     </Link>
@@ -68,7 +67,7 @@ function ItemsCard({ order }: { order: AdminOrderDetailDTO }) {
                   <td className={cn(td, 'min-w-56')}>
                     <Link
                       href={`/admin/products/${item.productId}`}
-                      className="focus-ring rounded-xs text-fg hover:text-accent-ink hover:underline"
+                      className="focus-ring rounded-xs text-fg decoration-1 underline-offset-[3px] hover:underline"
                     >
                       {item.name}
                     </Link>
@@ -103,8 +102,8 @@ function ItemsCard({ order }: { order: AdminOrderDetailDTO }) {
           <dt className="text-muted">Phí vận chuyển</dt>
           <dd>{order.shippingFee === 0 ? 'Miễn phí' : <Price amount={order.shippingFee} size="sm" />}</dd>
         </div>
-        <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
-          <dt className="font-semibold">Tổng cộng</dt>
+        <div className="flex items-baseline justify-between gap-4 border-t-2 border-fg pt-3">
+          <dt className="font-medium">Tổng cộng</dt>
           <dd>
             <Price amount={order.total} size="xl" />
           </dd>
@@ -198,7 +197,7 @@ function PaymentsCard({ order }: { order: AdminOrderDetailDTO }) {
                       <Price amount={p.amount} size="sm" />
                     </td>
                     <td className={td}>
-                      <Badge tone={s.tone}>{s.label}</Badge>
+                      <StatusText tone={s.tone}>{s.label}</StatusText>
                     </td>
                   </tr>
                 );
@@ -230,7 +229,7 @@ function CustomerCard({ order }: { order: AdminOrderDetailDTO }) {
             <dd>
               <a
                 href={`tel:${order.phone}`}
-                className="focus-ring rounded-xs tabular-nums text-accent-ink hover:underline"
+                className="focus-ring rounded-xs text-fg tabular-nums underline decoration-border-strong underline-offset-4 hover:decoration-current"
               >
                 {order.phone}
               </a>
@@ -308,11 +307,11 @@ export function OrderDetailPage({ code }: { code: string }) {
             Danh sách đơn hàng
           </Link>
         </Button>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
           <OrderStatusBadge status={order.status} type={order.type} />
-          <OrderTypeBadge type={order.type} />
           <PaymentStatusBadge status={order.paymentStatus} />
-          <span>Đặt lúc {formatDateTime(order.createdAt)}</span>
+          <OrderTypeBadge type={order.type} />
+          <span className="tabular-nums">Đặt lúc {formatDateTime(order.createdAt)}</span>
         </div>
       </div>
 

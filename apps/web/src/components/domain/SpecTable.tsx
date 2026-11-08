@@ -14,6 +14,8 @@ interface SpecTableProps {
   showEmpty?: boolean;
   dense?: boolean;
   caption?: string;
+  /** `framed` sits on its own as a panel; `plain` drops the frame and caption band and runs rows flush between hairlines. */
+  variant?: 'framed' | 'plain';
   className?: string;
 }
 
@@ -24,17 +26,29 @@ export function SpecTable({
   showEmpty,
   dense,
   caption,
+  variant = 'framed',
   className,
 }: SpecTableProps) {
+  const plain = variant === 'plain';
   const values = specs as Record<string, unknown>;
   const rows = fields
     .map((f) => ({ field: f, text: formatSpecValue(values[f.key], f) }))
     .filter((r) => showEmpty || r.text !== null);
 
   return (
-    <div className={cn('overflow-hidden rounded-md border border-border bg-surface', className)}>
+    <div
+      className={cn(
+        plain ? 'border-y border-border' : 'overflow-hidden rounded-md border border-border bg-surface',
+        className,
+      )}
+    >
       {caption && (
-        <div className="border-b border-border bg-surface-2 px-4 py-2.5 text-sm font-semibold text-fg">
+        <div
+          className={cn(
+            'border-b border-border text-sm font-semibold text-fg',
+            plain ? 'py-2.5' : 'bg-surface-2 px-4 py-2.5',
+          )}
+        >
           {caption}
         </div>
       )}
@@ -45,7 +59,8 @@ export function SpecTable({
             <div
               key={field.key}
               className={cn(
-                'grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-4 px-4',
+                'grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-4',
+                plain ? mark && '-mx-2 rounded-xs px-2' : 'px-4',
                 dense ? 'py-2' : 'py-2.5',
                 mark === 'warning' && 'bg-warn/10',
                 mark === 'error' && 'bg-danger/10',

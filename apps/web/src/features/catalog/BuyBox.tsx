@@ -29,25 +29,16 @@ export function BuyBox({ product: initial }: { product: ProductDTO }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-col gap-1.5">
         <PriceTag price={product.price} salePrice={product.salePrice} size="lg" />
         <p
           className={cn(
-            'inline-flex items-center gap-2 text-sm font-semibold',
+            'text-sm font-medium tabular-nums',
             state === 'in' && 'text-ok-ink',
             state === 'low' && 'text-warn-ink',
             state === 'out' && 'text-muted',
           )}
         >
-          <span
-            aria-hidden
-            className={cn(
-              'size-2 rounded-full',
-              state === 'in' && 'bg-ok',
-              state === 'low' && 'bg-warn',
-              state === 'out' && 'bg-border-strong',
-            )}
-          />
           {state === 'in' && 'Còn hàng'}
           {state === 'low' && `Chỉ còn ${product.stock} sản phẩm`}
           {state === 'out' && 'Tạm hết hàng'}

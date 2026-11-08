@@ -58,13 +58,14 @@ function SpecSwitch({
       <span
         className={cn(
           'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors',
-          checked ? 'border-accent bg-accent' : 'border-border-strong bg-surface-3',
+          checked ? 'border-accent bg-accent' : 'border-border-strong bg-surface',
         )}
         aria-hidden
       >
         <span
           className={cn(
-            'absolute size-4.5 rounded-full bg-surface shadow-raised transition-transform',
+            'absolute size-4.5 rounded-full transition-transform',
+            checked ? 'bg-accent-fg' : 'bg-border-strong',
             checked ? 'translate-x-[22px]' : 'translate-x-[3px]',
           )}
         />
@@ -165,7 +166,7 @@ function NumberChips({
         )}
         <div className="flex gap-2">
           <Input
-            mono
+            className="tabular-nums"
             inputMode="decimal"
             value={text}
             disabled={disabled}
@@ -231,7 +232,7 @@ export function DynamicSpecForm({
                 hint={<Hint field={field} />}
               >
                 <Input
-                  mono
+                  className="tabular-nums"
                   inputMode="decimal"
                   autoComplete="off"
                   value={typeof raw === 'string' ? raw : ''}

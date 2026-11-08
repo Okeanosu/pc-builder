@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { ScrollText } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Badge, type BadgeProps } from '@/components/ui/Badge';
+import type { BadgeProps } from '@/components/ui/Badge';
 import { Drawer, DrawerBody, DrawerContent, DrawerFooter } from '@/components/ui/Drawer';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { queryKeys } from '@/lib/query-keys';
 import { adminApi } from '../api';
+import { StatusText } from '../badges';
 import { formatDateTime } from '../format';
 import { Pagination, QueryError } from '../ui';
 import { MOVEMENT_LABEL } from './stock';
@@ -29,10 +30,10 @@ function MovementRow({ m }: { m: InventoryMovementDTO }) {
   return (
     <li className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 py-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={REASON_TONE[m.reason]} size="sm">
+        <StatusText tone={REASON_TONE[m.reason]} size="sm">
           {MOVEMENT_LABEL[m.reason]}
-        </Badge>
-        <span className="text-xs text-muted">{formatDateTime(m.createdAt)}</span>
+        </StatusText>
+        <span className="text-xs text-muted tabular-nums">{formatDateTime(m.createdAt)}</span>
       </div>
       <span className="row-span-2 self-center text-base font-semibold text-fg tabular-nums">
         {m.delta > 0 ? `+${m.delta}` : m.delta}
@@ -41,7 +42,7 @@ function MovementRow({ m }: { m: InventoryMovementDTO }) {
         {isOrder ? (
           <Link
             href={`/admin/orders/${m.ref}`}
-            className="focus-ring rounded-xs tabular-nums text-accent-ink hover:underline"
+            className="focus-ring rounded-xs text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
           >
             {m.ref}
           </Link>

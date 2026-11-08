@@ -1,6 +1,5 @@
 'use client';
 
-import { KeyRound } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Input';
@@ -56,20 +55,12 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <section
-      aria-labelledby="change-password-title"
-      className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5"
-    >
-      <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-sm bg-surface-2 text-muted">
-          <KeyRound className="size-4" aria-hidden />
-        </span>
-        <div className="flex flex-col gap-0.5">
-          <h2 id="change-password-title" className="text-lg font-semibold text-fg">
-            Đổi mật khẩu
-          </h2>
-          <p className="text-sm text-muted">Dùng ít nhất 8 ký tự và khác mật khẩu đang dùng.</p>
-        </div>
+    <section aria-labelledby="change-password-title" className="flex flex-col gap-5">
+      <div className="flex flex-col gap-0.5 border-b border-border pb-3">
+        <h2 id="change-password-title" className="text-lg font-semibold text-fg">
+          Đổi mật khẩu
+        </h2>
+        <p className="text-sm text-muted">Dùng ít nhất 8 ký tự và khác mật khẩu đang dùng.</p>
       </div>
       <form method="post" onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-3 sm:items-start">
         {formError && (

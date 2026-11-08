@@ -13,15 +13,3 @@ export const CATEGORY_COLOR: Record<CategoryKey, string> = {
   case: 'var(--color-cat-case)',
   cooler: 'var(--color-cat-cooler)',
 };
-
-/** Motherboard silkscreen designators used as slot labels (builder slots, image plates). */
-export const CATEGORY_DESIGNATOR: Record<CategoryKey, string> = {
-  cpu: 'CPU1',
-  mainboard: 'MB1',
-  ram: 'DIMM_A1',
-  gpu: 'PCIE_X16',
-  storage: 'M2_1',
-  psu: 'ATX_PWR',
-  case: 'CHASSIS',
-  cooler: 'CPU_FAN',
-};

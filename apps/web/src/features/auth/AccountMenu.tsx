@@ -26,7 +26,7 @@ function MenuLink({ href, icon, children }: { href: string; icon: ReactNode; chi
 }
 
 const triggerClass =
-  'focus-ring inline-flex h-10 items-center gap-2 rounded-sm px-2.5 text-sm font-semibold text-fg transition-colors hover:bg-surface-2 data-[state=open]:bg-surface-2 max-lg:w-10 max-lg:justify-center max-lg:px-0';
+  'focus-ring inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-fg transition-colors hover:bg-surface-2 data-[state=open]:bg-surface-2 max-lg:w-10 max-lg:justify-center max-lg:px-0';
 
 /** Header account control: login/register for guests, account links and logout for signed-in users. */
 export function AccountMenu() {
@@ -72,7 +72,7 @@ export function AccountMenu() {
           {user ? (
             <>
               <DropdownMenu.Label className="px-2.5 py-2">
-                <span className="block truncate text-sm font-semibold">{user.fullName}</span>
+                <span className="block truncate text-sm font-medium">{user.fullName}</span>
                 <span className="block truncate text-xs text-muted">{user.email}</span>
               </DropdownMenu.Label>
               <DropdownMenu.Separator className="my-1 h-px bg-border" />

@@ -85,7 +85,7 @@ export function AdjustStockDialog({
                 }
               >
                 <Input
-                  mono
+                  className="tabular-nums"
                   inputMode="numeric"
                   autoFocus
                   value={draft.delta}

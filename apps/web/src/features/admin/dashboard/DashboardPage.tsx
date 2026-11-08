@@ -2,11 +2,10 @@
 
 import { ORDER_STATUSES, type OrderStatus } from '@pc/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Banknote, Bot, PackageOpen, Receipt, Warehouse } from 'lucide-react';
+import { ArrowRight, PackageOpen } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Price } from '@/components/ui/Price';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -20,95 +19,83 @@ import { formatDateTime, orderStatusLabel } from '../format';
 import { RevenueChart } from '../RevenueChart';
 import { QueryError, TableFrame, tableClass, td, th, thEnd } from '../ui';
 
-function StatTile({
+/** One figure in the KPI row: label, a large tabular value, a quiet footnote. Cells are split by hairlines. */
+function Figure({
   label,
-  icon,
   children,
   footer,
   href,
 }: {
   label: string;
-  icon: ReactNode;
   children: ReactNode;
   footer: ReactNode;
   href?: string;
 }) {
   return (
-    <Card className="flex flex-col gap-2 p-4">
-      <div className="flex items-center justify-between gap-2 text-sm text-muted">
-        <span>{label}</span>
-        <span className="text-muted [&_svg]:size-4" aria-hidden>
-          {icon}
-        </span>
-      </div>
-      <div className="text-2xl font-semibold text-fg">{children}</div>
-      <div className="text-xs text-muted">
+    <div className="flex min-w-0 flex-col gap-1 bg-bg py-4 pe-5 sm:even:ps-5 xl:not-first:ps-5">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="text-2xl font-semibold text-fg tabular-nums">{children}</dd>
+      <dd className="text-xs text-muted">
         {href ? (
-          <Link href={href} className="focus-ring rounded-xs text-accent-ink hover:underline">
+          <Link
+            href={href}
+            className="focus-ring rounded-xs underline decoration-border-strong underline-offset-4 hover:text-fg hover:decoration-current"
+          >
             {footer}
           </Link>
         ) : (
           footer
         )}
-      </div>
-    </Card>
+      </dd>
+    </div>
   );
 }
+
+const figureRow = 'grid gap-px border-y border-border bg-border sm:grid-cols-2 xl:grid-cols-4';
 
 function SummaryTiles() {
   const summary = useQuery({ queryKey: queryKeys.admin.summary, queryFn: adminApi.summary });
   if (summary.isPending) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={figureRow} aria-busy>
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-[116px] rounded-md" />
+          <div key={i} className="flex flex-col gap-2 bg-bg py-4 pe-5 sm:even:ps-5 xl:not-first:ps-5">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
         ))}
       </div>
     );
   }
   if (summary.isError) {
     return (
-      <Card>
+      <div className="border-y border-border">
         <QueryError error={summary.error} onRetry={() => summary.refetch()} />
-      </Card>
+      </div>
     );
   }
   const s = summary.data;
   const toHandle = s.ordersByStatus.PAID + s.ordersByStatus.PROCESSING;
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <StatTile
-        label="Doanh thu hôm nay"
-        icon={<Banknote />}
-        footer={`${s.todayOrders} đơn đã thanh toán hôm nay`}
-      >
+    <dl className={figureRow}>
+      <Figure label="Doanh thu hôm nay" footer={`${s.todayOrders} đơn đã thanh toán hôm nay`}>
         <Price amount={s.todayRevenue} size="2xl" className="font-semibold" />
-      </StatTile>
-      <StatTile
+      </Figure>
+      <Figure
         label="Đơn chờ thanh toán"
-        icon={<Receipt />}
         footer={`${toHandle} đơn đã thanh toán cần xử lý`}
         href="/admin/orders?status=PAID"
       >
         {s.ordersByStatus.PENDING_PAYMENT}
-      </StatTile>
-      <StatTile
-        label="Sắp hết hàng"
-        icon={<Warehouse />}
-        footer="Còn bán được ≤ 3 sản phẩm · mở Tồn kho"
-        href="/admin/inventory"
-      >
+      </Figure>
+      <Figure label="Sắp hết hàng" footer="Còn bán được ≤ 3 sản phẩm · mở Tồn kho" href="/admin/inventory">
         <span className={cn(s.lowStockCount > 0 && 'text-warn-ink')}>{s.lowStockCount}</span>
-      </StatTile>
-      <StatTile
-        label="Hội thoại AI 7 ngày"
-        icon={<Bot />}
-        footer="Xem cách chatbot lập luận"
-        href="/admin/chats"
-      >
+      </Figure>
+      <Figure label="Hội thoại AI 7 ngày" footer="Xem cách chatbot lập luận" href="/admin/chats">
         {s.chatSessionsLast7Days}
-      </StatTile>
-    </div>
+      </Figure>
+    </dl>
   );
 }
 
@@ -117,18 +104,20 @@ function OrdersByStatus() {
   const counts = summary.data?.ordersByStatus;
   const total = counts ? ORDER_STATUSES.reduce((n, s) => n + counts[s], 0) : 0;
   return (
-    <Card className="flex flex-col">
-      <div className="flex items-center justify-between gap-2 p-5 pb-3">
-        <h2 className="text-base font-semibold text-fg">Đơn hàng theo trạng thái</h2>
+    <section aria-labelledby="dash-by-status" className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-2 border-b border-border pb-3">
+        <h2 id="dash-by-status" className="text-lg font-semibold text-fg">
+          Đơn hàng theo trạng thái
+        </h2>
         <span className="text-sm text-muted tabular-nums">{counts ? `${total} đơn` : ''}</span>
       </div>
       {counts ? (
-        <ul className="flex flex-col px-2 pb-3">
+        <ul className="flex flex-col">
           {ORDER_STATUSES.map((status: OrderStatus) => (
-            <li key={status}>
+            <li key={status} className="border-b border-border">
               <Link
                 href={`/admin/orders?status=${status}`}
-                className="focus-ring flex h-10 items-center justify-between gap-3 rounded-sm px-3 text-sm hover:bg-surface-2"
+                className="focus-ring -mx-2 flex h-10 items-center justify-between gap-3 rounded-sm px-2 text-sm hover:bg-surface-2"
                 aria-label={`${orderStatusLabel(status)}: ${counts[status]} đơn`}
               >
                 <OrderStatusBadge status={status} />
@@ -138,13 +127,13 @@ function OrdersByStatus() {
           ))}
         </ul>
       ) : (
-        <div className="flex flex-col gap-3 px-5 pb-5">
+        <div className="flex flex-col gap-3 pt-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-6" />
           ))}
         </div>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -161,8 +150,10 @@ function FallbackShare() {
   const fb = fallback.data?.total ?? 0;
   const share = total > 0 ? fb / total : 0;
   return (
-    <Card className="flex flex-col gap-3 p-5">
-      <h2 className="text-base font-semibold text-fg">Tỉ lệ chế độ dự phòng</h2>
+    <section aria-labelledby="dash-fallback" className="flex flex-col gap-3">
+      <h2 id="dash-fallback" className="border-b border-border pb-3 text-lg font-semibold text-fg">
+        Tỉ lệ chế độ dự phòng
+      </h2>
       {all.isPending || fallback.isPending ? (
         <Skeleton className="h-12" />
       ) : total === 0 ? (
@@ -172,24 +163,28 @@ function FallbackShare() {
       ) : (
         <>
           <p className="text-sm text-muted">
-            <span className="text-xl font-semibold text-fg tabular-nums">{formatPercent(share, 1)}</span>{' '}
-            phiên chạy bằng bộ hiểu ngôn ngữ dự phòng ({fb}/{total}) khi Gemini không phản hồi.
+            <span className="text-2xl font-semibold text-fg tabular-nums">{formatPercent(share, 1)}</span>{' '}
+            phiên chạy bằng bộ hiểu ngôn ngữ dự phòng (
+            <span className="tabular-nums">
+              {fb}/{total}
+            </span>
+            ) khi Gemini không phản hồi.
           </p>
-          <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" aria-hidden>
-            <span className="bg-ring" style={{ flexGrow: total - fb }} />
+          <div className="flex h-2 gap-0.5 overflow-hidden rounded-xs" aria-hidden>
+            <span className="bg-fg" style={{ flexGrow: total - fb }} />
             {fb > 0 && <span className="bg-warn" style={{ flexGrow: fb }} />}
           </div>
-          <div className="flex gap-4 text-xs text-muted">
+          <div className="flex gap-4 text-xs text-muted tabular-nums">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-ring" aria-hidden /> AI ({total - fb})
+              <span className="size-2 rounded-[2px] bg-fg" aria-hidden /> AI ({total - fb})
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-warn" aria-hidden /> Dự phòng ({fb})
+              <span className="size-2 rounded-[2px] bg-warn" aria-hidden /> Dự phòng ({fb})
             </span>
           </div>
         </>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -199,9 +194,11 @@ function RecentOrders() {
     queryFn: () => adminApi.orders({ pageSize: 6 }),
   });
   return (
-    <div className="flex flex-col gap-3">
+    <section aria-labelledby="dash-recent" className="flex min-w-0 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-fg">Đơn hàng mới</h2>
+        <h2 id="dash-recent" className="text-lg font-semibold text-fg">
+          Đơn hàng mới
+        </h2>
         <Button asChild variant="link" size="sm">
           <Link href="/admin/orders">
             Tất cả đơn hàng <ArrowRight aria-hidden />
@@ -210,7 +207,7 @@ function RecentOrders() {
       </div>
       <TableFrame>
         {orders.isPending ? (
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 py-4">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-6" />
             ))}
@@ -241,17 +238,17 @@ function RecentOrders() {
                   <td className={td}>
                     <Link
                       href={`/admin/orders/${o.code}`}
-                      className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
+                      className="focus-ring rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
                     >
                       {o.code}
                     </Link>
-                    <div className="mt-1">
+                    <div className="mt-0.5">
                       <OrderTypeBadge type={o.type} />
                     </div>
                   </td>
                   <td className={td}>
                     <div className="font-medium">{o.shippingName}</div>
-                    <div className="tabular-nums text-xs text-muted">{o.phone}</div>
+                    <div className="text-xs text-muted">{o.phone}</div>
                   </td>
                   <td className={td}>
                     <OrderStatusBadge status={o.status} type={o.type} />
@@ -266,19 +263,19 @@ function RecentOrders() {
           </table>
         )}
       </TableFrame>
-    </div>
+    </section>
   );
 }
 
 export function DashboardPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-10">
       <AdminPageHeader title="Tổng quan" />
       <SummaryTiles />
       <RevenueChart />
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-12">
         <RecentOrders />
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-10">
           <OrdersByStatus />
           <FallbackShare />
         </div>

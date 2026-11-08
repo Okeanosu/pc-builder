@@ -44,14 +44,16 @@ export interface ProductBrowserProps {
   initial: { search: string; data: Paginated<ProductSummaryDTO> } | null;
 }
 
+export const productGridClass = 'grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-3 lg:gap-x-6 xl:grid-cols-4';
+
 export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4" aria-hidden>
+    <div className={productGridClass} aria-hidden>
       {Array.from({ length: count }, (_, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
-        <div key={i} className="flex flex-col overflow-hidden rounded-md border border-border bg-surface">
-          <Skeleton className="aspect-[4/3] w-full rounded-none" />
-          <div className="flex flex-col gap-2.5 p-4">
+        <div key={i} className="flex flex-col gap-3">
+          <Skeleton className="aspect-[4/3] w-full" />
+          <div className="flex flex-col gap-2">
             <Skeleton className="h-3 w-1/3" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-2/3" />
@@ -108,7 +110,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-6 lg:px-6 lg:py-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6 lg:py-10">
       <nav aria-label="Đường dẫn" className="text-sm text-muted">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li>
@@ -116,17 +118,19 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
               Trang chủ
             </Link>
           </li>
-          <li aria-hidden>›</li>
+          <li aria-hidden>/</li>
           <li aria-current="page" className="text-fg">
             {category ? category.name : 'Tìm kiếm'}
           </li>
         </ol>
       </nav>
 
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-[-0.02em] text-balance text-fg">{title}</h1>
-          <p className="text-sm text-muted" aria-live="polite">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 border-b border-border pb-5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-balance text-fg sm:text-3xl">
+            {title}
+          </h1>
+          <p className="text-sm text-muted tabular-nums" aria-live="polite">
             {total === undefined ? 'Đang tải sản phẩm…' : `${formatNumber(total)} sản phẩm`}
           </p>
         </div>
@@ -139,7 +143,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
               aria-haspopup="dialog"
             >
               <SlidersHorizontal aria-hidden />
-              Bộ lọc{filterCount > 0 && ` (${filterCount})`}
+              Bộ lọc{filterCount > 0 && <span className="tabular-nums">({filterCount})</span>}
             </Button>
             <DrawerContent
               title="Bộ lọc"
@@ -180,7 +184,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
               <button
                 type="button"
                 onClick={() => navigate(chip.remove(query))}
-                className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-full border border-border-strong bg-surface ps-3 pe-2 text-sm text-fg transition-colors hover:bg-surface-2"
+                className="focus-ring inline-flex h-8 items-center gap-1.5 rounded-full bg-surface-2 ps-3 pe-2 text-sm text-fg tabular-nums transition-colors hover:bg-surface-3"
                 aria-label={`Bỏ lọc ${chip.label}`}
               >
                 {chip.label}
@@ -192,7 +196,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
             <button
               type="button"
               onClick={() => navigate(clearFilters(query))}
-              className="focus-ring rounded-xs px-1 text-sm font-medium text-accent-ink hover:underline"
+              className="focus-ring rounded-xs px-1 text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
             >
               Xóa tất cả
             </button>
@@ -200,20 +204,25 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
         </ul>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-8">
+      <div className="grid items-start gap-6 lg:grid-cols-[14.5rem_minmax(0,1fr)] lg:gap-10">
         <aside
           aria-label="Bộ lọc sản phẩm"
-          className="no-scrollbar sticky top-32 hidden max-h-[calc(100dvh-9rem)] overflow-y-auto rounded-md border border-border bg-surface p-4 lg:block"
+          className="no-scrollbar sticky top-32 hidden max-h-[calc(100dvh-9rem)] overflow-y-auto lg:block"
         >
           {panel}
           {filterCount > 0 && (
-            <Button variant="secondary" className="mt-2 w-full" onClick={() => navigate(clearFilters(query))}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => navigate(clearFilters(query))}
+            >
               Xóa bộ lọc
             </Button>
           )}
         </aside>
 
-        <div ref={resultsRef} className="flex min-w-0 scroll-mt-32 flex-col gap-6">
+        <div ref={resultsRef} className="flex min-w-0 scroll-mt-32 flex-col gap-10">
           {isPending ? (
             <ProductGridSkeleton />
           ) : isError && !data ? (
@@ -240,7 +249,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
                 filterCount > 0 ? (
                   <Button onClick={() => navigate(clearFilters(query))}>Xóa bộ lọc</Button>
                 ) : (
-                  <Button asChild variant="workshop">
+                  <Button asChild>
                     <Link href={query.q ? `/advisor?q=${encodeURIComponent(query.q)}` : '/advisor'}>
                       Hỏi AI tư vấn
                     </Link>
@@ -251,8 +260,8 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
           ) : data ? (
             <div className="relative">
               {isFetching && isPlaceholderData && (
-                <div className="absolute inset-x-0 -top-3 z-10 flex justify-center">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted shadow-raised">
+                <div className="absolute inset-x-0 -top-4 z-10 flex justify-center">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-fg px-3 py-1 text-xs text-bg">
                     <Spinner size="sm" label={null} />
                     Đang cập nhật…
                   </span>
@@ -260,7 +269,8 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
               )}
               <ul
                 className={cn(
-                  'grid grid-cols-2 gap-3 transition-opacity sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
+                  productGridClass,
+                  'transition-opacity',
                   isFetching && isPlaceholderData && 'opacity-60',
                 )}
                 aria-busy={isFetching || undefined}

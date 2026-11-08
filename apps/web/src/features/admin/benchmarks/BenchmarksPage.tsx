@@ -107,12 +107,12 @@ function BenchmarkRow({
 
   const formId = `bench-${item.productId}`;
   return (
-    <tr className={cn('align-top hover:bg-surface-2', dirty && 'bg-accent/5')}>
+    <tr className={cn('align-top hover:bg-surface-2', dirty && 'bg-surface-2')}>
       <td className={cn(td, 'min-w-60')}>
         <form id={formId} onSubmit={submit} />
         <Link
           href={`/admin/products/${item.productId}`}
-          className="focus-ring line-clamp-2 rounded-xs font-medium text-fg hover:text-accent-ink hover:underline"
+          className="focus-ring line-clamp-2 rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
         >
           {item.productName}
         </Link>
@@ -129,7 +129,7 @@ function BenchmarkRow({
           <td key={c.key} className={cn(td, 'w-40')}>
             <Input
               form={formId}
-              mono
+              className="tabular-nums"
               size="sm"
               inputMode="numeric"
               value={draft[c.key]}

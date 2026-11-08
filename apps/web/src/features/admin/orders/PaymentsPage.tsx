@@ -3,7 +3,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { QrCode } from 'lucide-react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Price } from '@/components/ui/Price';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/cn';
 import { queryKeys } from '@/lib/query-keys';
 import { AdminPageHeader } from '../AdminChrome';
 import { adminApi } from '../api';
+import { StatusText } from '../badges';
 import { formatDateTime } from '../format';
 import {
   Pagination,
@@ -60,8 +60,8 @@ function FilterChips({
             className={cn(
               'focus-ring inline-flex h-8 items-center rounded-full border px-3.5 text-sm font-medium transition-colors',
               active
-                ? 'border-accent bg-accent/12 text-accent-ink'
-                : 'border-border-strong bg-surface text-muted hover:border-fg/50 hover:text-fg',
+                ? 'border-fg text-fg shadow-[0_0_0_1px_var(--color-fg)]'
+                : 'border-border-strong bg-transparent text-muted hover:border-fg hover:text-fg',
             )}
           >
             {c.label}
@@ -152,7 +152,7 @@ export function PaymentsPage() {
                       {order.code ? (
                         <Link
                           href={`/admin/orders/${order.code}`}
-                          className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
+                          className="focus-ring rounded-xs font-medium text-fg decoration-1 underline-offset-[3px] hover:underline"
                         >
                           {order.text}
                         </Link>
@@ -161,7 +161,7 @@ export function PaymentsPage() {
                       )}
                     </td>
                     <td className={td}>
-                      <Badge tone={s.tone}>{s.label}</Badge>
+                      <StatusText tone={s.tone}>{s.label}</StatusText>
                     </td>
                   </tr>
                 );
