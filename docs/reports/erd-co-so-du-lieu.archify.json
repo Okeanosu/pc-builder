@@ -1,0 +1,1132 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Cơ sở dữ liệu PC Builder",
+    "output": ".archify/erd-pc-builder-db-20261108-163110/co-so-du-lieu.html",
+    "quality_profile": "standard",
+    "repository": {
+      "url": "git@github.com:yamadaOliva/pc-builder.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "f07a10fa69045511dd90b7ec8110e5758f0e5b8f"
+    },
+    "legend": {
+      "entries": {
+        "pk": {
+          "label": "Khóa chính"
+        },
+        "fk": {
+          "label": "Khóa ngoại"
+        },
+        "uk": {
+          "label": "Giá trị duy nhất"
+        },
+        "one": {
+          "label": "Một"
+        },
+        "many": {
+          "label": "Nhiều"
+        },
+        "optional": {
+          "label": "Có thể không có (0)"
+        }
+      }
+    },
+    "views": [
+      {
+        "id": "muahang",
+        "label": "Mua hàng",
+        "focus": [
+          "carts",
+          "cart_items",
+          "orders",
+          "order_items",
+          "payments",
+          "products"
+        ],
+        "note": "Giỏ của tài khoản, đơn lẻ hoặc lắp ráp, và giao dịch VietQR đối soát với đơn."
+      },
+      {
+        "id": "danhmuc",
+        "label": "Danh mục và kho",
+        "focus": [
+          "products",
+          "categories",
+          "brands",
+          "benchmarks",
+          "inventory_movements"
+        ],
+        "note": "products là trung tâm: thông số JSONB, điểm benchmark và nhật ký kho đều trỏ về nó."
+      },
+      {
+        "id": "cauhinh",
+        "label": "Cấu hình và thuật toán",
+        "focus": [
+          "builds",
+          "purpose_weights",
+          "cart_items",
+          "order_items",
+          "orders"
+        ],
+        "note": "Một cấu hình đi vào giỏ và đơn qua build_id; trọng số theo mục đích do admin chỉnh."
+      },
+      {
+        "id": "troly",
+        "label": "Trợ lý AI",
+        "focus": [
+          "chat_sessions",
+          "chat_messages",
+          "users",
+          "builds"
+        ],
+        "note": "Phiên thuộc tài khoản hoặc mã khách; mỗi tin lưu lời gọi công cụ, độ trễ và kiểm tra giá."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 32,
+    "gapY": 40
+  },
+  "entities": [
+    {
+      "id": "chat_sessions",
+      "label": "chat_sessions",
+      "sublabel": "Phiên trò chuyện với trợ lý",
+      "tag": "Trợ lý AI",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "users.id"
+        },
+        {
+          "name": "guest_id",
+          "type": "text?"
+        },
+        {
+          "name": "title",
+          "type": "text?"
+        },
+        {
+          "name": "mode",
+          "type": "chat_mode"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 250,
+          "end_line": 257
+        }
+      ]
+    },
+    {
+      "id": "chat_messages",
+      "label": "chat_messages",
+      "sublabel": "Tin nhắn, lời gọi công cụ, kiểm tra giá",
+      "tag": "Trợ lý AI",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "session_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "chat_sessions.id"
+        },
+        {
+          "name": "role",
+          "type": "chat_role"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "tool_name",
+          "type": "text?"
+        },
+        {
+          "name": "tool_args",
+          "type": "jsonb?"
+        },
+        {
+          "name": "tool_result",
+          "type": "jsonb?"
+        },
+        {
+          "name": "build_ids",
+          "type": "jsonb"
+        },
+        {
+          "name": "mode",
+          "type": "chat_mode?"
+        },
+        {
+          "name": "latency_ms",
+          "type": "integer?"
+        },
+        {
+          "name": "price_check",
+          "type": "jsonb?"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 259,
+          "end_line": 282
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "label": "users",
+      "sublabel": "Khách hàng, nhân viên, quản trị",
+      "tag": "Tài khoản",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "password_hash",
+          "type": "text"
+        },
+        {
+          "name": "full_name",
+          "type": "text"
+        },
+        {
+          "name": "phone",
+          "type": "text?"
+        },
+        {
+          "name": "role",
+          "type": "role"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 38,
+          "end_line": 46
+        }
+      ]
+    },
+    {
+      "id": "builds",
+      "label": "builds",
+      "sublabel": "Cấu hình đã gợi ý hoặc tự lắp",
+      "tag": "Cấu hình PC",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "users.id"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "label",
+          "type": "text?"
+        },
+        {
+          "name": "purpose",
+          "type": "text"
+        },
+        {
+          "name": "budget",
+          "type": "bigint"
+        },
+        {
+          "name": "items",
+          "type": "jsonb"
+        },
+        {
+          "name": "total_price",
+          "type": "bigint"
+        },
+        {
+          "name": "score",
+          "type": "real"
+        },
+        {
+          "name": "score_breakdown",
+          "type": "jsonb"
+        },
+        {
+          "name": "allocation",
+          "type": "jsonb"
+        },
+        {
+          "name": "estimated_wattage",
+          "type": "integer"
+        },
+        {
+          "name": "recommended_psu_wattage",
+          "type": "integer"
+        },
+        {
+          "name": "warnings",
+          "type": "jsonb"
+        },
+        {
+          "name": "source",
+          "type": "build_source"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 136,
+          "end_line": 160
+        }
+      ],
+      "width": 260
+    },
+    {
+      "id": "purpose_weights",
+      "label": "purpose_weights",
+      "sublabel": "Trọng số và phân bổ theo mục đích",
+      "tag": "Cấu hình PC",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "purpose",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "weights",
+          "type": "jsonb"
+        },
+        {
+          "name": "allocation",
+          "type": "jsonb"
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "users.id"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 121,
+          "end_line": 127
+        }
+      ],
+      "width": 260
+    },
+    {
+      "id": "carts",
+      "label": "carts",
+      "sublabel": "Giỏ của tài khoản đã đăng nhập",
+      "tag": "Giỏ hàng",
+      "row": 0,
+      "col": 3,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "key": [
+            "fk",
+            "uk"
+          ],
+          "references": "users.id"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 162,
+          "end_line": 169
+        }
+      ]
+    },
+    {
+      "id": "cart_items",
+      "label": "cart_items",
+      "sublabel": "Dòng trong giỏ, lẻ hoặc theo bộ",
+      "tag": "Giỏ hàng",
+      "row": 1,
+      "col": 3,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "cart_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "carts.id"
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "products.id"
+        },
+        {
+          "name": "qty",
+          "type": "integer"
+        },
+        {
+          "name": "build_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "builds.id"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 171,
+          "end_line": 186
+        }
+      ]
+    },
+    {
+      "id": "orders",
+      "label": "orders",
+      "sublabel": "Đơn lẻ hoặc đơn lắp ráp",
+      "tag": "Đơn hàng & thanh toán",
+      "row": 0,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "code",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "users.id"
+        },
+        {
+          "name": "guest_id",
+          "type": "text?"
+        },
+        {
+          "name": "type",
+          "type": "order_type"
+        },
+        {
+          "name": "status",
+          "type": "order_status"
+        },
+        {
+          "name": "payment_status",
+          "type": "payment_status"
+        },
+        {
+          "name": "build_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "builds.id"
+        },
+        {
+          "name": "subtotal",
+          "type": "bigint"
+        },
+        {
+          "name": "assembly_fee",
+          "type": "bigint"
+        },
+        {
+          "name": "shipping_fee",
+          "type": "bigint"
+        },
+        {
+          "name": "total",
+          "type": "bigint"
+        },
+        {
+          "name": "shipping_name",
+          "type": "text"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "address",
+          "type": "text"
+        },
+        {
+          "name": "note",
+          "type": "text?"
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamptz?"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz?"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 188,
+          "end_line": 217
+        }
+      ],
+      "width": 244
+    },
+    {
+      "id": "order_items",
+      "label": "order_items",
+      "sublabel": "Dòng đơn, chụp lại tên và giá lúc mua",
+      "tag": "Đơn hàng & thanh toán",
+      "row": 1,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "order_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "orders.id"
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "products.id"
+        },
+        {
+          "name": "name_snapshot",
+          "type": "text"
+        },
+        {
+          "name": "price_snapshot",
+          "type": "bigint"
+        },
+        {
+          "name": "qty",
+          "type": "integer"
+        },
+        {
+          "name": "build_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "builds.id"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 219,
+          "end_line": 231
+        }
+      ]
+    },
+    {
+      "id": "payments",
+      "label": "payments",
+      "sublabel": "Giao dịch VietQR, SePay, thủ công",
+      "tag": "Đơn hàng & thanh toán",
+      "row": 2,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "order_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "orders.id"
+        },
+        {
+          "name": "provider",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "bigint"
+        },
+        {
+          "name": "transfer_content",
+          "type": "text?"
+        },
+        {
+          "name": "provider_txn_id",
+          "type": "text?",
+          "key": "uk"
+        },
+        {
+          "name": "raw",
+          "type": "jsonb?"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 233,
+          "end_line": 248
+        }
+      ]
+    },
+    {
+      "id": "products",
+      "label": "products",
+      "sublabel": "Linh kiện, thông số JSONB, tồn kho",
+      "tag": "Sản phẩm",
+      "row": 0,
+      "col": 5,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "category_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "categories.id"
+        },
+        {
+          "name": "brand_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "brands.id"
+        },
+        {
+          "name": "sku",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "price",
+          "type": "bigint"
+        },
+        {
+          "name": "sale_price",
+          "type": "bigint?"
+        },
+        {
+          "name": "stock",
+          "type": "integer"
+        },
+        {
+          "name": "reserved",
+          "type": "integer"
+        },
+        {
+          "name": "images",
+          "type": "jsonb"
+        },
+        {
+          "name": "specs",
+          "type": "jsonb"
+        },
+        {
+          "name": "description",
+          "type": "text?"
+        },
+        {
+          "name": "status",
+          "type": "product_status"
+        },
+        {
+          "name": "commercial_boost",
+          "type": "real"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 62,
+          "end_line": 92
+        }
+      ]
+    },
+    {
+      "id": "categories",
+      "label": "categories",
+      "sublabel": "8 danh mục và lược đồ thông số",
+      "tag": "Sản phẩm",
+      "row": 1,
+      "col": 5,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "sort_order",
+          "type": "integer"
+        },
+        {
+          "name": "spec_schema",
+          "type": "jsonb"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 48,
+          "end_line": 55
+        }
+      ]
+    },
+    {
+      "id": "brands",
+      "label": "brands",
+      "sublabel": "Hãng sản xuất",
+      "tag": "Sản phẩm",
+      "row": 2,
+      "col": 5,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "key": "uk"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 57,
+          "end_line": 60
+        }
+      ]
+    },
+    {
+      "id": "benchmarks",
+      "label": "benchmarks",
+      "sublabel": "Điểm hiệu năng CPU, GPU",
+      "tag": "Kho & hiệu năng",
+      "row": 0,
+      "col": 6,
+      "attributes": [
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "products.id"
+        },
+        {
+          "name": "cpu_single",
+          "type": "integer?"
+        },
+        {
+          "name": "cpu_multi",
+          "type": "integer?"
+        },
+        {
+          "name": "gpu_score",
+          "type": "integer?"
+        },
+        {
+          "name": "source",
+          "type": "text?"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 94,
+          "end_line": 103
+        }
+      ]
+    },
+    {
+      "id": "inventory_movements",
+      "label": "inventory_movements",
+      "sublabel": "Nhật ký nhập, xuất, điều chỉnh kho",
+      "tag": "Kho & hiệu năng",
+      "row": 1,
+      "col": 6,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "key": "fk",
+          "references": "products.id"
+        },
+        {
+          "name": "delta",
+          "type": "integer"
+        },
+        {
+          "name": "reason",
+          "type": "movement_reason"
+        },
+        {
+          "name": "ref",
+          "type": "text?"
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid?",
+          "key": "fk",
+          "references": "users.id"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/db/schema.ts",
+          "line": 105,
+          "end_line": 119
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "msg_session",
+      "from": "chat_messages",
+      "to": "chat_sessions",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "session_user",
+      "from": "chat_sessions",
+      "to": "users",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "build_user",
+      "from": "builds",
+      "to": "users",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "weights_user",
+      "from": "purpose_weights",
+      "to": "users",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "cart_user",
+      "from": "carts",
+      "to": "users",
+      "fromCardinality": "one",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "item_cart",
+      "from": "cart_items",
+      "to": "carts",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "item_product",
+      "from": "cart_items",
+      "to": "products",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "item_build",
+      "from": "cart_items",
+      "to": "builds",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "order_user",
+      "from": "orders",
+      "to": "users",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "order_build",
+      "from": "orders",
+      "to": "builds",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "line_order",
+      "from": "order_items",
+      "to": "orders",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "line_product",
+      "from": "order_items",
+      "to": "products",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "line_build",
+      "from": "order_items",
+      "to": "builds",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "payment_order",
+      "from": "payments",
+      "to": "orders",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    },
+    {
+      "id": "product_category",
+      "from": "products",
+      "to": "categories",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "product_brand",
+      "from": "products",
+      "to": "brands",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "bench_product",
+      "from": "benchmarks",
+      "to": "products",
+      "fromCardinality": "one",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "identifying": true
+    },
+    {
+      "id": "movement_product",
+      "from": "inventory_movements",
+      "to": "products",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true
+    },
+    {
+      "id": "movement_actor",
+      "from": "inventory_movements",
+      "to": "users",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Quy ước đọc bảng",
+      "items": [
+        "Dấu ? sau kiểu dữ liệu: cột cho phép NULL.",
+        "Khóa chính là uuid sinh ngẫu nhiên; riêng benchmarks dùng product_id làm khóa chính, purpose_weights dùng purpose.",
+        "Tiền lưu bigint theo đồng (VND), không dùng số thực.",
+        "role, order_status, payment_status, chat_mode… là kiểu enum của PostgreSQL."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "JSONB và chỉ mục",
+      "items": [
+        "products.specs (JSONB) có chỉ mục GIN jsonb_path_ops để lọc thông số như socket, chuẩn RAM.",
+        "Tìm theo tên dùng GIN trên to_tsvector(name); products(category_id, price) phục vụ danh sách và lọc giá.",
+        "orders(status, expires_at) cho job hủy đơn quá hạn; chat_messages(session_id, created_at) cho lịch sử chat."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Ràng buộc nghiệp vụ",
+      "items": [
+        "Hàng có thể bán = stock − reserved; giữ hàng bằng UPDATE có điều kiện stock − reserved ≥ q nên không bán âm.",
+        "cart_items unique NULLS NOT DISTINCT (cart_id, product_id, build_id) để upsert nguyên tử.",
+        "payments.order_id NULL: tiền chuyển không khớp đơn (NO_ORDER); provider_txn_id unique giúp webhook chạy lại không ghi trùng."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Dữ liệu chụp lại và ngoài bảng",
+      "items": [
+        "builds.items và order_items.name_snapshot, price_snapshot giữ tên và giá tại thời điểm tạo, không đổi khi giá sản phẩm đổi.",
+        "chat_messages.build_ids là mảng id cấu hình trong JSONB, không phải khóa ngoại.",
+        "Giỏ của khách vãng lai nằm trong Redis (cart:guest:{gid}) và gộp vào carts khi đăng nhập; đơn của khách ghi orders.guest_id."
+      ]
+    }
+  ]
+}
