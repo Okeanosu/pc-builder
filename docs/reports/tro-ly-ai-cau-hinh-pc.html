@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trợ lý AI cấu hình PC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: report column with a sticky contents rail on wide screens; diagrams and tables scroll inside their own boxes. */
+  :root {
+    --paper: #ffffff;
+    --plate: #f1f2f3;
+    --rule: #e3e5e8;
+    --ink: #0d0f12;
+    --muted: #5d636a;
+    --model: #2a6fd0;      /* lane: language model */
+    --engine: #11866f;     /* lane: engine and data */
+    --warn: #a14e05;
+    --code-bg: #f4f5f6;
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0b0c0e; --plate: #17191c; --rule: #2a2d31; --ink: #f2f3f5; --muted: #a3a9b0;
+      --model: #6aa5ff; --engine: #3fc9a6; --warn: #f5b041; --code-bg: #15171a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0b0c0e; --plate: #17191c; --rule: #2a2d31; --ink: #f2f3f5; --muted: #a3a9b0;
+    --model: #6aa5ff; --engine: #3fc9a6; --warn: #f5b041; --code-bg: #15171a; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-block: 40px 96px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+  @media (min-width: 1000px) {
+    .wrap { grid-template-columns: 220px minmax(0, 1fr); gap: 56px; }
+    nav.toc { position: sticky; top: calc(24px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 48px); overflow: auto; }
+  }
+
+  header.top { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 18px; padding-bottom: 32px; border-bottom: 1px solid var(--rule); }
+  .kicker { color: var(--muted); font-size: 14px; }
+  h1 {
+    font-family: var(--font-display);
+    font-stretch: 125%;
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5vw, 3.6rem);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    margin: 0;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .lead { font-size: 1.15rem; color: var(--ink); max-width: 66ch; margin: 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 8px 0 0; border-top: 1px solid var(--rule); }
+  .facts div { padding: 14px 16px 4px 0; border-bottom: 1px solid var(--rule); }
+  .facts dt { font-size: 13px; color: var(--muted); }
+  .facts dd { margin: 2px 0 0; font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+  nav.toc { font-size: 14px; }
+  nav.toc p { margin: 0 0 10px; font-weight: 600; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a { display: grid; grid-template-columns: 1.8em 1fr; color: var(--muted); text-decoration: none; padding: 4px 0; border-radius: 3px; }
+  nav.toc a::before { content: counter(toc) "."; font-variant-numeric: tabular-nums; }
+  nav.toc a:hover { color: var(--ink); }
+  nav.toc a:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  @media (max-width: 999px) {
+    nav.toc { border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
+    nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  }
+
+  article { min-width: 0; display: flex; flex-direction: column; gap: 64px; counter-reset: sec; }
+  section { display: flex; flex-direction: column; gap: 16px; min-width: 0; scroll-margin-top: 24px; }
+  h2 {
+    counter-increment: sec;
+    font-family: var(--font-display);
+    font-stretch: 112%;
+    font-weight: 650;
+    font-size: 1.7rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    margin: 0;
+    text-wrap: balance;
+    display: flex; gap: 0.6em; align-items: baseline;
+  }
+  h2::before { content: counter(sec); color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; min-width: 1.2em; }
+  h3 { font-size: 1.1rem; font-weight: 650; margin: 12px 0 0; letter-spacing: -0.01em; }
+  p, ul, ol { margin: 0; max-width: 70ch; }
+  ul, ol.steps { padding-left: 1.2em; display: grid; gap: 6px; }
+  li::marker { color: var(--muted); }
+  strong { font-weight: 650; }
+  a { color: var(--ink); text-decoration-color: var(--muted); text-underline-offset: 3px; }
+  code, kbd { font-family: var(--font-code); font-size: 0.86em; background: var(--code-bg); padding: 0.08em 0.35em; border-radius: 3px; }
+  pre.code {
+    font-family: var(--font-code); font-size: 13px; line-height: 1.6;
+    background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px;
+    padding: 16px; margin: 0; overflow-x: auto; max-width: 100%;
+  }
+  pre.code code { background: none; padding: 0; font-size: inherit; }
+  .muted { color: var(--muted); }
+  .note { font-size: 14px; color: var(--muted); max-width: 70ch; }
+
+  .lanes { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: var(--muted); }
+  .lanes span { display: inline-flex; align-items: center; gap: 8px; }
+  .lanes i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  figure .diagram { border: 1px solid var(--rule); border-radius: 8px; padding: 20px 16px; overflow-x: auto; background: var(--paper); }
+  figure .diagram pre.mermaid { margin: 0; background: none; min-width: 560px; }
+  figcaption { font-size: 14px; color: var(--muted); max-width: 70ch; }
+
+  .table { overflow-x: auto; border-top: 1px solid var(--ink); max-width: 100%; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 560px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; font-size: 13px; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td code { white-space: nowrap; }
+
+  .compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--ink); }
+  .compare > div { padding: 16px 20px 16px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .compare h3 { margin: 0; }
+  .compare .tag { font-size: 13px; color: var(--muted); }
+
+  .layers { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; max-width: none; border-top: 1px solid var(--ink); }
+  .layers li { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: 4px 24px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .layers li b { font-weight: 650; }
+  @media (max-width: 640px) { .layers li { grid-template-columns: minmax(0, 1fr); } }
+
+  blockquote { margin: 0; padding: 4px 0 4px 16px; border-left: 2px solid var(--model); max-width: 70ch; color: var(--ink); }
+  .eval-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; border-top: 1px solid var(--ink); }
+  .eval-split div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); }
+  .eval-split b { display: block; font-size: 1.6rem; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .eval-split span { font-size: 14px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  html { scroll-behavior: smooth; }
+</style>
+
+<style>
+  /* Print edition: single column, A4, light only, figures and table rows kept whole. */
+  @page { size: A4; margin: 20mm 17mm 20mm 17mm; }
+  html, body { background: #ffffff !important; }
+  body { font-size: 10.5pt; line-height: 1.55; }
+  .wrap { display: block; max-width: none; padding: 0 !important; }
+  header.top { padding-bottom: 18px; margin-bottom: 20px; }
+  h1 { font-size: 30pt; max-width: none; }
+  .lead { font-size: 12pt; max-width: none; }
+  p, ul, ol, blockquote, .note, figcaption { max-width: none; }
+  nav.toc { position: static !important; max-height: none; overflow: visible; border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; margin: 0 0 28px; break-inside: avoid; }
+  nav.toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+  nav.toc a { padding: 2px 0; color: var(--ink); }
+  article { gap: 30px; }
+  section { gap: 11px; }
+  h2 { font-size: 16pt; break-after: avoid; page-break-after: avoid; }
+  h3 { break-after: avoid; }
+  figure, .compare, .eval-split, .facts, blockquote, pre.code, .layers li, tr { break-inside: avoid; page-break-inside: avoid; }
+  figure .diagram { padding: 12px; overflow: visible; }
+  figure .diagram pre.mermaid { min-width: 0; text-align: center; }
+  figure .diagram svg { display: block; margin: 0 auto; width: 100% !important; max-width: 100% !important; height: auto; max-height: 200mm; }
+  .table { overflow: visible; }
+  table { min-width: 0; font-size: 9.5pt; }
+  td:first-child code { white-space: nowrap; }
+  th, td { padding: 7px 10px 7px 0; }
+  pre.code { font-size: 8.5pt; white-space: pre-wrap; word-break: break-all; }
+  section#nguyen-tac { break-before: avoid; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  window.addEventListener('load', async () => {
+    try {
+      mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'Archivo, Arial, sans-serif', flowchart: { useMaxWidth: true, htmlLabels: true, nodeSpacing: 28, rankSpacing: 34, padding: 8 }, sequence: { useMaxWidth: true, mirrorActors: false, actorMargin: 22, width: 112, boxMargin: 6, messageFontSize: 15, actorFontSize: 15 } });
+      await document.fonts.ready;
+      await mermaid.run({ querySelector: 'pre.mermaid' });
+      window.__mermaidDone = 'ok';
+    } catch (e) {
+      window.__mermaidDone = 'error: ' + e;
+    }
+  });
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="kicker">Đồ án tốt nghiệp PC Builder · tài liệu kỹ thuật cho chương 4 và 5</p>
+    <h1>Trợ lý AI cấu hình PC</h1>
+    <p class="lead">Khách kể nhu cầu bằng tiếng Việt, ví dụ “chơi game tầm 25 triệu, thích card NVIDIA”. Gemini hiểu câu nói và quyết định gọi công cụ nào. Linh kiện, giá và tính tương thích do Optimization Engine (CSP + MCKP) chọn trên dữ liệu kho thật. Mô hình ngôn ngữ chỉ điều phối và giải thích, nên mọi sản phẩm và giá khách thấy đều có thật.</p>
+    <dl class="facts">
+      <div><dt>Công cụ cho mô hình</dt><dd>5</dd></div>
+      <div><dt>Vòng gọi công cụ mỗi lượt</dt><dd>tối đa 4</dd></div>
+      <div><dt>Chờ Gemini tối đa</dt><dd>20 giây</dd></div>
+      <div><dt>Engine giải 250 sản phẩm</dt><dd>p95 11,5 ms</dd></div>
+      <div><dt>Golden set, chấm nghiêm ngặt</dt><dd>26/30</dd></div>
+    </dl>
+  </header>
+
+  <nav class="toc" aria-label="Mục lục">
+    <p>Mục lục</p>
+    <ol>
+      <li><a href="#nguyen-tac">Nguyên tắc thiết kế</a></li>
+      <li><a href="#kien-truc">Kiến trúc tổng thể</a></li>
+      <li><a href="#mot-luot">Một lượt chat diễn ra thế nào</a></li>
+      <li><a href="#cong-cu">Năm công cụ của mô hình</a></li>
+      <li><a href="#prompt">System prompt</a></li>
+      <li><a href="#engine">Engine phía sau recommend_builds</a></li>
+      <li><a href="#chinh-sua">Chỉnh cấu hình bằng câu chat</a></li>
+      <li><a href="#chong-ao-giac">Chống ảo giác</a></li>
+      <li><a href="#du-phong">Chế độ dự phòng</a></li>
+      <li><a href="#sse">Giao thức stream SSE</a></li>
+      <li><a href="#luu-tru">Lưu trữ, giới hạn, giám sát</a></li>
+      <li><a href="#danh-gia">Đánh giá</a></li>
+      <li><a href="#ma-nguon">Bản đồ mã nguồn và graph</a></li>
+      <li><a href="#han-che">Hạn chế và hướng phát triển</a></li>
+    </ol>
+  </nav>
+
+  <article>
+    <section id="nguyen-tac">
+      <h2>Nguyên tắc thiết kế</h2>
+      <p>Chatbot thuần LLM thường bịa: nó có thể nêu một card đồ họa cửa hàng không bán, một mức giá đã cũ, hoặc một cặp CPU và mainboard khác socket. Với một website bán hàng, các lỗi này gây thiệt hại thật. Vì vậy hệ thống tách hai vai trò (ADR-004, “LLM chỉ điều phối, Engine quyết định linh kiện”):</p>
+      <div class="compare">
+        <div>
+          <span class="tag">Mô hình ngôn ngữ (Gemini)</span>
+          <h3>Hiểu và giải thích</h3>
+          <ul>
+            <li>Hiểu tiếng Việt tự nhiên: “25 củ”, “2K”, “rẻ hơn 3 triệu”.</li>
+            <li>Hỏi lại khi thiếu ngân sách hoặc mục đích.</li>
+            <li>Chọn công cụ và điền tham số.</li>
+            <li>Giải thích vì sao cấu hình phù hợp.</li>
+          </ul>
+        </div>
+        <div>
+          <span class="tag">Optimization Engine + cơ sở dữ liệu</span>
+          <h3>Quyết định linh kiện</h3>
+          <ul>
+            <li>Chỉ dùng sản phẩm đang còn hàng trong kho.</li>
+            <li>Kiểm tra đủ 15 luật tương thích C01–C15.</li>
+            <li>Tối ưu điểm hiệu năng trong ngân sách.</li>
+            <li>Trả về giá lấy từ bảng <code>products</code>.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Hệ quả quan trọng nhất: thẻ cấu hình hiển thị cho khách được dựng từ dữ liệu công cụ trả về, không phải từ chữ mô hình viết. Dù mô hình có viết sai một con số trong lời giải thích, tên linh kiện và giá trên thẻ vẫn đúng.</p>
+    </section>
+
+    <section id="kien-truc">
+      <h2>Kiến trúc tổng thể</h2>
+      <div class="lanes" aria-hidden="true">
+        <span><i style="background: var(--model)"></i>Mô hình ngôn ngữ</span>
+        <span><i style="background: var(--engine)"></i>Engine và dữ liệu</span>
+      </div>
+      <figure>
+        <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  U["Khách hàng<br/>trang /advisor, widget chat"] -->|"POST tin nhắn"| R["Chat routes<br/>xác thực, rate limit"]
+  R --> O["Orchestrator<br/>runTurn()"]
+  O <-->|"stream + function calling"| G["Gemini<br/>gemini-flash-latest"]
+  O -->|"Gemini lỗi"| F["NLU theo luật<br/>trả lời theo mẫu"]
+  O --> T["Tool registry<br/>5 công cụ"]
+  F --> T
+  T --> RS["Recommendation service"]
+  T --> DB[("PostgreSQL<br/>products, builds")]
+  RS <--> C[("Redis<br/>cache gợi ý 10 phút")]
+  RS --> E["Engine<br/>CSP + MCKP"]
+  E --> DB
+  O -->|"SSE: session, tool, builds, token, done"| U
+  O --> L[("chat_sessions<br/>chat_messages")]
+  classDef model fill:#2a6fd022,stroke:#2a6fd0
+  classDef engine fill:#11866f22,stroke:#11866f
+  class G,F model
+  class RS,E,C,DB,T engine
+</pre>
+        </div>
+        <figcaption>Hình 1. Các khối chính. Orchestrator là điểm duy nhất nói chuyện với Gemini; mọi truy cập dữ liệu đi qua tool registry.</figcaption>
+      </figure>
+      <p>Module nằm ở <code>apps/api/src/modules/chat</code>. Kết nối Gemini dùng thư viện chính thức <code>@google/genai</code>, model đặt bằng biến môi trường <code>GEMINI_MODEL</code> (mặc định <code>gemini-flash-latest</code>, gói miễn phí của Google AI Studio, ADR-003). Lớp <code>LlmClient</code> che thư viện đi, nên orchestrator test được bằng client giả và có thể đổi nhà cung cấp mà không sửa logic.</p>
+    </section>
+
+    <section id="mot-luot">
+      <h2>Một lượt chat diễn ra thế nào</h2>
+      <figure>
+        <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant W as Web
+  participant A as API / Orchestrator
+  participant G as Gemini
+  participant T as Tool
+  participant E as Engine
+  W->>A: "chơi game 25 triệu"
+  A-->>W: session
+  A->>G: prompt + lịch sử + 5 tool
+  G-->>A: gọi recommend_builds(25tr, gaming)
+  A-->>W: tool start
+  A->>T: chạy tool
+  T->>E: giải CSP + MCKP
+  E-->>T: 3 cấu hình
+  T-->>W: builds (dữ liệu thật)
+  A-->>W: tool end
+  A->>G: kết quả tóm tắt
+  G-->>A: chữ giải thích
+  A-->>W: token × n
+  A->>A: kiểm tra giá, lưu lượt chat
+  A-->>W: done (mode AI)
+</pre>
+        </div>
+        <figcaption>Hình 2. Một lượt có một vòng gọi công cụ. Mô hình có thể gọi tiếp công cụ khác trong cùng lượt, tối đa 4 vòng.</figcaption>
+      </figure>
+      <h3>Vòng lặp trong orchestrator</h3>
+      <ol class="steps">
+        <li>Ghép lịch sử (20 dòng gần nhất) với tin nhắn mới, gửi kèm system prompt và khai báo 5 công cụ.</li>
+        <li>Đọc luồng trả về: phần chữ được phát ngay cho trình duyệt dưới dạng <code>token</code>; các lời gọi hàm (<code>functionCall</code>) được gom lại.</li>
+        <li>Không có lời gọi hàm nào: lượt kết thúc. Có lời gọi: chạy từng công cụ, gửi kết quả lại cho mô hình dưới dạng <code>functionResponse</code>, quay lại bước 2.</li>
+        <li>Quá 4 vòng: dừng và nhắc khách nói ngắn gọn nhu cầu. Mỗi lần gọi Gemini có hạn 20 giây.</li>
+        <li>Cuối lượt: so số tiền trong chữ của mô hình với số liệu công cụ (mục 8), lưu tin nhắn, phát <code>done</code>.</li>
+      </ol>
+      <p class="note">Với các model Gemini 3, mỗi <code>functionCall</code> đi kèm <code>thoughtSignature</code>; orchestrator gửi trả nguyên chữ ký này ở lượt sau, nếu không Gemini từ chối yêu cầu. Khi khách đóng tab, tín hiệu hủy cắt luôn lời gọi Gemini đang chạy và không chuyển sang dự phòng.</p>
+    </section>
+
+    <section id="cong-cu">
+      <h2>Năm công cụ của mô hình</h2>
+      <p>Khai báo công cụ dùng JSON Schema (<code>tools/declarations.ts</code>). Chỉ dùng tập con schema Gemini chấp nhận: ví dụ bộ lọc thông số của <code>search_products</code> là danh sách cặp <code>{key, value}</code> thay cho một object tự do, vì Gemini từ chối object không khai báo trước thuộc tính. Một unit test kiểm tra điều này.</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Công cụ</th><th>Khi nào gọi</th><th>Tham số chính</th><th>Trả cho mô hình</th><th>Trả cho giao diện</th></tr></thead>
+          <tbody>
+            <tr><td><code>recommend_builds</code></td><td>Đã biết ngân sách và mục đích</td><td>budget (VND), purpose, resolution, preferences, exclude/mustInclude</td><td>Tóm tắt 1–3 cấu hình: id, nhãn, tổng giá, tên và giá linh kiện, phân bổ, cảnh báo; hoặc lý do không khả thi + ngân sách tối thiểu</td><td>Event <code>builds</code></td></tr>
+            <tr><td><code>modify_build</code></td><td>Khách muốn chỉnh cấu hình vừa gợi ý</td><td>buildId, replaceCategory + newProductId, budgetDelta, preferenceChanges</td><td>Cấu hình mới và ghi chú phần nào đã đổi</td><td>Event <code>builds</code></td></tr>
+            <tr><td><code>search_products</code></td><td>Hỏi về một loại linh kiện</td><td>category, keyword, minPrice, maxPrice, filters[{key,value}]</td><td>Tối đa 8 sản phẩm còn hàng</td><td>Event <code>products</code></td></tr>
+            <tr><td><code>get_product_details</code></td><td>Hỏi chi tiết một sản phẩm</td><td>productId</td><td>Thông số chính và điểm benchmark</td><td>Event <code>products</code></td></tr>
+            <tr><td><code>check_compatibility</code></td><td>Khách tự đưa danh sách linh kiện</td><td>productIds (1–16)</td><td>Lỗi, cảnh báo theo luật C01–C15, công suất ước tính</td><td>Chữ giải thích</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Mô hình chỉ nhận bản tóm tắt gọn, không nhận toàn bộ thông số JSONB, để tiết kiệm token và giảm chỗ cho mô hình tự suy diễn. Mỗi công cụ có một nhãn tiếng Việt (“Đang tìm cấu hình tối ưu”, “Đang kiểm tra tương thích”…) phát qua event <code>tool</code>; giao diện hiện nhãn này trong lúc chờ.</p>
+    </section>
+
+    <section id="prompt">
+      <h2>System prompt</h2>
+      <p>Prompt (<code>prompts.ts</code>) gồm 10 nguyên tắc bắt buộc. Các nguyên tắc quan trọng nhất cho tính đúng đắn:</p>
+      <blockquote>2. Tuyệt đối không tự nêu tên linh kiện, giá hay thông số khi chưa có kết quả từ công cụ (tool). Mọi sản phẩm và giá phải lấy nguyên văn từ kết quả công cụ; không bịa sản phẩm, không ước lượng giá, không dùng kiến thức bên ngoài về giá.</blockquote>
+      <blockquote>3. Để gợi ý cấu hình cần đủ hai thông tin: NGÂN SÁCH và MỤC ĐÍCH (chơi game, đồ họa/dựng phim, lập trình/AI, văn phòng/học tập). Nếu thiếu, hỏi lại đúng MỘT câu ngắn và chưa gọi công cụ.</blockquote>
+      <blockquote>4. … Quy đổi ngân sách ra số nguyên VND: “25tr”, “25 củ”, “hai lăm triệu” = 25000000; “tầm 20-25 triệu” lấy mức trên. “2K” là độ phân giải 1440p, không phải tiền.</blockquote>
+      <p>Các nguyên tắc còn lại quy định: trả lời tiếng Việt dưới khoảng 120 từ, xưng “em” gọi “anh/chị”; chọn đúng công cụ cho từng loại yêu cầu; không liệt kê lại linh kiện đã có trên thẻ; giải thích khi bài toán không khả thi và đề xuất ngân sách tối thiểu; từ chối câu hỏi ngoài chủ đề PC; viết tiền dạng <code>25.000.000₫</code>; không tiết lộ hướng dẫn.</p>
+    </section>
+
+    <section id="engine">
+      <h2>Engine phía sau recommend_builds</h2>
+      <p>Bài toán chọn cấu hình được mô hình hóa thành <strong>bài toán thỏa mãn ràng buộc (CSP)</strong> kết hợp <strong>bài toán ba lô nhiều lựa chọn (MCKP)</strong>. Có 8 biến, mỗi biến là một danh mục (CPU, mainboard, RAM, card đồ họa, ổ cứng, nguồn, vỏ case, tản nhiệt). Miền giá trị của mỗi biến là các sản phẩm còn hàng thỏa sở thích của khách. Mục tiêu là tổng điểm có trọng số theo mục đích sử dụng lớn nhất, với tổng giá không vượt ngân sách.</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Kỹ thuật</th><th>Vai trò trong engine</th></tr></thead>
+          <tbody>
+            <tr><td>15 luật C01–C15</td><td>Ràng buộc cứng (socket, chuẩn RAM, kích thước, chiều dài card, chiều cao tản, công suất nguồn, khe M.2…) và mềm (cân bằng CPU–GPU, CPU cao cấp trên chipset phổ thông)</td></tr>
+            <tr><td>AC-3 (Arc Consistency)</td><td>Loại trước các sản phẩm không thể ghép với bất kỳ sản phẩm nào của danh mục liên quan</td></tr>
+            <tr><td>Thứ tự biến theo hàm mục tiêu</td><td>Danh mục có miền một phần tử trước, sau đó danh mục có trọng số lớn (ví dụ GPU khi chơi game); MRV giữ lại làm phương án đối chứng</td></tr>
+            <tr><td>Backtracking + Forward Checking</td><td>Gán từng biến, sau mỗi lần gán thu hẹp miền của các biến còn lại, quay lui khi một miền rỗng</td></tr>
+            <tr><td>Branch &amp; Bound với cận MCKP</td><td>Cận trên tính bằng nới lỏng tuyến tính của bài toán ba lô nhiều lựa chọn; nhánh nào không thể vượt nghiệm tốt nhất thì cắt</td></tr>
+            <tr><td>Cắt tỉa trội (dominance)</td><td>Bỏ sản phẩm vừa đắt hơn vừa yếu hơn một sản phẩm khác cùng tương thích</td></tr>
+            <tr><td>Top-K có vai trò</td><td>Trả về 3 cấu hình: Tối ưu hiệu năng, Cân bằng, Tiết kiệm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Hiệu năng đo trên Apple M3: catalog 250 sản phẩm p95 <strong>11,5 ms</strong>, catalog 500 sản phẩm p95 40,3 ms (mục tiêu dưới 300 ms). Tính tối ưu được kiểm chứng bằng cách so với vét cạn trên catalog ngẫu nhiên nhỏ: <strong>1.512 trường hợp, 0 sai khác</strong>. Kết quả gợi ý được lưu Redis 10 phút theo khóa <code>cache:reco:v{phiên bản catalog}:{sha1 của yêu cầu}</code>; khi admin sửa sản phẩm hay trọng số, phiên bản catalog tăng nên cache cũ tự hết hiệu lực (ADR-015).</p>
+    </section>
+
+    <section id="chinh-sua">
+      <h2>Chỉnh cấu hình bằng câu chat</h2>
+      <p>Khi khách nói “rẻ hơn 3 triệu”, “đổi sang card AMD” hay “thay ổ cứng 2TB”, mô hình gọi <code>modify_build</code> với <code>buildId</code> của cấu hình trước. Công cụ không bắt engine chọn lại từ đầu:</p>
+      <ul>
+        <li>Mọi linh kiện được <strong>giữ cố định</strong>, trừ danh mục khách muốn đổi; linh kiện cũ của danh mục đó bị loại khỏi miền.</li>
+        <li>Chỉ đổi ngân sách thì giải lại toàn bộ theo ngân sách mới.</li>
+        <li>Nếu giữ cố định làm bài toán vô nghiệm (đổi sang card lớn hơn mà nguồn cũ không đủ), công cụ thử lại và cho đổi thêm các linh kiện phụ thuộc như nguồn, vỏ case, rồi ghi rõ phần đã đổi để mô hình báo cho khách.</li>
+        <li>Yêu cầu gốc (ngân sách, mục đích, sở thích) được nhớ trong Redis theo buildId, nên sở thích cũ không bị mất khi chỉnh.</li>
+      </ul>
+    </section>
+
+    <section id="chong-ao-giac">
+      <h2>Chống ảo giác</h2>
+      <p>Hệ thống có bốn lớp bảo vệ. Ba lớp đầu ngăn lỗi xảy ra; lớp thứ tư phát hiện lỗi còn lọt qua.</p>
+      <ul class="layers">
+        <li><b>Dữ liệu tách khỏi lời nói</b><span>Thẻ cấu hình và thẻ sản phẩm đi qua event <code>builds</code>/<code>products</code>, dựng từ kết quả công cụ. Tên, giá và tình trạng tương thích trên thẻ luôn lấy từ cơ sở dữ liệu và engine.</span></li>
+        <li><b>Engine bảo đảm tương thích</b><span>Không có cấu hình nào đến tay khách mà chưa qua đủ 15 luật. Trong đánh giá, 69/69 cấu hình trả về đều được kiểm tra lại bằng <code>checkCompatibility</code> và ngân sách, không có cấu hình sai.</span></li>
+        <li><b>Prompt ràng buộc</b><span>Cấm nêu sản phẩm hay giá khi chưa có kết quả công cụ, cấm dùng kiến thức giá bên ngoài, bắt hỏi lại khi thiếu thông tin, giới hạn chủ đề.</span></li>
+        <li><b>Kiểm tra giá sau mỗi lượt</b><span><code>price-check.ts</code> trích mọi số tiền VND trong chữ mô hình viết (“24.920.000₫”, “21,9 triệu”, “20-25tr”), bỏ qua số hiệu như “RTX 4060”, “750W”, “2K”, rồi so với các số có trong kết quả công cụ, lịch sử và tin nhắn của khách. Số không khớp được ghi vào <code>chat_messages.price_check</code> và log cảnh báo. Câu trả lời không bị sửa: đây là giám sát, không phải bộ lọc.</span></li>
+      </ul>
+    </section>
+
+    <section id="du-phong">
+      <h2>Chế độ dự phòng</h2>
+      <p>Gói miễn phí của Gemini có giới hạn lượt gọi và có lúc chậm. Để chatbot luôn trả lời được, orchestrator chuyển sang một bộ hiểu ngôn ngữ tiếng Việt viết bằng luật ngay trong cùng lượt chat (ADR-005).</p>
+      <figure>
+        <div class="diagram">
+<pre class="mermaid">
+flowchart TD
+  S["Tin nhắn của khách"] --> K{"Có GEMINI_API_KEY?"}
+  K -- "không" --> FB
+  K -- "có" --> AI["Gọi Gemini với công cụ"]
+  AI -- "HTTP 429 hết quota" --> FB
+  AI -- "quá 20 giây" --> FB
+  AI -- "lỗi mạng, khóa sai, trả rỗng" --> FB
+  AI -- "thành công" --> OK["Trả lời ở chế độ AI<br/>done {mode: AI}"]
+  FB["NLU theo luật: ngân sách, mục đích, sở thích, yêu cầu chỉnh"] --> Q{"Đủ ngân sách và mục đích?"}
+  Q -- "chưa" --> ASK["Hỏi lại đúng thông tin còn thiếu"]
+  Q -- "đủ" --> REC["Gọi recommend_builds như chế độ AI"]
+  REC --> TPL["Giải thích theo mẫu, chỉ dùng số liệu engine"]
+  ASK --> D2["done {mode: FALLBACK}"]
+  TPL --> D2
+</pre>
+        </div>
+        <figcaption>Hình 3. Điều kiện chuyển sang dự phòng. Chữ đã phát trước khi lỗi vẫn được giữ; phần dự phòng nối tiếp sau một dòng trống, không phát event lỗi.</figcaption>
+      </figure>
+      <h3>Bộ NLU tiếng Việt (<code>fallback/nlu.ts</code>)</h3>
+      <ul>
+        <li><strong>Ngân sách:</strong> “25tr”, “25 triệu”, “25 củ”, “hai mươi triệu”, khoảng “20-25 triệu” (lấy mức trên), “dưới 40 củ”; số vượt trần như “1 tỷ” được đưa về mức tối đa 200 triệu.</li>
+        <li><strong>Không nhầm số hiệu thành tiền:</strong> “i5 13600K”, “RTX4060”, “B650M”, “750W”, “2K” không bị đọc là ngân sách.</li>
+        <li><strong>Phân biệt dấu sau khi bỏ dấu:</strong> “củ” (triệu) khác “cũ” (đã dùng); chữ “cu” không dấu chỉ được hiểu là triệu khi đứng sau một số nhỏ hoặc số đọc bằng chữ (ADR-018).</li>
+        <li><strong>Chỉnh tương đối:</strong> “bớt 3 triệu”, “thêm 5tr” luôn là thay đổi; “rẻ hơn 3 triệu” chỉ là thay đổi khi đã có ngân sách trước và số tiền nhỏ hơn một nửa ngân sách đó.</li>
+        <li><strong>Mục đích và sở thích:</strong> nhận diện game, đồ họa, AI, văn phòng qua tên phần mềm (Premiere, Blender, Stable Diffusion, Excel…); hãng CPU/GPU kèm phủ định (“không thích Intel”), màu case, độ phân giải, RAM, ổ cứng, Wi-Fi, kích thước ITX.</li>
+      </ul>
+      <p>Câu trả lời dự phòng được ghép từ mẫu câu và số liệu engine, nên tên và giá luôn đúng. Để giao diện trông giống nhau ở hai chế độ, chữ dự phòng cũng được stream theo nhóm 4 từ. Giao diện hiện nhãn “Chế độ dự phòng” để khách biết.</p>
+    </section>
+
+    <section id="sse">
+      <h2>Giao thức stream SSE</h2>
+      <p>Endpoint <code>POST /api/chat/sessions/:id/messages</code> trả về <code>text/event-stream</code>; mỗi dòng <code>data:</code> là một object JSON thuộc kiểu <code>ChatEvent</code> (định nghĩa chung trong <code>packages/shared/src/chat-events.ts</code>, web và API dùng cùng một kiểu).</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Event</th><th>Nội dung</th><th>Giao diện làm gì</th></tr></thead>
+          <tbody>
+            <tr><td><code>session</code></td><td>sessionId, mode</td><td>Ghi nhớ phiên chat</td></tr>
+            <tr><td><code>tool</code></td><td>name, status start/end, label tiếng Việt</td><td>Hiện dòng trạng thái kèm vòng quay, rồi dấu check</td></tr>
+            <tr><td><code>builds</code></td><td>Danh sách BuildDTO đầy đủ</td><td>Vẽ các bảng cấu hình để so sánh</td></tr>
+            <tr><td><code>products</code></td><td>Danh sách ProductSummaryDTO</td><td>Vẽ thẻ sản phẩm</td></tr>
+            <tr><td><code>token</code></td><td>Một đoạn chữ</td><td>Nối vào câu trả lời, hiện con trỏ đang gõ</td></tr>
+            <tr><td><code>error</code></td><td>code, message</td><td>Báo lỗi (chỉ dùng cho lỗi hệ thống, không dùng khi chuyển dự phòng)</td></tr>
+            <tr><td><code>done</code></td><td>messageId, mode AI hoặc FALLBACK</td><td>Kết thúc lượt, hiện nhãn chế độ</td></tr>
+          </tbody>
+        </table>
+      </div>
+<pre class="code"><code>data: {"type":"session","sessionId":"5f0c…","mode":"AI"}
+data: {"type":"tool","name":"recommend_builds","status":"start","label":"Đang tìm cấu hình tối ưu"}
+data: {"type":"builds","builds":[{"label":"performance","totalPrice":24920000,…},…]}
+data: {"type":"tool","name":"recommend_builds","status":"end","label":"Đang tìm cấu hình tối ưu"}
+data: {"type":"token","text":"Em gợi ý 3 cấu hình chơi game "}
+data: {"type":"token","text":"trong ngân sách 25.000.000₫…"}
+data: {"type":"done","messageId":"9b21…","mode":"AI"}</code></pre>
+      <p class="note">Trình duyệt đọc luồng bằng <code>fetch</code> và một bộ đọc SSE tự viết (không dùng <code>EventSource</code> vì cần gửi POST và header xác thực). Reverse proxy Caddy được cấu hình không nén và xả ngay luồng <code>/api</code> để chữ hiện ra liên tục.</p>
+    </section>
+
+    <section id="luu-tru">
+      <h2>Lưu trữ, giới hạn, giám sát</h2>
+      <ul>
+        <li><strong>Hội thoại:</strong> bảng <code>chat_sessions</code> và <code>chat_messages</code> lưu từng tin nhắn kèm chế độ (AI/FALLBACK), danh sách lời gọi công cụ (tên, tham số, kết quả, thời gian), id các cấu hình đã tạo, độ trễ và kết quả kiểm tra giá. Phiên chat thuộc về tài khoản nếu khách đã đăng nhập, hoặc thuộc về mã khách lưu trong cookie nếu là khách vãng lai.</li>
+        <li><strong>Quyền:</strong> chỉ chủ phiên được gửi tin. Nhân viên và quản trị viên chỉ đọc, qua trang “Hội thoại AI” trong admin, xem được từng lời gọi công cụ và thời gian của nó.</li>
+        <li><strong>Giới hạn tần suất hai lớp:</strong> mỗi khách 10 tin/phút và 10 phiên mới/phút; mỗi địa chỉ IP 40 tin/phút và 30 phiên mới/phút. Lớp IP chặn việc xoay mã khách để vượt giới hạn. Nếu Redis lỗi, giới hạn mở để không chặn khách thật.</li>
+        <li><strong>Giới hạn ngữ cảnh:</strong> mỗi lượt chỉ gửi 20 dòng lịch sử gần nhất cho Gemini.</li>
+      </ul>
+    </section>
+
+    <section id="danh-gia">
+      <h2>Đánh giá</h2>
+      <p>Bộ golden set gồm 30 kịch bản (<code>apps/api/eval/golden-set.json</code>): 8 chơi game, 5 đồ họa, 5 AI, 4 văn phòng, 3 thiếu thông tin, 3 chỉnh cấu hình nhiều lượt, 2 hỏi sản phẩm. Script <code>pnpm --filter @pc/api eval:ai</code> chạy từng kịch bản qua <code>runTurn</code> với công cụ và engine thật trên cơ sở dữ liệu dev, rồi chấm tự động. Cách chấm hai mức được ghi ở ADR-019.</p>
+      <div class="eval-split">
+        <div><b>26/30</b><span>đạt mọi tiêu chí, chấm nghiêm ngặt theo kỳ vọng của trợ lý AI</span></div>
+        <div><b>30/30</b><span>chấm theo khả năng thiết kế của chế độ luật</span></div>
+        <div><b>69/69</b><span>cấu hình trả về hợp lệ khi kiểm tra lại</span></div>
+        <div><b>10 / 22 ms</b><span>độ trễ một lượt p50 / p95</span></div>
+      </div>
+      <div class="table">
+        <table>
+          <thead><tr><th>Chỉ số</th><th class="num">Nghiêm ngặt</th><th class="num">Theo chế độ luật</th></tr></thead>
+          <tbody>
+            <tr><td>Gọi đúng công cụ</td><td class="num">26/30</td><td class="num">30/30</td></tr>
+            <tr><td>Tham số đúng (mục đích khớp, ngân sách lệch ≤ 5%)</td><td class="num">23/25</td><td class="num">25/25</td></tr>
+            <tr><td>Sở thích đúng (hãng, màu, độ phân giải, Wi-Fi, kích thước)</td><td class="num">9/10</td><td class="num">10/10</td></tr>
+            <tr><td>Hiện cấu hình đúng lúc cần</td><td class="num">30/30</td><td class="num">30/30</td></tr>
+            <tr><td>Hỏi lại khi thiếu thông tin</td><td class="num">3/3</td><td class="num">5/5</td></tr>
+            <tr><td>Giải thích khi ngân sách không đủ, kèm mức tối thiểu</td><td class="num">1/1</td><td class="num">1/1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Lần chạy trên (2026-11-07) là ở <strong>chế độ dự phòng</strong> vì máy chưa có khóa Gemini. Bốn kịch bản trượt khi chấm nghiêm ngặt đều do giới hạn đã biết của chế độ luật: hai câu chỉnh cấu hình (luật gọi lại <code>recommend_builds</code> thay vì <code>modify_build</code>) và hai câu hỏi sản phẩm (luật hỏi lại thay vì gọi <code>search_products</code>). Con số nên dẫn trong báo cáo là con số nghiêm ngặt 26/30.</p>
+      <p class="note">Bộ golden set do chính người phát triển viết khi đã biết phạm vi của bộ luật và không mang tính đối kháng, nên điểm ở chế độ dự phòng là cận trên. Chỉ 30 kịch bản và một lần chạy, chưa đủ để kết luận có ý nghĩa thống kê.</p>
+    </section>
+
+    <section id="ma-nguon">
+      <h2>Bản đồ mã nguồn và graph</h2>
+      <div class="table">
+        <table>
+          <thead><tr><th>Tệp</th><th>Vai trò</th></tr></thead>
+          <tbody>
+            <tr><td><code>chat/orchestrator.ts</code></td><td>Vòng lặp một lượt, giới hạn vòng, timeout, chuyển dự phòng, kiểm tra giá</td></tr>
+            <tr><td><code>chat/llm/gemini-client.ts</code></td><td>Gọi Gemini dạng stream có function calling, quy đổi lỗi (429, timeout, khóa sai) thành lý do dự phòng</td></tr>
+            <tr><td><code>chat/prompts.ts</code></td><td>System prompt 10 nguyên tắc</td></tr>
+            <tr><td><code>chat/tools/declarations.ts</code></td><td>JSON Schema của 5 công cụ</td></tr>
+            <tr><td><code>chat/tools/recommend-builds.ts</code>, <code>modify-build.ts</code>, <code>catalog-tools.ts</code></td><td>Cài đặt các công cụ</td></tr>
+            <tr><td><code>chat/tools/execute.ts</code>, <code>registry.ts</code></td><td>Chạy công cụ, kiểm tra tham số, phát event tool</td></tr>
+            <tr><td><code>chat/fallback/nlu.ts</code>, <code>responder.ts</code></td><td>Hiểu tiếng Việt theo luật và câu trả lời theo mẫu</td></tr>
+            <tr><td><code>chat/price-check.ts</code></td><td>Trích và đối chiếu số tiền trong câu trả lời</td></tr>
+            <tr><td><code>chat/sse.ts</code>, <code>chat.routes.ts</code>, <code>chat.service.ts</code></td><td>Stream SSE, endpoint, lưu hội thoại, giới hạn tần suất</td></tr>
+            <tr><td><code>packages/engine/src/*</code></td><td>Engine CSP + MCKP thuần TypeScript</td></tr>
+            <tr><td><code>apps/web/src/features/advisor/*</code>, <code>stores/chat.ts</code></td><td>Giao diện tư vấn, đọc SSE, bảng so sánh cấu hình</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Các node trong spec-code graph (<code>docs/graph</code>) liên quan, dùng để truy vết khi viết chương 4 và 5:</p>
+      <ul>
+        <li>Tính năng: <code>F-AI-ADVISOR</code>, <code>F-FALLBACK-NLU</code>, <code>F-ENGINE-CORE</code>, <code>F-RECOMMEND</code>.</li>
+        <li>Thuật toán: <code>ALG-CSP</code>, <code>ALG-FC</code>, <code>ALG-SCORING</code>, <code>ALG-NLU-FALLBACK</code>; luật <code>R-C01</code> đến <code>R-C15</code>.</li>
+        <li>Quyết định: <code>ADR-003</code> (chọn Gemini), <code>ADR-004</code> (LLM chỉ điều phối), <code>ADR-005</code> (chế độ dự phòng), <code>ADR-015</code> (khóa cache theo phiên bản catalog), <code>ADR-018</code> (phân tích ngân sách tiếng Việt), <code>ADR-019</code> (hai mức chấm đánh giá).</li>
+      </ul>
+    </section>
+
+    <section id="han-che">
+      <h2>Hạn chế và hướng phát triển</h2>
+      <ul>
+        <li><strong>Chưa có số liệu với Gemini thật.</strong> Cần đặt <code>GEMINI_API_KEY</code> (lấy miễn phí tại aistudio.google.com/apikey), chạy <code>eval/smoke-gemini.ts</code> rồi <code>eval:ai</code> để có điểm ở chế độ AI và tỷ lệ số tiền không khớp. Kết quả có thể dao động giữa các lần chạy vì mô hình không tất định.</li>
+        <li><strong>Golden set nhỏ và do người phát triển viết.</strong> Nên bổ sung câu hỏi thật từ khảo sát người dùng (UAT) và các câu đối kháng (lạc đề, cố moi prompt, ngân sách vô lý).</li>
+        <li><strong>Kiểm tra giá mới dừng ở mức ghi lại.</strong> Kết quả lưu trong cơ sở dữ liệu nhưng trang admin chưa hiển thị; có thể thêm cột cảnh báo trong “Hội thoại AI”.</li>
+        <li><strong>Chế độ dự phòng không chỉnh cấu hình tại chỗ và không tìm sản phẩm.</strong> Có thể mở rộng luật cho hai trường hợp này.</li>
+        <li><strong>Phụ thuộc gói miễn phí.</strong> Khi lưu lượng lớn, giới hạn của Google sẽ đẩy nhiều lượt sang dự phòng; lớp <code>LlmClient</code> cho phép thêm nhà cung cấp khác mà không sửa orchestrator.</li>
+      </ul>
+    </section>
+  </article>
+</div>
+
+</body>
+</html>
