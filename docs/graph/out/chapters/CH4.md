@@ -57,7 +57,7 @@ flowchart LR
   BANK[SePay webhook / giả lập] -->|POST| MW
 ```
 
-Tổng cộng **164** node thuộc chương này.
+Tổng cộng **165** node thuộc chương này.
 
 ## Tính năng
 
@@ -859,16 +859,18 @@ Liên kết — realizes: NFR-11 · dependsOn: F-DEPLOY, F-ADMIN-WEIGHTS
 
 **Mô tả:** mời người dùng phổ thông và kỹ thuật viên lắp ráp thử hệ thống đã triển khai, điền biểu mẫu Google Form (thang SUS và mức hài lòng, câu hỏi mở về độ hợp lý của cấu hình gợi ý). Phản hồi được dùng để chỉnh ma trận trọng số (F-ADMIN-WEIGHTS) rồi đo lại. Kết quả đưa vào chương 4 (đánh giá) và chương 6 (kết luận).
 
-### F-UI-DESIGN-SYSTEM — Hệ thống thiết kế "Tech Workshop" và các thành phần giao diện
+### F-UI-DESIGN-SYSTEM — Hệ thống thiết kế "Bench" và các thành phần giao diện
 
 Trạng thái: **done**
 Liên kết — realizes: NFR-06 · dependsOn: M-WEB
 
 **Mục đích:** giao diện nhất quán, dễ đọc thông số kỹ thuật, tiếng Việt chuẩn.
 
-**Mô tả:** token Tailwind v4 `@theme` (màu ngữ nghĩa bg/surface/fg/muted/accent/ok/warn/danger, bo góc 8/12/16, khoảng cách 4-pt, 2 cấp bóng, sáng/tối). Nền tối than chì cho khu Advisor/Builder, nền sáng cho storefront. Accent Electric Cyan `#22D3EE`, Signal Lime `#A3E635`, cảnh báo Amber `#F59E0B`, xung đột Red `#EF4444`. Font Be Vietnam Pro (UI) và JetBrains Mono (thông số, giá). Thành phần: ProductCard, SpecTable, PriceTag, CompatibilityBadge, BuildSlot, PartPicker, BuildSummaryBar, BuildCard, ChatMessage, AllocationBar, PerfMeter, VietQRPanel, OrderTimeline, DynamicSpecForm, WeightMatrixEditor. Chuẩn chất lượng: 360-1440 px, WCAG AA, focus ring rõ, `prefers-reduced-motion`.
+**Mô tả:** token Tailwind v4 `@theme` (màu ngữ nghĩa bg/surface/fg/muted/accent/ok/warn/danger, bo góc 3/6/8/12, khoảng cách 4-pt, không bóng đổ trừ lớp phủ, sáng/tối). Nền trắng/xám lạnh, chữ và nút chính màu mực; màu sắc chỉ đến từ 8 màu danh mục (tỷ lệ ngân sách) và màu trạng thái. Font Archivo biến thiên (tiêu đề giãn 125%, số thẳng cột cho giá và thông số), JetBrains Mono chỉ cho nội dung cần sao chép. Bản đầu "Tech Workshop" (than chì + cyan) được thay theo ADR-022. Thành phần: ProductCard, SpecTable, PriceTag, CompatibilityBadge, BuildSlot, PartPicker, BuildSummaryBar, BuildCard, ChatMessage, AllocationBar, PerfMeter, VietQRPanel, OrderTimeline, DynamicSpecForm, WeightMatrixEditor. Chuẩn chất lượng: 360-1440 px, WCAG AA, focus ring rõ, `prefers-reduced-motion`.
 
-**Code:** `apps/web/src/components/ui/**`, `apps/web/src/app/globals.css`
+**Code:** `apps/web/src/components/ui/**`, `apps/web/src/components/domain/**`, `apps/web/src/app/globals.css`
+
+**Test:** `e2e/a11y.spec.ts`
 
 ## Module
 
@@ -3163,3 +3165,17 @@ Trạng thái: **done**
 **Sơ đồ:** `docs/diagrams/seq-checkout-vietqr.mmd` (đã nêu ở trên trong chương này)
 
 **Sơ đồ:** `docs/diagrams/state-order.mmd` (đã nêu ở trên trong chương này)
+
+### ADR-022 — Thiết kế lại giao diện theo hệ "Bench": nền sáng đơn sắc, màu chỉ đến từ dữ liệu, bảng cấu hình là trung tâm
+
+Trạng thái: **done**
+
+**Bối cảnh:** bản giao diện đầu ("Tech Workshop": nền than chì, một màu nhấn cyan, lưới chấm, nhãn chữ mono viết hoa, mã khe cắm kiểu `PCIE_X16`, ba bước đánh số và ba thẻ "Vì sao chọn chúng tôi") đọc lên giống trang do AI sinh ra: nền gần đen với một màu nhấn chói, font mono cho nhãn nhỏ, nhãn viết hoa giãn chữ và các thẻ bo góc giống hệt nhau là các dấu hiệu quen thuộc. Chủ đề tài yêu cầu giao diện hiện đại, mang tính công nghệ nhưng không "giống AI", có tham khảo thiết kế thực tế. Đã xem trực tiếp teenage.engineering/store (tấm nền sản phẩm xám phẳng, tên và giá là chữ thường bên dưới, bộ lọc là hàng chữ) và linear.app (chính sản phẩm làm hero, tiêu đề lớn, gần như đơn sắc).
+
+**Quyết định:** nền trắng/xám lạnh, chữ đen, đường kẻ mảnh; màu sắc duy nhất là 8 màu danh mục linh kiện, dùng ở nơi chúng mã hóa tỷ lệ tiền của từng danh mục (thanh phân bổ ngân sách, ô màu cạnh tên danh mục, logo là 8 dải màu theo một cấu hình chơi game thật). Nút hành động chính là viên thuốc màu mực (đen trên nền sáng, trắng trên nền tối). Font Archivo biến thiên có trục độ rộng: tiêu đề dùng bản giãn 125%, thân chữ bản thường; số liệu dùng chữ số thẳng cột thay cho font mono (mono chỉ còn cho nội dung chuyển khoản, tên tool và JSON). Bỏ bóng đổ (trừ lớp phủ), gradient, lưới chấm, đèn LED, nhãn viết hoa, bước đánh số trang trí. Advisor và Customizer theo chủ đề sáng/tối của trang thay vì luôn tối. Phần nổi bật duy nhất là **bảng cấu hình** (danh mục, linh kiện, giá từng dòng, dòng tổng kẻ đậm): trang chủ hiển thị kết quả thật của engine cho bốn nhu cầu mẫu, lấy phía server và lưu cache vài phút (API cũng cache yêu cầu giống hệt nên chi phí là bốn lần trúng cache), và cùng một bảng đó xuất hiện ở Advisor, Customizer, cấu hình đã lưu.
+
+**Hệ quả:** giao diện có bản sắc riêng gắn với nghiệp vụ (chia ngân sách cho 8 danh mục), trang chủ chứng minh thuật toán ngay khi mở (số phương án đã xét và thời gian giải lấy từ `stats` của engine). Đổi lại phải sửa gần như mọi màn hình; các test E2E dựa trên vai trò và tên truy cập nên không phải viết lại. Trang chủ phụ thuộc API khi render phần bảng mẫu; khi API lỗi, phần đó hiện thông báo thay thế và không lưu cache lỗi.
+
+**Code:** `apps/web/src/app/globals.css`, `apps/web/src/app/layout.tsx`, `apps/web/src/components/ui/Button.tsx`, `apps/web/src/components/domain/ProductCard.tsx`, `apps/web/src/features/home/SampleSheet.tsx`, `apps/web/src/features/home/server.ts`
+
+**Test:** `e2e/a11y.spec.ts`, `e2e/smoke.spec.ts`
