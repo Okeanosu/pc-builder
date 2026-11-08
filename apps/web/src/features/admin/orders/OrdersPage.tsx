@@ -130,7 +130,7 @@ export function OrdersPage() {
                   <td className={td}>
                     <Link
                       href={`/admin/orders/${o.code}`}
-                      className="focus-ring rounded-xs font-mono font-medium text-accent-ink hover:underline"
+                      className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
                     >
                       {o.code}
                     </Link>
@@ -141,7 +141,7 @@ export function OrdersPage() {
                   </td>
                   <td className={cn(td, 'min-w-44')}>
                     <div className="font-medium">{o.shippingName}</div>
-                    <div className="font-mono text-xs text-muted">{o.phone}</div>
+                    <div className="tabular-nums text-xs text-muted">{o.phone}</div>
                   </td>
                   <td className={td}>
                     <OrderStatusBadge status={o.status} type={o.type} />

@@ -20,19 +20,19 @@ const STATUS = {
     Icon: CircleCheck,
     label: 'Tương thích',
     noun: '',
-    className: 'border-ok/45 bg-ok/16 text-ok-ink',
+    className: 'bg-ok/12 text-ok-ink',
   },
   warning: {
     Icon: TriangleExclamationPoint,
     label: 'Cảnh báo',
     noun: 'cảnh báo',
-    className: 'border-warn/45 bg-warn/14 text-warn-ink',
+    className: 'bg-warn/14 text-warn-ink',
   },
   error: {
     Icon: OctagonX,
     label: 'Xung đột',
     noun: 'xung đột',
-    className: 'border-danger/45 bg-danger/12 text-danger-ink',
+    className: 'bg-danger/10 text-danger-ink',
   },
 } as const;
 
@@ -70,13 +70,13 @@ export function CompatibilityBadge({
     <button
       type="button"
       className={cn(
-        'focus-ring inline-flex shrink-0 cursor-help items-center gap-1.5 whitespace-nowrap rounded-full border font-semibold',
+        'focus-ring inline-flex shrink-0 cursor-help items-center gap-1.5 whitespace-nowrap rounded-full font-medium',
         size === 'sm' ? 'h-6 px-2 text-xs [&_svg]:size-3.5' : 'h-7 px-2.5 text-sm [&_svg]:size-4',
         meta.className,
         className,
       )}
     >
-      <meta.Icon className="[filter:var(--led-glow)]" aria-hidden />
+      <meta.Icon aria-hidden />
       {text}
     </button>
   );
@@ -88,7 +88,7 @@ export function CompatibilityBadge({
       <ul className="flex flex-col gap-1.5">
         {relevant.map((i) => (
           <li key={`${i.code}-${i.message}`} className="flex gap-2">
-            <span className="font-mono font-semibold">{i.code}</span>
+            <span className="font-semibold tabular-nums">{i.code}</span>
             <span>{i.message}</span>
           </li>
         ))}

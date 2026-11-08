@@ -51,7 +51,7 @@ export function IssueList({ issues }: { issues: readonly CompatibilityIssueDTO[]
           <span className="min-w-0 text-fg">
             <span
               className={cn(
-                'me-1.5 font-mono text-xs font-semibold',
+                'me-1.5 tabular-nums text-xs font-semibold',
                 i.severity === 'error' ? 'text-danger-ink' : 'text-warn-ink',
               )}
             >
@@ -112,7 +112,7 @@ export function BuildView({ build }: { build: BuildDTO }) {
           <ul className="flex flex-col gap-2.5">
             {items.map((item) => (
               <li key={`${item.category}-${item.product.id}`} className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wide text-muted">
+                <span className="flex items-center gap-2 tabular-nums text-xs font-semibold tracking-wide text-muted">
                   {CATEGORY_DESIGNATOR[item.category]}
                   <span className="font-sans font-medium tracking-normal">
                     · {CATEGORY_LABELS[item.category]}
@@ -152,8 +152,8 @@ export function BuildView({ build }: { build: BuildDTO }) {
           <p className="flex items-center gap-2 text-sm text-muted">
             <Zap className="size-4 shrink-0 text-accent-ink" aria-hidden />
             <span>
-              Công suất ước tính <span className="font-mono text-fg">~{build.estimatedWattage}W</span> · nên
-              dùng nguồn từ <span className="font-mono text-fg">{build.recommendedPsuWattage}W</span>
+              Công suất ước tính <span className="tabular-nums text-fg">~{build.estimatedWattage}W</span> ·
+              nên dùng nguồn từ <span className="tabular-nums text-fg">{build.recommendedPsuWattage}W</span>
             </span>
           </p>
           <IssueList issues={build.warnings} />

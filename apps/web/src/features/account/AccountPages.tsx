@@ -49,7 +49,7 @@ function OrderRow({ order }: { order: OrderDTO }) {
       <div className="flex min-w-0 flex-col gap-1">
         <Link
           href={`/orders/${order.code}`}
-          className="font-mono text-sm font-semibold text-fg outline-none after:absolute after:inset-0"
+          className="tabular-nums text-sm font-semibold text-fg outline-none after:absolute after:inset-0"
         >
           {order.code}
         </Link>
@@ -137,7 +137,7 @@ export function AccountOverview() {
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-xs text-muted">Số điện thoại</span>
-          <span className="font-mono text-sm text-fg">{user.phone ?? 'Chưa có'}</span>
+          <span className="tabular-nums text-sm text-fg">{user.phone ?? 'Chưa có'}</span>
         </div>
         <div className="flex flex-col items-start gap-1">
           <span className="text-xs text-muted">Vai trò</span>

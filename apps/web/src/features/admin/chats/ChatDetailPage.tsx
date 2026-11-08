@@ -59,7 +59,7 @@ function ToolCall({ m, index }: { m: ChatLogMessageDTO; index: number }) {
                 {summary.text}
               </Badge>
               {latency(m.latencyMs) && (
-                <span className="font-mono text-xs text-muted tabular-nums">{latency(m.latencyMs)}</span>
+                <span className="text-xs text-muted tabular-nums">{latency(m.latencyMs)}</span>
               )}
             </span>
             <code className="truncate font-mono text-xs text-muted">{compactJson(m.toolArgs)}</code>
@@ -90,7 +90,7 @@ function BuildLinks({ ids }: { ids: string[] }) {
           target="_blank"
           className="focus-ring inline-flex h-7 items-center gap-1 rounded-xs border border-border bg-surface px-2 text-xs font-medium text-accent-ink hover:border-border-strong"
         >
-          Cấu hình {i + 1} <span className="font-mono text-muted">{id.slice(0, 8)}</span>
+          Cấu hình {i + 1} <span className="tabular-nums text-muted">{id.slice(0, 8)}</span>
           <ExternalLink className="size-3" aria-hidden />
         </Link>
       ))}
@@ -121,7 +121,7 @@ function Message({ m, toolIndex }: { m: ChatLogMessageDTO; toolIndex: number }) 
       <BuildLinks ids={m.buildIds} />
       <span className="inline-flex flex-wrap items-center gap-1.5 text-xs text-muted">
         <Bot className="size-3" aria-hidden /> Trợ lý · {time}
-        {latency(m.latencyMs) && <span className="font-mono tabular-nums">· {latency(m.latencyMs)}</span>}
+        {latency(m.latencyMs) && <span className="tabular-nums">· {latency(m.latencyMs)}</span>}
         {m.mode === 'FALLBACK' && (
           <Badge tone="warn" size="sm">
             Dự phòng
@@ -150,15 +150,15 @@ function ReasoningPanel({ chat }: { chat: ChatLogDetailDTO }) {
           </div>
           <div>
             <dt className="text-xs text-muted">Tin nhắn</dt>
-            <dd className="font-mono tabular-nums">{chat.messageCount}</dd>
+            <dd className="tabular-nums">{chat.messageCount}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted">Lần gọi công cụ</dt>
-            <dd className="font-mono tabular-nums">{tools.length}</dd>
+            <dd className="tabular-nums">{tools.length}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted">Cấu hình gợi ý</dt>
-            <dd className="font-mono tabular-nums">{builds.size}</dd>
+            <dd className="tabular-nums">{builds.size}</dd>
           </div>
           <div className="col-span-2">
             <dt className="text-xs text-muted">Người dùng</dt>
@@ -177,7 +177,7 @@ function ReasoningPanel({ chat }: { chat: ChatLogDetailDTO }) {
                     href={`#msg-${t.id}`}
                     className="focus-ring flex items-baseline gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-surface-2"
                   >
-                    <span className="font-mono text-xs text-muted tabular-nums">{i + 1}.</span>
+                    <span className="text-xs text-muted tabular-nums">{i + 1}.</span>
                     <code className="font-mono text-fg">{t.toolName}</code>
                     <span
                       className={cn('ms-auto truncate text-xs', s.failed ? 'text-danger-ink' : 'text-muted')}
@@ -248,7 +248,7 @@ export function ChatDetailPage({ id }: { id: string }) {
           </Link>
         </Button>
         <span className="text-xs text-muted">
-          Bắt đầu {formatDateTime(chat.createdAt)} · <span className="font-mono">{chat.id}</span>
+          Bắt đầu {formatDateTime(chat.createdAt)} · <span className="tabular-nums">{chat.id}</span>
         </span>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">

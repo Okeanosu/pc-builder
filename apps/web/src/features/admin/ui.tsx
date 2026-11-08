@@ -97,10 +97,10 @@ export function Pagination({
       className={cn('flex flex-wrap items-center justify-between gap-3 text-sm text-muted', className)}
     >
       <span>
-        <span className="font-mono tabular-nums">
+        <span className="tabular-nums">
           {from}–{to}
         </span>{' '}
-        trên <span className="font-mono tabular-nums">{total}</span>
+        trên <span className="tabular-nums">{total}</span>
       </span>
       <div className="flex items-center gap-2">
         <Button
@@ -113,7 +113,7 @@ export function Pagination({
           <ChevronLeft aria-hidden />
           <span className="max-sm:sr-only">Trước</span>
         </Button>
-        <span className="font-mono text-fg tabular-nums">
+        <span className="text-fg tabular-nums">
           {page}/{pages}
         </span>
         <Button

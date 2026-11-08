@@ -36,9 +36,7 @@ function BenchmarkBars({ benchmark, reference }: { benchmark: Benchmark; referen
         ) : (
           <div key={r.key} className="flex items-baseline justify-between gap-3">
             <span className="text-sm font-medium text-muted">{r.label}</span>
-            <span className="font-mono text-xl font-semibold text-fg tabular-nums">
-              {formatNumber(r.value)}
-            </span>
+            <span className="text-xl font-semibold text-fg tabular-nums">{formatNumber(r.value)}</span>
           </div>
         ),
       )}
@@ -110,14 +108,14 @@ export function ProductDetail({ product, categoryName, specSchema, benchmarkRefe
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-muted">{product.brand}</span>
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-balance text-fg">{product.name}</h1>
-            <span className="font-mono text-xs text-muted">Mã SP: {product.sku}</span>
+            <span className="tabular-nums text-xs text-muted">Mã SP: {product.sku}</span>
           </div>
           {chips.length > 0 && (
             <ul className="flex flex-wrap gap-1.5" aria-label="Thông số nổi bật">
               {chips.map((c) => (
                 <li
                   key={c}
-                  className="rounded-xs border border-border bg-surface px-2 py-1 font-mono text-xs text-fg"
+                  className="rounded-xs border border-border bg-surface px-2 py-1 tabular-nums text-xs text-fg"
                 >
                   {c}
                 </li>

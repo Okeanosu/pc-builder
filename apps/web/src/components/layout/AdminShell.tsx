@@ -121,7 +121,7 @@ export function AdminShell({
     <div className={cn('flex bg-bg text-fg', embedded ? 'h-full' : 'min-h-dvh', className)}>
       <aside
         className={cn(
-          'workshop hidden w-64 shrink-0 border-e border-border bg-bg lg:block',
+          'hidden w-64 shrink-0 border-e border-border bg-bg lg:block',
           embedded ? 'h-full' : 'sticky top-0 h-dvh',
         )}
       >
@@ -142,7 +142,7 @@ export function AdminShell({
             >
               <Menu className="size-5" aria-hidden />
             </DrawerTrigger>
-            <DrawerContent side="left" className="workshop" title="Menu quản trị" hideTitle>
+            <DrawerContent side="left" title="Menu quản trị" hideTitle>
               <SidebarBody activeHref={activeHref} user={user} onNavigate={() => setMenuOpen(false)} />
             </DrawerContent>
           </Drawer>

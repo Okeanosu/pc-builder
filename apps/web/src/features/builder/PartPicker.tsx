@@ -79,7 +79,7 @@ function VerdictLine({ verdict, loading }: { verdict?: CandidateVerdict; loading
               <TriangleExclamationPoint className="mt-px size-3.5 shrink-0" aria-hidden />
             )}
             <span>
-              <span className="font-mono">{first.code}</span> {first.message}
+              <span className="tabular-nums">{first.code}</span> {first.message}
               {verdict.issues.length > 1 && ` (+${verdict.issues.length - 1})`}
             </span>
           </span>
@@ -223,7 +223,7 @@ function PickerContent({
                     >
                       {formatSpecValue(f.type === 'boolean' ? v.value === 'true' : v.value, { key: f.key }) ??
                         v.value}
-                      <span className="font-mono text-muted tabular-nums">{v.count}</span>
+                      <span className="text-muted tabular-nums">{v.count}</span>
                     </button>
                   </li>
                 );

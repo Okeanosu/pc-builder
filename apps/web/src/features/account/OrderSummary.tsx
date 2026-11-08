@@ -37,7 +37,7 @@ function ItemRows({ items }: { items: OrderItemDTO[] }) {
         >
           <span className="min-w-0 text-fg">
             <span className="line-clamp-2">{i.name}</span>
-            <span className="font-mono text-xs text-muted">
+            <span className="tabular-nums text-xs text-muted">
               {i.qty} × <Price amount={i.price} size="sm" tone="muted" className="text-xs" />
             </span>
           </span>
@@ -103,7 +103,7 @@ export function OrderSummary({ order, className }: { order: OrderDTO; className?
       </dl>
       <div className="flex flex-col gap-1 rounded-sm bg-surface-2 px-3 py-2.5 text-sm">
         <span className="font-semibold text-fg">
-          {order.shippingName} · <span className="font-mono">{order.phone}</span>
+          {order.shippingName} · <span className="tabular-nums">{order.phone}</span>
         </span>
         <span className="text-muted">{order.address}</span>
         {order.note && <span className="text-muted">Ghi chú: {order.note}</span>}

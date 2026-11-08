@@ -74,8 +74,8 @@ function BuildsSummary({
             >
               <span className="font-medium text-fg">{buildTitle(b)}</span>
               <span className="flex items-center gap-2">
-                <span className="font-mono text-sm text-fg tabular-nums">{formatVndShort(b.totalPrice)}</span>
-                <span className="font-mono text-xs text-muted tabular-nums">{Math.round(b.score)} điểm</span>
+                <span className="text-sm text-fg tabular-nums">{formatVndShort(b.totalPrice)}</span>
+                <span className="text-xs text-muted tabular-nums">{Math.round(b.score)} điểm</span>
                 <ArrowRight className="size-3.5 text-muted" aria-hidden />
               </span>
             </button>

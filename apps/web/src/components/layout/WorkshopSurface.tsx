@@ -8,11 +8,9 @@ interface WorkshopSurfaceProps extends ComponentPropsWithoutRef<'div'> {
 }
 
 /**
- * Graphite "workshop" surface for the AI Advisor and PC Customizer. Stays dark on a light site,
- * and overlays opened inside it (part picker drawer, tooltips) render dark as well.
+ * Surface for the AI Advisor and PC Customizer. It follows the site theme; it still scopes overlays
+ * (part picker drawer, tooltips) so they portal inside it. `mat` paints the page background.
  */
 export function WorkshopSurface({ mat = true, className, ...props }: WorkshopSurfaceProps) {
-  return (
-    <ThemeScope workshop className={cn(mat ? 'workshop-mat' : 'bg-bg', 'text-fg', className)} {...props} />
-  );
+  return <ThemeScope className={cn(mat && 'bg-bg', 'text-fg', className)} {...props} />;
 }

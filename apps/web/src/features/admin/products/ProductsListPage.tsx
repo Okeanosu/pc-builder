@@ -165,7 +165,7 @@ export function ProductsListPage() {
                       {p.name}
                     </Link>
                     <div className="mt-0.5 text-xs text-muted">
-                      <span className="font-mono">{p.sku}</span> · {p.brand}
+                      <span className="tabular-nums">{p.sku}</span> · {p.brand}
                     </div>
                   </td>
                   <td className={cn(td, 'whitespace-nowrap')}>{CATEGORY_LABELS[p.category]}</td>
@@ -175,18 +175,18 @@ export function ProductsListPage() {
                   <td className={cn(td, 'text-end')}>
                     <span
                       className={cn(
-                        'font-mono tabular-nums',
+                        ' tabular-nums',
                         p.stock <= 0 ? 'text-danger-ink' : p.stock <= 3 ? 'text-warn-ink' : 'text-fg',
                       )}
                     >
                       {p.stock}
                     </span>
                     <div className="text-xs whitespace-nowrap text-muted">
-                      kho <span className="font-mono tabular-nums">{p.stockOnHand}</span>
+                      kho <span className="tabular-nums">{p.stockOnHand}</span>
                       {p.reserved > 0 && (
                         <>
                           {' '}
-                          · giữ <span className="font-mono tabular-nums">{p.reserved}</span>
+                          · giữ <span className="tabular-nums">{p.reserved}</span>
                         </>
                       )}
                     </div>
@@ -197,7 +197,7 @@ export function ProductsListPage() {
                   <td
                     className={cn(
                       td,
-                      'text-end font-mono tabular-nums',
+                      'text-end tabular-nums',
                       p.commercialBoost > 0 ? 'text-fg' : 'text-muted',
                     )}
                   >

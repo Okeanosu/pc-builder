@@ -266,7 +266,7 @@ export function QuickRecommendForm({
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-5 px-4 py-5 sm:px-5">
       <div className="flex flex-col gap-1">
-        <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-accent-ink">
+        <span className="inline-flex items-center gap-2 tabular-nums text-xs uppercase tracking-wider text-accent-ink">
           <Sparkles className="size-3.5" aria-hidden />
           Gợi ý nhanh
         </span>

@@ -76,16 +76,14 @@ function StockTable({
               >
                 {p.name}
               </Link>
-              <div className="mt-0.5 font-mono text-xs text-muted">{p.sku}</div>
+              <div className="mt-0.5 tabular-nums text-xs text-muted">{p.sku}</div>
             </td>
             <td className={cn(td, 'whitespace-nowrap')}>{CATEGORY_LABELS[p.category]}</td>
-            <td className={cn(td, 'text-end font-mono tabular-nums')}>{p.stockOnHand}</td>
-            <td
-              className={cn(td, 'text-end font-mono tabular-nums', p.reserved > 0 ? 'text-fg' : 'text-muted')}
-            >
+            <td className={cn(td, 'text-end tabular-nums')}>{p.stockOnHand}</td>
+            <td className={cn(td, 'text-end tabular-nums', p.reserved > 0 ? 'text-fg' : 'text-muted')}>
               {p.reserved}
             </td>
-            <td className={cn(td, 'text-end font-mono font-semibold tabular-nums')}>{p.stock}</td>
+            <td className={cn(td, 'text-end font-semibold tabular-nums')}>{p.stock}</td>
             <td className={td}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <LevelBadge sellable={p.stock} />

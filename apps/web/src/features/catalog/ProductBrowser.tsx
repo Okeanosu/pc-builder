@@ -266,7 +266,7 @@ export function ProductBrowser({ category, facets, brands, initial }: ProductBro
                 aria-busy={isFetching || undefined}
               >
                 {data.items.map((p) => (
-                  <li key={p.id} className="grid">
+                  <li key={p.id} className="grid min-w-0">
                     <ProductCard
                       product={p}
                       action={<AddToCartButton compact product={p} className="max-sm:hidden" />}

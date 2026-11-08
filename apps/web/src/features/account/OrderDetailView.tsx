@@ -106,7 +106,7 @@ export function OrderDetailView({ code }: { code: string }) {
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">
-              Đơn <span className="font-mono">{order.code}</span>
+              Đơn <span className="tabular-nums">{order.code}</span>
             </h1>
             <OrderStatusBadge status={order.status} />
           </div>

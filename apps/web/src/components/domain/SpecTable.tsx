@@ -63,7 +63,7 @@ export function SpecTable({
               </dt>
               <dd
                 className={cn(
-                  'min-w-0 break-words font-mono text-sm text-fg',
+                  'min-w-0 break-words tabular-nums text-sm text-fg',
                   mark === 'error' && 'font-semibold text-danger-ink',
                   mark === 'warning' && 'font-semibold text-warn-ink',
                 )}

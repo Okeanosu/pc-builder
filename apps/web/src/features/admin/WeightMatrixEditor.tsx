@@ -148,7 +148,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
         <p className="text-sm text-muted">
           Mỗi cột là một nhu cầu; tổng trọng số của cột phải bằng{' '}
-          <span className="font-mono text-fg">1,00</span>. Mở một dòng để sửa khoảng phân bổ ngân sách (tối
+          <span className="tabular-nums text-fg">1,00</span>. Mở một dòng để sửa khoảng phân bổ ngân sách (tối
           thiểu – tối đa).
         </p>
         <Button
@@ -304,7 +304,7 @@ export function WeightMatrixEditor({ rows, canEdit }: WeightMatrixEditorProps) {
                   <td key={p} className="px-3 py-3 align-top" aria-live="polite">
                     <div
                       className={cn(
-                        'inline-flex items-center gap-1.5 font-mono text-base font-semibold tabular-nums',
+                        'inline-flex items-center gap-1.5 text-base font-semibold tabular-nums',
                         sumOk && !unreadable ? 'text-ok-ink' : 'text-warn-ink',
                       )}
                     >

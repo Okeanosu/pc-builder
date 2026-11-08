@@ -2,17 +2,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from '@/lib/cn';
 
-export const cardVariants = cva('rounded-md border text-fg', {
+export const cardVariants = cva('rounded-md text-fg', {
   variants: {
     variant: {
-      default: 'border-border bg-surface',
-      /** Sits inside another surface (spec groups, summaries). */
-      inset: 'border-border bg-surface-2',
-      /** Whole card is clickable: lifts on hover, shows the focus ring when a child link is focused. */
+      /** A framed panel: hairline, no shadow. */
+      default: 'border border-border bg-surface',
+      /** Sits inside another surface (spec groups, summaries): a flat plate, no frame. */
+      inset: 'bg-surface-2',
+      /** Whole card is clickable: the frame darkens on hover, focus ring follows a focused child link. */
       interactive:
-        'border-border bg-surface transition-[border-color,box-shadow] duration-150 hover:border-border-strong hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
-      /** Highlighted choice, e.g. the selected build. */
-      selected: 'border-accent bg-surface shadow-[0_0_0_1px_var(--color-accent)]',
+        'border border-border bg-surface transition-[border-color] duration-150 hover:border-border-strong has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
+      /** Highlighted choice, e.g. the selected build: ink frame. */
+      selected: 'border border-fg bg-surface shadow-[0_0_0_1px_var(--color-fg)]',
     },
   },
   defaultVariants: { variant: 'default' },

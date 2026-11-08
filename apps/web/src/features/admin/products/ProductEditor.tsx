@@ -81,7 +81,7 @@ function BoostSlider({
           className="h-10 min-w-0 flex-1 accent-ring"
           aria-valuetext={formatNumber(shown)}
         />
-        <span className="w-12 text-end font-mono text-sm font-semibold text-fg tabular-nums">
+        <span className="w-12 text-end text-sm font-semibold text-fg tabular-nums">
           {formatWeight(shown)}
         </span>
       </div>
@@ -397,7 +397,7 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                     value={draft.images}
                     onChange={(e) => set('images', e.target.value)}
                     rows={2}
-                    className="font-mono text-xs"
+                    className="tabular-nums text-xs"
                   />
                 </Field>
               </CardContent>
@@ -445,15 +445,15 @@ function EditorForm({ categories, product, initialCategory }: EditorFormProps) {
                   <div className="flex flex-col gap-1.5 rounded-sm border border-border bg-surface-2 p-3 text-sm">
                     <div className="flex justify-between gap-2">
                       <span className="text-muted">Trong kho</span>
-                      <span className="font-mono tabular-nums">{product.stockOnHand}</span>
+                      <span className="tabular-nums">{product.stockOnHand}</span>
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-muted">Đang giữ cho đơn chờ thanh toán</span>
-                      <span className="font-mono tabular-nums">{product.reserved}</span>
+                      <span className="tabular-nums">{product.reserved}</span>
                     </div>
                     <div className="flex justify-between gap-2 font-medium">
                       <span>Có thể bán</span>
-                      <span className="font-mono tabular-nums">{product.stock}</span>
+                      <span className="tabular-nums">{product.stock}</span>
                     </div>
                     <Link
                       href={`/admin/inventory?q=${encodeURIComponent(product.sku)}`}

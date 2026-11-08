@@ -146,7 +146,7 @@ function NumberChips({
             {value.map((n) => (
               <li
                 key={n}
-                className="inline-flex h-7 items-center gap-1 rounded-xs border border-border bg-surface-2 ps-2 pe-1 font-mono text-xs text-fg tabular-nums"
+                className="inline-flex h-7 items-center gap-1 rounded-xs border border-border bg-surface-2 ps-2 pe-1 text-xs text-fg tabular-nums"
               >
                 {formatNumber(n)}
                 {field.unit ? ` ${field.unit}` : ''}

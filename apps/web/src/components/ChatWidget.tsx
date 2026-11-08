@@ -19,7 +19,7 @@ function ChatWidgetInner() {
   const aboveSummaryBar = pathname === '/builder';
 
   return (
-    <ThemeScope workshop className="contents">
+    <ThemeScope className="contents">
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           <Button

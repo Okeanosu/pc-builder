@@ -82,7 +82,7 @@ export function BuildCard({ build, selected, onSelect, index = 0, className, sty
                   <span className="truncate text-sm font-medium text-fg [grid-area:name]" title={p.name}>
                     {p.name}
                   </span>
-                  <span className="text-end font-mono text-xs text-muted tabular-nums [grid-area:price]">
+                  <span className="text-end text-xs text-muted tabular-nums [grid-area:price]">
                     {formatVnd(p.salePrice ?? p.price)}
                   </span>
                 </>

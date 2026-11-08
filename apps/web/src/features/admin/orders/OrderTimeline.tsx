@@ -49,9 +49,7 @@ export function OrderTimeline({
               {s.label}
               <span className="sr-only"> ({STATE_TEXT[s.state]})</span>
             </span>
-            {s.at && (
-              <span className="font-mono text-xs text-muted tabular-nums">{formatDateTime(s.at)}</span>
-            )}
+            {s.at && <span className="text-xs text-muted tabular-nums">{formatDateTime(s.at)}</span>}
             {s.state === 'current' && !s.at && <span className="text-xs text-accent-ink">Bước hiện tại</span>}
           </div>
         </li>

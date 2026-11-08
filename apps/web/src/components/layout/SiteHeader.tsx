@@ -46,9 +46,7 @@ export function SiteHeader({
   className,
 }: SiteHeaderProps) {
   return (
-    <header
-      className={cn('sticky top-0 z-40 border-b border-border bg-surface/92 backdrop-blur-md', className)}
-    >
+    <header className={cn('sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md', className)}>
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2.5 px-4 py-3 md:flex-nowrap md:gap-x-5 lg:px-6">
         <Logo compact />
 
@@ -69,12 +67,8 @@ export function SiteHeader({
         </Form>
 
         <div className="ms-auto flex items-center gap-1 sm:gap-2">
-          <Button asChild variant="workshop" className="max-sm:h-9 max-sm:px-3">
+          <Button asChild variant="workshop" className="max-sm:h-9 max-sm:px-3.5">
             <Link href="/advisor">
-              <span
-                aria-hidden
-                className="size-1.5 animate-blink-dot rounded-full bg-cyan shadow-[0_0_6px_var(--color-cyan)]"
-              />
               <span className="sm:hidden">AI tư vấn</span>
               <span className="max-sm:hidden">AI tư vấn cấu hình</span>
             </Link>
@@ -83,13 +77,13 @@ export function SiteHeader({
           <Link
             href="/cart"
             aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : 'Giỏ hàng'}
-            className="focus-ring relative inline-flex size-10 items-center justify-center rounded-sm text-fg transition-colors hover:bg-surface-2"
+            className="focus-ring relative inline-flex size-10 items-center justify-center rounded-full text-fg transition-colors hover:bg-surface-2"
           >
             <ShoppingCart className="size-5" aria-hidden />
             {cartCount > 0 && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -end-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-mono text-xs font-semibold text-accent-fg tabular-nums ring-2 ring-surface"
+                className="absolute -top-0.5 -end-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-xs font-semibold text-accent-fg tabular-nums ring-2 ring-bg"
               >
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
@@ -107,7 +101,7 @@ export function SiteHeader({
       </div>
 
       <nav aria-label="Danh mục sản phẩm" className="border-t border-border">
-        <ul className="no-scrollbar mx-auto flex h-11 max-w-7xl items-center gap-1 overflow-x-auto px-4 lg:px-6">
+        <ul className="no-scrollbar mx-auto flex h-11 max-w-7xl items-center gap-5 overflow-x-auto px-4 lg:px-6">
           {categories.map((c) => {
             const active = c.key === activeCategory;
             return (
@@ -116,8 +110,10 @@ export function SiteHeader({
                   href={c.href}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'focus-ring inline-flex h-8 items-center rounded-xs px-3 text-sm font-medium transition-colors',
-                    active ? 'bg-surface-2 text-fg' : 'text-muted hover:bg-surface-2 hover:text-fg',
+                    'focus-ring relative inline-flex h-11 items-center rounded-xs text-sm transition-colors',
+                    active
+                      ? 'font-medium text-fg after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-fg'
+                      : 'text-muted hover:text-fg',
                   )}
                 >
                   {c.label}
@@ -128,9 +124,9 @@ export function SiteHeader({
           <li className="ms-auto shrink-0 ps-2">
             <Link
               href="/builder"
-              className="focus-ring inline-flex h-8 items-center gap-2 rounded-xs px-3 text-sm font-semibold text-fg transition-colors hover:bg-surface-2"
+              className="focus-ring inline-flex h-11 items-center gap-2 rounded-xs text-sm font-medium text-fg underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-current"
             >
-              <Wrench className="size-4 text-accent-ink" aria-hidden />
+              <Wrench className="size-4" aria-hidden />
               Tự build PC
             </Link>
           </li>

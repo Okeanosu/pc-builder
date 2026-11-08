@@ -1,16 +1,9 @@
 'use client';
 
-import { ArrowRight } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-
-export const PROMPT_CHIPS = [
-  'Gaming 25 triệu',
-  'Đồ họa 40 triệu',
-  'AI/Deep learning 60 triệu',
-  'Văn phòng 12 triệu',
-];
 
 const advisorHref = (text: string) => `/advisor?q=${encodeURIComponent(text.trim())}`;
 
@@ -30,10 +23,10 @@ export function AdvisorPrompt() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <form
         onSubmit={submit}
-        className="group flex items-center gap-2 rounded-lg border border-border-strong bg-surface p-2 shadow-overlay transition-[border-color,box-shadow] focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgb(34_211_238/0.25)]"
+        className="flex items-center gap-2 rounded-full border border-border-strong bg-bg p-1.5 ps-5 transition-[border-color,box-shadow] focus-within:border-fg focus-within:ring-1 focus-within:ring-fg"
       >
         <label htmlFor="advisor-prompt" className="sr-only">
           Mô tả nhu cầu và ngân sách của bạn
@@ -50,35 +43,19 @@ export function AdvisorPrompt() {
           enterKeyHint="send"
           aria-invalid={error || undefined}
           aria-describedby={error ? 'advisor-prompt-error' : undefined}
-          placeholder="Chơi Valorant + edit video nhẹ, tầm 25 triệu…"
-          className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base text-fg outline-none placeholder:text-muted sm:h-14 sm:text-lg"
+          placeholder="Chơi Valorant, dựng video nhẹ, tầm 25 triệu"
+          className="h-11 min-w-0 flex-1 bg-transparent text-base text-fg outline-none placeholder:text-muted sm:h-12"
         />
-        <Button type="submit" size="lg" className="max-sm:size-12 max-sm:px-0" aria-label="Hỏi AI tư vấn">
+        <Button type="submit" size="lg" className="max-sm:size-11 max-sm:px-0" aria-label="Hỏi AI tư vấn">
           <span className="max-sm:sr-only">Hỏi AI</span>
-          <ArrowRight aria-hidden />
+          <ArrowUp className="sm:hidden" aria-hidden />
         </Button>
       </form>
       {error && (
-        <p id="advisor-prompt-error" className="-mt-1 text-sm font-medium text-warn-ink">
-          Hãy kể nhu cầu, ví dụ “chơi game 2K tầm 30 triệu”, hoặc chọn một gợi ý bên dưới.
+        <p id="advisor-prompt-error" className="ps-5 text-sm font-medium text-warn-ink">
+          Hãy kể nhu cầu và ngân sách, ví dụ “chơi game 2K tầm 30 triệu”.
         </p>
       )}
-      <ul
-        className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0"
-        aria-label="Gợi ý nhanh"
-      >
-        {PROMPT_CHIPS.map((chip) => (
-          <li key={chip} className="shrink-0">
-            <button
-              type="button"
-              onClick={() => router.push(advisorHref(chip))}
-              className="focus-ring inline-flex h-9 items-center rounded-full border border-border bg-surface-2 px-4 text-sm font-medium text-fg transition-colors hover:border-accent/60 hover:bg-surface-3"
-            >
-              {chip}
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export function PriceTag({ price, salePrice, size = 'md', layout = 'stacked', cl
     <span className="inline-flex items-center gap-1.5">
       <span className="sr-only">Giá gốc</span>
       <Price amount={price} size={s.old} tone="strike" />
-      <Badge tone="accent" size="sm" mono>
+      <Badge tone="danger" size="sm" mono>
         -{off}%
       </Badge>
     </span>

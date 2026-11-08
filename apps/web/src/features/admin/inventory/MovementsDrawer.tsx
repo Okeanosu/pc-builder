@@ -34,14 +34,14 @@ function MovementRow({ m }: { m: InventoryMovementDTO }) {
         </Badge>
         <span className="text-xs text-muted">{formatDateTime(m.createdAt)}</span>
       </div>
-      <span className="row-span-2 self-center font-mono text-base font-semibold text-fg tabular-nums">
+      <span className="row-span-2 self-center text-base font-semibold text-fg tabular-nums">
         {m.delta > 0 ? `+${m.delta}` : m.delta}
       </span>
       <div className="min-w-0 text-sm text-muted">
         {isOrder ? (
           <Link
             href={`/admin/orders/${m.ref}`}
-            className="focus-ring rounded-xs font-mono text-accent-ink hover:underline"
+            className="focus-ring rounded-xs tabular-nums text-accent-ink hover:underline"
           >
             {m.ref}
           </Link>
@@ -84,15 +84,15 @@ export function MovementsDrawer({
             <div className="grid grid-cols-3 gap-2 rounded-sm border border-border bg-surface-2 p-3 text-sm">
               <div className="flex flex-col">
                 <span className="text-xs text-muted">Trong kho</span>
-                <span className="font-mono tabular-nums">{product.stockOnHand}</span>
+                <span className="tabular-nums">{product.stockOnHand}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-muted">Đang giữ</span>
-                <span className="font-mono tabular-nums">{product.reserved}</span>
+                <span className="tabular-nums">{product.reserved}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-muted">Có thể bán</span>
-                <span className="font-mono tabular-nums">{product.stock}</span>
+                <span className="tabular-nums">{product.stock}</span>
               </div>
             </div>
             {query.isPending ? (

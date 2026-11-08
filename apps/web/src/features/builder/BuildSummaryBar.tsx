@@ -56,7 +56,7 @@ export function WattageLine({ summary, className }: { summary: BuildSummary; cla
           <Gauge className="size-4" aria-hidden />
           Công suất ước tính
         </span>
-        <span className="whitespace-nowrap font-mono text-fg tabular-nums">
+        <span className="whitespace-nowrap text-fg tabular-nums">
           ~{estimatedWattage}W{psuWattage ? <span className="text-muted"> / nguồn {psuWattage}W</span> : null}
         </span>
       </div>
@@ -100,7 +100,7 @@ export function IssueList({
           <span className="text-fg">
             <span
               className={cn(
-                'me-1.5 font-mono font-semibold',
+                'me-1.5 tabular-nums font-semibold',
                 i.severity === 'error' ? 'text-danger-ink' : 'text-warn-ink',
               )}
             >
@@ -219,7 +219,7 @@ export function BuildSummaryBar({
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col">
           <Price amount={total} size="xl" />
-          <span className="truncate font-mono text-xs text-muted tabular-nums">
+          <span className="truncate text-xs text-muted tabular-nums">
             ~{estimatedWattage}W{psuWattage ? ` / nguồn ${psuWattage}W` : ''} · {count}/8 linh kiện
           </span>
         </div>

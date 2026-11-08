@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from 'next';
-import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
+import { Archivo, JetBrains_Mono } from 'next/font/google';
 import { themeInitScript } from '@/components/layout/theme-script';
 import { Toaster } from '@/components/ui/Toast';
 import { Providers } from './providers';
 import './globals.css';
 
-const beVietnam = Be_Vietnam_Pro({
+/** Variable Archivo: the width axis gives the expanded display cut used for page titles. */
+const archivo = Archivo({
   subsets: ['latin', 'vietnamese'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-be-vietnam',
+  axes: ['wdth'],
+  variable: '--font-archivo',
   display: 'swap',
 });
 
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#edf0f2' },
-    { media: '(prefers-color-scheme: dark)', color: '#12161b' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
   ],
 };
 
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="vi"
       data-theme="light"
       suppressHydrationWarning
-      className={`${beVietnam.variable} ${jetbrainsMono.variable}`}
+      className={`${archivo.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <script

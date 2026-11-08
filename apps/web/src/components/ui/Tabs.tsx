@@ -27,7 +27,7 @@ export function TabsList({ className, ...props }: ComponentPropsWithRef<typeof T
       className={cn(
         'no-scrollbar flex max-w-full overflow-x-auto',
         variant === 'segmented'
-          ? 'w-fit gap-1 rounded-sm border border-border bg-surface-2 p-1'
+          ? 'w-fit gap-1 rounded-full bg-surface-2 p-1'
           : 'gap-6 border-b border-border',
         className,
       )}
@@ -43,8 +43,8 @@ export function TabsTrigger({ className, ...props }: ComponentPropsWithRef<typeo
       className={cn(
         'focus-ring inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-sm font-medium text-muted transition-colors hover:text-fg disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4',
         variant === 'segmented'
-          ? 'h-8 rounded-xs px-3 data-[state=active]:bg-surface data-[state=active]:text-fg data-[state=active]:shadow-raised'
-          : 'relative h-10 px-0.5 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-transparent data-[state=active]:text-fg data-[state=active]:after:bg-accent',
+          ? 'h-8 rounded-full px-3.5 data-[state=active]:bg-bg data-[state=active]:text-fg data-[state=active]:shadow-[0_0_0_1px_var(--color-border)]'
+          : 'relative h-10 px-0.5 after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:text-fg data-[state=active]:after:bg-fg',
         className,
       )}
       {...props}

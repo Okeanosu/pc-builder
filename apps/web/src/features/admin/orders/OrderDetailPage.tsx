@@ -56,7 +56,7 @@ function ItemsCard({ order }: { order: AdminOrderDetailDTO }) {
                     <Link
                       href={`/builds/${g.buildId}`}
                       target="_blank"
-                      className="focus-ring inline-flex items-center gap-1 rounded-xs font-mono text-accent-ink hover:underline"
+                      className="focus-ring inline-flex items-center gap-1 rounded-xs tabular-nums text-accent-ink hover:underline"
                     >
                       {g.buildId.slice(0, 8)} <ExternalLink className="size-3" aria-hidden />
                     </Link>
@@ -76,7 +76,7 @@ function ItemsCard({ order }: { order: AdminOrderDetailDTO }) {
                   <td className={cn(td, 'text-end')}>
                     <Price amount={item.price} size="sm" tone="muted" />
                   </td>
-                  <td className={cn(td, 'text-end font-mono tabular-nums')}>{item.qty}</td>
+                  <td className={cn(td, 'text-end tabular-nums')}>{item.qty}</td>
                   <td className={cn(td, 'text-end')}>
                     <Price amount={item.price * item.qty} size="sm" />
                   </td>
@@ -121,8 +121,8 @@ function Reconciliation({ order }: { order: AdminOrderDetailDTO }) {
     return (
       <p className="text-sm text-muted">
         Chưa có giao dịch nào. Hệ thống chờ chuyển khoản{' '}
-        <strong className="font-mono text-fg">{formatVnd(order.total)}</strong> với nội dung{' '}
-        <strong className="font-mono text-fg">{order.code}</strong>.
+        <strong className="tabular-nums text-fg">{formatVnd(order.total)}</strong> với nội dung{' '}
+        <strong className="tabular-nums text-fg">{order.code}</strong>.
       </p>
     );
   }
@@ -184,14 +184,14 @@ function PaymentsCard({ order }: { order: AdminOrderDetailDTO }) {
                       <div>{paymentProviderLabel(p.provider)}</div>
                       {p.providerTxnId && (
                         <div
-                          className="max-w-32 truncate font-mono text-xs text-muted"
+                          className="max-w-32 truncate tabular-nums text-xs text-muted"
                           title={p.providerTxnId}
                         >
                           #{p.providerTxnId}
                         </div>
                       )}
                     </td>
-                    <td className={cn(td, 'max-w-44 font-mono text-xs break-words')}>
+                    <td className={cn(td, 'max-w-44 tabular-nums text-xs break-words')}>
                       {p.transferContent ?? '—'}
                     </td>
                     <td className={cn(td, 'text-end')}>
@@ -230,7 +230,7 @@ function CustomerCard({ order }: { order: AdminOrderDetailDTO }) {
             <dd>
               <a
                 href={`tel:${order.phone}`}
-                className="focus-ring rounded-xs font-mono text-accent-ink hover:underline"
+                className="focus-ring rounded-xs tabular-nums text-accent-ink hover:underline"
               >
                 {order.phone}
               </a>
@@ -300,7 +300,7 @@ export function OrderDetailPage({ code }: { code: string }) {
   const order = query.data;
   return (
     <div className="flex flex-col gap-5">
-      <AdminPageHeader title={<span className="font-mono">{title}</span>} />
+      <AdminPageHeader title={<span className="tabular-nums">{title}</span>} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="link" size="sm">
           <Link href="/admin/orders">

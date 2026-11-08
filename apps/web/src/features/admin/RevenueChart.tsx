@@ -43,7 +43,7 @@ function RevenueTooltip({ active, payload, groupBy }: TooltipContentProps & { gr
   if (!row) return null;
   return (
     <div className="rounded-sm border border-border bg-surface px-3 py-2 text-sm shadow-overlay">
-      <div className="font-mono font-semibold text-fg tabular-nums">{formatVnd(row.revenue)}</div>
+      <div className="font-semibold text-fg tabular-nums">{formatVnd(row.revenue)}</div>
       <div className="text-xs text-muted">
         {periodTitle(row.period, groupBy)} · {row.orders} đơn
       </div>
@@ -77,7 +77,7 @@ export function RevenueChart() {
             {query.data ? (
               <>
                 <Price amount={totals.revenue} size="sm" /> từ{' '}
-                <span className="font-mono tabular-nums">{totals.orders}</span> đơn
+                <span className="tabular-nums">{totals.orders}</span> đơn
               </>
             ) : (
               '…'
@@ -171,8 +171,8 @@ export function RevenueChart() {
                 {rows.map((r) => (
                   <tr key={r.period}>
                     <td className={td}>{periodTitle(r.period, groupBy)}</td>
-                    <td className={`${td} text-end font-mono tabular-nums`}>{formatVnd(r.revenue)}</td>
-                    <td className={`${td} text-end font-mono tabular-nums`}>{r.orders}</td>
+                    <td className={`${td} text-end tabular-nums`}>{formatVnd(r.revenue)}</td>
+                    <td className={`${td} text-end tabular-nums`}>{r.orders}</td>
                   </tr>
                 ))}
               </tbody>

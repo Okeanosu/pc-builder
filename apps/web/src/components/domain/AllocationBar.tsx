@@ -98,20 +98,18 @@ export function AllocationBar({
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-baseline gap-1.5">
                     <span className="truncate text-xs text-muted">{CATEGORY_LABELS[r.key]}</span>
-                    <span className="font-mono text-xs font-semibold text-fg tabular-nums">
+                    <span className="text-xs font-semibold text-fg tabular-nums">
                       {formatPercent(r.share)}
                     </span>
                   </span>
                   {r.amount !== undefined && (
-                    <span className="font-mono text-xs text-muted tabular-nums">{formatVnd(r.amount)}</span>
+                    <span className="text-xs text-muted tabular-nums">{formatVnd(r.amount)}</span>
                   )}
                 </span>
               ) : (
                 <span className="text-xs text-muted">
                   {CATEGORY_LABELS[r.key]}{' '}
-                  <span className="font-mono font-semibold text-fg tabular-nums">
-                    {formatPercent(r.share)}
-                  </span>
+                  <span className="font-semibold text-fg tabular-nums">{formatPercent(r.share)}</span>
                 </span>
               )}
             </li>

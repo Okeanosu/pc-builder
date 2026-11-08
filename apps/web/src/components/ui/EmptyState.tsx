@@ -36,11 +36,9 @@ export function EmptyState({
       {icon && (
         <div
           className={cn(
-            'grid place-items-center rounded-md border-[1.5px] border-dashed [&_svg]:size-6',
+            'grid place-items-center rounded-full [&_svg]:size-6',
             compact ? 'size-12' : 'size-16',
-            tone === 'error'
-              ? 'border-danger/50 bg-danger/8 text-danger-ink'
-              : 'border-border-strong text-muted',
+            tone === 'error' ? 'bg-danger/10 text-danger-ink' : 'bg-surface-2 text-muted',
           )}
           aria-hidden
         >

@@ -44,7 +44,7 @@ export function BuildSlot({
       aria-label={label}
     >
       <div className="flex items-baseline gap-2 sm:flex-col sm:gap-0.5 sm:pt-3">
-        <span className="font-mono text-xs font-semibold tracking-wider text-accent-ink">
+        <span className="tabular-nums text-xs font-semibold tracking-wider text-accent-ink">
           {CATEGORY_DESIGNATOR[category]}
         </span>
         <span className="text-sm font-medium text-fg">{label}</span>
@@ -125,7 +125,7 @@ export function BuildSlot({
                   <TriangleExclamationPoint className="mt-0.5 size-4 shrink-0" aria-hidden />
                 )}
                 <span>
-                  <span className="font-mono font-semibold">{i.code}</span>{' '}
+                  <span className="tabular-nums font-semibold">{i.code}</span>{' '}
                   <span className="text-fg">{i.message}</span>
                 </span>
               </li>

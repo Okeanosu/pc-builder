@@ -169,7 +169,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
   const header = (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <h1 className="text-2xl font-bold tracking-[-0.02em] text-fg">
-        Đơn <span className="font-mono">{code}</span>
+        Đơn <span className="tabular-nums">{code}</span>
       </h1>
       {info && <OrderStatusBadge status={info.status} />}
     </div>
@@ -232,7 +232,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
               <div className="flex flex-col gap-1">
                 <h2 className="text-xl font-bold text-fg">Đã nhận thanh toán</h2>
                 <p className="text-sm text-muted">
-                  Cảm ơn bạn! Đơn <span className="font-mono text-fg">{code}</span> đã được xác nhận
+                  Cảm ơn bạn! Đơn <span className="tabular-nums text-fg">{code}</span> đã được xác nhận
                   {order.data?.paidAt ? ' tự động' : ''}. Chúng tôi sẽ gọi số điện thoại bạn để lại trước khi
                   giao.
                 </p>
@@ -350,7 +350,7 @@ export function PaymentView({ code, serverTime }: { code: string; serverTime?: n
                 <span className="text-xs text-muted">Hết hạn sau</span>
                 <span
                   className={cn(
-                    'font-mono text-2xl font-semibold tabular-nums',
+                    ' text-2xl font-semibold tabular-nums',
                     remaining !== null && remaining < 120_000 ? 'text-warn-ink' : 'text-fg',
                   )}
                   role="timer"

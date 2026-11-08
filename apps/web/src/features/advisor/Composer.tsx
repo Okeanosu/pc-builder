@@ -98,7 +98,7 @@ export function Composer({
         </span>
         <span className="ms-auto flex items-center gap-2">
           {nearLimit && (
-            <span className="font-mono text-xs text-muted tabular-nums">
+            <span className="text-xs text-muted tabular-nums">
               {value.length}/{MAX_LENGTH}
             </span>
           )}

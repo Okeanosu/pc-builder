@@ -88,7 +88,7 @@ export function ChatsPage() {
                     >
                       {s.title || 'Phiên chưa đặt tên'}
                     </Link>
-                    <div className="font-mono text-xs text-muted">{s.id.slice(0, 8)}</div>
+                    <div className="tabular-nums text-xs text-muted">{s.id.slice(0, 8)}</div>
                   </td>
                   <td className={td}>
                     <ChatModeBadge mode={s.mode} />
@@ -96,7 +96,7 @@ export function ChatsPage() {
                   <td className={cn(td, 'text-sm')}>
                     {s.userEmail ?? <span className="text-muted">Khách vãng lai</span>}
                   </td>
-                  <td className={cn(td, 'text-end font-mono tabular-nums')}>{s.messageCount}</td>
+                  <td className={cn(td, 'text-end tabular-nums')}>{s.messageCount}</td>
                   <td className={cn(td, 'whitespace-nowrap text-muted')}>{formatDateTime(s.createdAt)}</td>
                   <td className={cn(td, 'whitespace-nowrap text-muted')}>
                     {formatDateTime(s.lastMessageAt)}

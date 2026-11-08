@@ -100,7 +100,7 @@ export function OrderStatusControl({ order }: { order: Pick<OrderDTO, 'code' | '
           }
         >
           <p className="text-sm text-fg">
-            <strong>{pending.label}</strong> cho đơn <span className="font-mono">{order.code}</span>?{' '}
+            <strong>{pending.label}</strong> cho đơn <span className="tabular-nums">{order.code}</span>?{' '}
             {pending.confirm}
           </p>
           <div className="flex flex-wrap gap-2">

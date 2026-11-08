@@ -145,14 +145,14 @@ export function PaymentsPage() {
                       <div className="font-mono text-xs break-words text-fg">{p.transferContent ?? '—'}</div>
                       <div className="mt-1 text-xs text-muted">
                         {paymentProviderLabel(p.provider)}
-                        {p.providerTxnId && <span className="font-mono"> · #{p.providerTxnId}</span>}
+                        {p.providerTxnId && <span className="tabular-nums"> · #{p.providerTxnId}</span>}
                       </div>
                     </td>
                     <td className={cn(td, 'whitespace-nowrap')}>
                       {order.code ? (
                         <Link
                           href={`/admin/orders/${order.code}`}
-                          className="focus-ring rounded-xs font-mono font-medium text-accent-ink hover:underline"
+                          className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
                         >
                           {order.text}
                         </Link>

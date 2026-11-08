@@ -46,7 +46,7 @@ export function Select({
         aria-describedby={field?.describedBy}
         aria-invalid={isInvalid || undefined}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-sm border border-border-strong bg-surface px-3 text-start text-fg outline-none transition-[border-color,box-shadow] duration-150 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-60 aria-invalid:border-danger aria-invalid:ring-danger/20 data-placeholder:text-muted',
+          'flex w-full items-center justify-between gap-2 rounded-sm border border-border-strong bg-surface px-3 text-start text-fg outline-none transition-[border-color,box-shadow] duration-150 focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-60 aria-invalid:border-danger aria-invalid:ring-danger/20 data-placeholder:text-muted',
           SIZES[size],
           className,
         )}

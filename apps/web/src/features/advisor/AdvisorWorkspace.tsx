@@ -114,7 +114,7 @@ export function AdvisorWorkspace() {
             <PanelsTopLeft aria-hidden />
             Cấu hình
             {builds.length > 0 && (
-              <span className="rounded-full bg-accent px-1.5 font-mono text-xs text-accent-fg tabular-nums">
+              <span className="rounded-full bg-accent px-1.5 text-xs text-accent-fg tabular-nums">
                 {builds.length}
               </span>
             )}

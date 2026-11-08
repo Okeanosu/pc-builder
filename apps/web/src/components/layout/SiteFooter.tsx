@@ -42,7 +42,7 @@ export function SiteFooter({ categories = DEFAULT_NAV_CATEGORIES, note, classNam
     ACCOUNT,
   ];
   return (
-    <footer className={cn('border-t border-border bg-surface', className)}>
+    <footer className={cn('bg-surface-2', className)}>
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))] lg:px-6">
         <div className="flex max-w-xs flex-col gap-3">
           <Logo />

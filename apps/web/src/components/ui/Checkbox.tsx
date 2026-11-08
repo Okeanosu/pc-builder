@@ -45,7 +45,7 @@ export function Checkbox({ label, description, meta, className, id, ...props }: 
           className="flex cursor-pointer items-baseline justify-between gap-2 text-sm text-fg group-has-disabled/cb:cursor-not-allowed group-has-disabled/cb:text-muted"
         >
           <span className="min-w-0">{label}</span>
-          {meta !== undefined && <span className="font-mono text-xs text-muted tabular-nums">{meta}</span>}
+          {meta !== undefined && <span className="text-xs text-muted tabular-nums">{meta}</span>}
         </label>
         {description && (
           <p id={`${controlId}-desc`} className="text-xs text-muted">

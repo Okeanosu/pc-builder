@@ -59,7 +59,7 @@ export function OrderTimeline({
               {step.state === 'current' && <span className="sr-only"> (bước hiện tại)</span>}
             </span>
             {step.at && (
-              <time dateTime={step.at} className="font-mono text-xs text-muted">
+              <time dateTime={step.at} className="tabular-nums text-xs text-muted">
                 {timeFmt.format(new Date(step.at))}
               </time>
             )}

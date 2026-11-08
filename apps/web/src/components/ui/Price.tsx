@@ -18,7 +18,7 @@ interface PriceProps {
   className?: string;
 }
 
-/** Money in JetBrains Mono with tabular digits: "25.000.000₫". The đồng sign is set slightly smaller. */
+/** Money with tabular digits so columns of prices line up: "25.000.000₫". The đồng sign is set slightly smaller. */
 export function Price({ amount, size = 'md', tone = 'default', className }: PriceProps) {
   const text = formatVnd(amount);
   const digits = text.slice(0, -1);
@@ -26,7 +26,7 @@ export function Price({ amount, size = 'md', tone = 'default', className }: Pric
     <data
       value={amount}
       className={cn(
-        'inline-flex items-baseline whitespace-nowrap font-mono font-semibold tracking-tight tabular-nums',
+        'inline-flex items-baseline whitespace-nowrap font-semibold tabular-nums',
         SIZES[size],
         tone === 'default' && 'text-fg',
         tone === 'accent' && 'text-accent-ink',
@@ -36,7 +36,7 @@ export function Price({ amount, size = 'md', tone = 'default', className }: Pric
       )}
     >
       {digits}
-      <span className="ms-px text-[0.82em]">₫</span>
+      <span className="ms-0.5 text-[0.78em] font-medium">₫</span>
     </data>
   );
 }

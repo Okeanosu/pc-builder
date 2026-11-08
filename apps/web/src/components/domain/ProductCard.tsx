@@ -18,21 +18,12 @@ function StockLine({ stock }: { stock: number }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 text-xs font-medium',
+        'shrink-0 text-xs',
         state === 'in' && 'text-ok-ink',
-        state === 'low' && 'text-warn-ink',
+        state === 'low' && 'font-medium text-warn-ink',
         state === 'out' && 'text-muted',
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          'size-1.5 rounded-full',
-          state === 'in' && 'bg-ok',
-          state === 'low' && 'bg-warn',
-          state === 'out' && 'bg-border-strong',
-        )}
-      />
       {state === 'in' ? 'Còn hàng' : state === 'low' ? `Chỉ còn ${stock}` : 'Hết hàng'}
     </span>
   );
@@ -68,35 +59,23 @@ export function ProductCard({
   const title = (
     <Link
       href={href}
-      className="text-sm font-semibold text-fg outline-none after:absolute after:inset-0 after:rounded-md hover:text-accent-ink"
+      className="text-[0.9375rem] leading-snug font-medium text-fg outline-none decoration-1 underline-offset-[3px] after:absolute after:inset-0 after:rounded-md group-hover:underline"
     >
       <span className="line-clamp-2">{product.name}</span>
     </Link>
   );
-  const chipClass = 'max-w-full truncate rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-muted';
-  // Narrow cards (2-column phone grid) keep two chips plus a "+n"; the rest stay readable to screen readers.
-  const specChips = chips.length > 0 && (
-    <div className="@container">
-      <ul className="flex flex-wrap gap-1.5">
-        {chips.map((c, i) => (
-          <li key={c} title={c} className={cn(chipClass, i >= 2 && '@max-[11rem]:sr-only')}>
-            {c}
-          </li>
-        ))}
-        {chips.length > 2 && (
-          <li aria-hidden className={cn(chipClass, 'hidden @max-[11rem]:block')}>
-            +{chips.length - 2}
-          </li>
-        )}
-      </ul>
-    </div>
+  // Key specs read as one plain line ("AM5, 16 nhân, 32 luồng"), not chips.
+  const specLine = chips.length > 0 && (
+    <p className="truncate text-sm text-muted tabular-nums" title={chips.join(', ')}>
+      {chips.join(', ')}
+    </p>
   );
 
   if (variant === 'list') {
     return (
       <article
         className={cn(
-          '@container relative rounded-md border border-border bg-surface p-3 transition-[border-color,box-shadow] duration-150 hover:border-border-strong has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
+          '@container group relative min-w-0 rounded-md border border-border bg-surface p-3 transition-[border-color] duration-150 hover:border-border-strong has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
           className,
         )}
       >
@@ -105,15 +84,14 @@ export function ProductCard({
             src={product.image}
             alt={product.name}
             category={product.category}
-            designator={false}
             sizes="96px"
             className={cn('w-20 shrink-0 @min-[26rem]:w-24', out && 'opacity-60')}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-2.5 @min-[26rem]:flex-row @min-[26rem]:items-center @min-[26rem]:gap-4">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="text-xs text-muted">{product.brand}</span>
               {title}
-              {specChips}
+              {specLine}
             </div>
             <div className="flex items-end justify-between gap-3 @min-[26rem]:shrink-0 @min-[26rem]:flex-col @min-[26rem]:gap-2">
               <div className="flex flex-col gap-1 @min-[26rem]:items-end">
@@ -136,7 +114,7 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        'relative flex flex-col overflow-hidden rounded-md border border-border bg-surface transition-[border-color,box-shadow] duration-150 hover:border-border-strong hover:shadow-raised has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring',
+        'group relative flex min-w-0 flex-col gap-3 rounded-md has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-4 has-[a:focus-visible]:outline-ring',
         className,
       )}
     >
@@ -144,16 +122,16 @@ export function ProductCard({
         src={product.image}
         alt={product.name}
         category={product.category}
-        className={cn('rounded-none', out && 'opacity-60')}
+        className={cn('group-hover:bg-surface-3', out && 'opacity-60')}
       />
-      <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-1 flex-col gap-1">
+        <div className="flex items-baseline justify-between gap-2">
           <span className="truncate text-xs text-muted">{product.brand}</span>
           <StockLine stock={product.stock} />
         </div>
         {title}
-        {specChips}
-        <div className="mt-auto flex items-end justify-between gap-3 pt-1">
+        {specLine}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
           <PriceTag price={product.price} salePrice={product.salePrice} size="sm" />
           {action && <div className="relative z-10 shrink-0">{action}</div>}
         </div>

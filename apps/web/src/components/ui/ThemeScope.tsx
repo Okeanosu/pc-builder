@@ -1,7 +1,6 @@
 'use client';
 
 import { type ComponentPropsWithoutRef, createContext, useContext, useState } from 'react';
-import { cn } from '@/lib/cn';
 
 const PortalContainerContext = createContext<HTMLElement | null>(null);
 
@@ -13,14 +12,12 @@ export function usePortalContainer(): HTMLElement | undefined {
 interface ThemeScopeProps extends ComponentPropsWithoutRef<'div'> {
   /** Pin a light/dark scope regardless of the page theme. */
   theme?: 'light' | 'dark';
-  /** Graphite "workshop" treatment used by Advisor/Builder surfaces. */
-  workshop?: boolean;
 }
 
-export function ThemeScope({ theme, workshop, className, children, ...props }: ThemeScopeProps) {
+export function ThemeScope({ theme, className, children, ...props }: ThemeScopeProps) {
   const [el, setEl] = useState<HTMLDivElement | null>(null);
   return (
-    <div ref={setEl} data-theme={theme} className={cn(workshop && 'workshop', className)} {...props}>
+    <div ref={setEl} data-theme={theme} className={className} {...props}>
       <PortalContainerContext.Provider value={el}>{children}</PortalContainerContext.Provider>
     </div>
   );

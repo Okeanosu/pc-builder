@@ -50,7 +50,7 @@ export function QtyStepper({
       </button>
       <output
         aria-live="polite"
-        className={cn('grid min-w-9 place-items-center font-mono text-sm font-semibold tabular-nums', h)}
+        className={cn('grid min-w-9 place-items-center text-sm font-semibold tabular-nums', h)}
       >
         {value}
       </output>

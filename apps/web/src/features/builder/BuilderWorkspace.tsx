@@ -202,7 +202,7 @@ export function BuilderWorkspace() {
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex max-w-xl flex-col gap-1.5">
-            <span className="font-mono text-xs font-semibold tracking-wider text-accent-ink">
+            <span className="tabular-nums text-xs font-semibold tracking-wider text-accent-ink">
               PC CUSTOMIZER
             </span>
             <h1 className="text-2xl font-bold text-fg">Tự build PC</h1>
@@ -249,7 +249,7 @@ export function BuilderWorkspace() {
           <section aria-label="Linh kiện" className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-fg">
-                Linh kiện <span className="font-mono text-sm text-muted tabular-nums">{summary.count}/8</span>
+                Linh kiện <span className="text-sm text-muted tabular-nums">{summary.count}/8</span>
               </h2>
               <ClearBuildButton disabled={empty || busy} />
             </div>

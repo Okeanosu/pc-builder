@@ -258,7 +258,7 @@ export function CheckoutView() {
             <li key={l.id} className="flex items-baseline justify-between gap-3 text-sm">
               <span className="min-w-0 text-fg">
                 <span className="line-clamp-2">{l.product.name}</span>
-                <span className="font-mono text-xs text-muted">× {l.qty}</span>
+                <span className="tabular-nums text-xs text-muted">× {l.qty}</span>
               </span>
               <Price amount={l.lineTotal} size="sm" className="shrink-0" />
             </li>

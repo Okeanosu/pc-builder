@@ -69,7 +69,7 @@ export function Field({ label, hint, error, required, id, className, children }:
 const SIZES = { sm: 'h-8 text-sm', md: 'h-10 text-sm', lg: 'h-12 text-base' } as const;
 
 export const fieldFrame =
-  'flex w-full shrink-0 items-center gap-2 rounded-sm border border-border-strong bg-surface px-3 text-fg transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/20 has-[[aria-invalid=true]]:border-danger has-[[aria-invalid=true]]:ring-danger/20 has-disabled:cursor-not-allowed has-disabled:bg-surface-2 has-disabled:opacity-60 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted';
+  'flex w-full shrink-0 items-center gap-2 rounded-sm border border-border-strong bg-surface px-3 text-fg transition-[border-color,box-shadow] duration-150 focus-within:border-fg focus-within:ring-1 focus-within:ring-fg has-[[aria-invalid=true]]:border-danger has-[[aria-invalid=true]]:ring-danger/20 has-disabled:cursor-not-allowed has-disabled:bg-surface-2 has-disabled:opacity-60 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted';
 
 export interface InputProps extends Omit<ComponentPropsWithRef<'input'>, 'size'> {
   size?: keyof typeof SIZES;
@@ -128,7 +128,7 @@ export function Textarea({ invalid, className, id, ...props }: TextareaProps) {
       aria-describedby={props['aria-describedby'] ?? field?.describedBy}
       aria-invalid={isInvalid || undefined}
       className={cn(
-        'min-h-24 w-full resize-y rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-ring focus:ring-3 focus:ring-ring/20 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-60 aria-invalid:border-danger aria-invalid:ring-danger/20',
+        'min-h-24 w-full resize-y rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-fg outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-fg focus:ring-1 focus:ring-fg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:opacity-60 aria-invalid:border-danger aria-invalid:ring-danger/20',
         className,
       )}
       {...props}

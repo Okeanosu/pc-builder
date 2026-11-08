@@ -107,7 +107,7 @@ export function AdjustStockDialog({
               <div className="grid grid-cols-3 gap-2 rounded-sm border border-border bg-surface-2 p-3 text-sm">
                 <div className="flex flex-col">
                   <span className="text-xs text-muted">Trong kho</span>
-                  <span className="flex items-center gap-1.5 font-mono tabular-nums">
+                  <span className="flex items-center gap-1.5 tabular-nums">
                     {product.stockOnHand}
                     {check?.after !== null && check?.after !== undefined && (
                       <>
@@ -121,11 +121,11 @@ export function AdjustStockDialog({
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs text-muted">Đang giữ</span>
-                  <span className="font-mono tabular-nums">{product.reserved}</span>
+                  <span className="tabular-nums">{product.reserved}</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs text-muted">Có thể bán</span>
-                  <span className="font-mono tabular-nums">
+                  <span className="tabular-nums">
                     {check?.after != null && !check.error ? check.after - product.reserved : product.stock}
                   </span>
                 </div>

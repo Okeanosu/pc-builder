@@ -120,7 +120,7 @@ function OrdersByStatus() {
     <Card className="flex flex-col">
       <div className="flex items-center justify-between gap-2 p-5 pb-3">
         <h2 className="text-base font-semibold text-fg">Đơn hàng theo trạng thái</h2>
-        <span className="font-mono text-sm text-muted tabular-nums">{counts ? `${total} đơn` : ''}</span>
+        <span className="text-sm text-muted tabular-nums">{counts ? `${total} đơn` : ''}</span>
       </div>
       {counts ? (
         <ul className="flex flex-col px-2 pb-3">
@@ -132,7 +132,7 @@ function OrdersByStatus() {
                 aria-label={`${orderStatusLabel(status)}: ${counts[status]} đơn`}
               >
                 <OrderStatusBadge status={status} />
-                <span className="font-mono text-fg tabular-nums">{counts[status]}</span>
+                <span className="text-fg tabular-nums">{counts[status]}</span>
               </Link>
             </li>
           ))}
@@ -172,9 +172,7 @@ function FallbackShare() {
       ) : (
         <>
           <p className="text-sm text-muted">
-            <span className="font-mono text-xl font-semibold text-fg tabular-nums">
-              {formatPercent(share, 1)}
-            </span>{' '}
+            <span className="text-xl font-semibold text-fg tabular-nums">{formatPercent(share, 1)}</span>{' '}
             phiên chạy bằng bộ hiểu ngôn ngữ dự phòng ({fb}/{total}) khi Gemini không phản hồi.
           </p>
           <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" aria-hidden>
@@ -243,7 +241,7 @@ function RecentOrders() {
                   <td className={td}>
                     <Link
                       href={`/admin/orders/${o.code}`}
-                      className="focus-ring rounded-xs font-mono font-medium text-accent-ink hover:underline"
+                      className="focus-ring rounded-xs tabular-nums font-medium text-accent-ink hover:underline"
                     >
                       {o.code}
                     </Link>
@@ -253,7 +251,7 @@ function RecentOrders() {
                   </td>
                   <td className={td}>
                     <div className="font-medium">{o.shippingName}</div>
-                    <div className="font-mono text-xs text-muted">{o.phone}</div>
+                    <div className="tabular-nums text-xs text-muted">{o.phone}</div>
                   </td>
                   <td className={td}>
                     <OrderStatusBadge status={o.status} type={o.type} />

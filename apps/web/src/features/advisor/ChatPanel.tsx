@@ -25,7 +25,7 @@ function Welcome({ compact, onPick }: { compact: boolean; onPick: (t: string) =>
   return (
     <div className={cn('flex flex-col gap-5', compact ? 'py-2' : 'py-6 sm:py-10')}>
       <div className="flex flex-col gap-2">
-        <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-accent-ink">
+        <span className="inline-flex items-center gap-2 tabular-nums text-xs uppercase tracking-wider text-accent-ink">
           <span
             aria-hidden
             className="size-1.5 animate-blink-dot rounded-full bg-accent shadow-(--led-shadow)"

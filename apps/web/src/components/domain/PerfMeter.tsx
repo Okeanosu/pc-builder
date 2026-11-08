@@ -29,33 +29,25 @@ interface PerfMeterProps {
   caption?: string;
   /** `sm` is a single inline row for build cards and slots. */
   size?: 'sm' | 'md';
-  /** Light the segments one after another on mount. */
+  /** @deprecated The bar no longer animates; kept so call sites compile. */
   animate?: boolean;
   className?: string;
 }
 
-/** A segmented "LED bar": one segment per 5 points, lit segments in the accent colour. */
-export function PerfMeter({ score, label, caption, size = 'md', animate = true, className }: PerfMeterProps) {
+/** A thin continuous bar: the filled share is the score out of 100, in ink. */
+export function PerfMeter({ score, label, caption, size = 'md', className }: PerfMeterProps) {
   const value = clamp(score);
   const tier = perfTier(value);
-  const count = size === 'sm' ? 10 : 20;
-  const lit = Math.round((value / 100) * count);
 
   const bar = (
-    <div className={cn('flex flex-1', size === 'sm' ? 'gap-0.5' : 'gap-[3px]')} aria-hidden>
-      {Array.from({ length: count }, (_, i) => (
-        <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length segment list
-          key={i}
-          className={cn(
-            'flex-1 rounded-[2px]',
-            size === 'sm' ? 'h-2' : 'h-2.5',
-            i < lit ? 'bg-accent shadow-(--led-shadow)' : 'bg-surface-3',
-            i < lit && animate && 'animate-led-on',
-          )}
-          style={i < lit && animate ? { animationDelay: `${i * (size === 'sm' ? 40 : 28)}ms` } : undefined}
-        />
-      ))}
+    <div
+      className={cn(
+        'relative flex-1 overflow-hidden rounded-full bg-surface-3',
+        size === 'sm' ? 'h-1' : 'h-1.5',
+      )}
+      aria-hidden
+    >
+      <span className="absolute inset-y-0 start-0 rounded-full bg-fg" style={{ width: `${value}%` }} />
     </div>
   );
 
@@ -71,7 +63,7 @@ export function PerfMeter({ score, label, caption, size = 'md', animate = true, 
   if (size === 'sm') {
     return (
       <div {...meterProps} className={cn('flex min-w-0 items-center gap-2.5', className)}>
-        <span className="w-7 font-mono text-sm font-semibold text-fg tabular-nums">{value}</span>
+        <span className="w-7 text-sm font-semibold text-fg tabular-nums">{value}</span>
         {bar}
         <span className="shrink-0 text-xs font-medium text-muted">{tier.label}</span>
       </div>
@@ -82,14 +74,14 @@ export function PerfMeter({ score, label, caption, size = 'md', animate = true, 
     <div {...meterProps} className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm font-medium text-muted">{label ?? 'Điểm hiệu năng'}</span>
-        <span className="shrink-0 font-mono tabular-nums">
+        <span className="shrink-0 tabular-nums">
           <span className="text-xl font-semibold text-fg">{value}</span>
           <span className="text-sm text-muted">/100</span>
         </span>
       </div>
       {bar}
       <div className="flex items-baseline justify-between gap-3 text-xs">
-        <span className="shrink-0 font-semibold text-accent-ink">{tier.label}</span>
+        <span className="shrink-0 font-medium text-fg">{tier.label}</span>
         {caption && <span className="text-end text-muted">{caption}</span>}
       </div>
     </div>
