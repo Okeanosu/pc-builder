@@ -19,7 +19,6 @@ import {
   Gamepad2,
   OctagonX,
   Palette,
-  Sparkles,
   TriangleAlert,
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
@@ -124,10 +123,10 @@ function PurposePicker({ value, onChange }: { value: Purpose; onChange: (p: Purp
             <label
               key={p}
               className={cn(
-                'flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
+                'flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2 text-sm transition-[border-color,color] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring',
                 checked
-                  ? 'border-accent bg-accent/12 text-fg'
-                  : 'border-border-strong bg-surface text-muted hover:border-fg/50 hover:text-fg',
+                  ? 'border-fg text-fg shadow-[0_0_0_1px_var(--color-fg)]'
+                  : 'border-border-strong text-muted hover:border-fg hover:text-fg',
               )}
             >
               <input
@@ -138,10 +137,7 @@ function PurposePicker({ value, onChange }: { value: Purpose; onChange: (p: Purp
                 onChange={() => onChange(p)}
                 className="sr-only"
               />
-              <Icon
-                className={cn('size-4 shrink-0', checked ? 'text-accent-ink' : 'text-muted')}
-                aria-hidden
-              />
+              <Icon className={cn('size-4 shrink-0', checked ? 'text-fg' : 'text-muted')} aria-hidden />
               <span className="font-medium">{PURPOSE_LABELS[p]}</span>
             </label>
           );
@@ -218,7 +214,7 @@ export function InfeasiblePanel({
   return (
     <div
       role="status"
-      className="flex flex-col gap-4 rounded-lg border border-warn/45 bg-warn/10 p-5 text-sm text-fg"
+      className="flex flex-col gap-4 rounded-md border border-warn/45 bg-warn/10 p-5 text-sm text-fg"
     >
       <div className="flex items-start gap-3">
         <TriangleAlert className="mt-0.5 size-5 shrink-0 text-warn-ink" aria-hidden />
@@ -266,11 +262,7 @@ export function QuickRecommendForm({
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-5 px-4 py-5 sm:px-5">
       <div className="flex flex-col gap-1">
-        <span className="inline-flex items-center gap-2 tabular-nums text-xs uppercase tracking-wider text-accent-ink">
-          <Sparkles className="size-3.5" aria-hidden />
-          Gợi ý nhanh
-        </span>
-        <h2 className="text-xl font-bold text-fg">Ngân sách và mục đích, nhận 3 cấu hình</h2>
+        <h2 className="text-lg font-semibold text-fg">Ngân sách và mục đích, nhận 3 cấu hình</h2>
         <p className="max-w-prose text-sm text-muted">
           Chọn từ hàng còn trong kho, đã kiểm tra tương thích. Không cần gõ câu hỏi.
         </p>
@@ -289,7 +281,7 @@ export function QuickRecommendForm({
         <div className="flex items-center gap-4">
           <Input
             name="budget"
-            mono
+            className="tabular-nums"
             inputMode="decimal"
             autoComplete="off"
             value={values.budget}
@@ -353,7 +345,6 @@ export function QuickRecommendForm({
 
       <div className="flex flex-col gap-3">
         <Button type="submit" size="lg" loading={quick.pending}>
-          {!quick.pending && <Sparkles aria-hidden />}
           Gợi ý cấu hình
         </Button>
         <ResultStatus quick={quick} />

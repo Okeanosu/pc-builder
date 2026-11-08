@@ -99,12 +99,20 @@ export function AdvisorWorkspace() {
       className="flex shrink-0 flex-col"
       style={{ height: `calc(100dvh - ${offset}px)`, minHeight: 520 }}
     >
-      <h1 className="sr-only">AI tư vấn cấu hình PC</h1>
       <Tabs
         value={tab}
         onValueChange={(v) => setTab(v as 'chat' | 'builds')}
-        className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-0 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:grid-rows-[minmax(0,1fr)] lg:gap-6 lg:p-6"
+        className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-0 lg:grid lg:grid-cols-[minmax(22rem,5fr)_minmax(0,8fr)] lg:grid-rows-[auto_minmax(0,1fr)]"
       >
+        {/* Phones keep the title for screen readers only: the two tabs below are the page's real header. */}
+        <div className="flex items-baseline justify-between gap-6 border-border max-lg:sr-only lg:col-span-2 lg:border-b lg:px-6 lg:py-4">
+          <h1 className="text-xl font-semibold font-stretch-expanded tracking-[-0.02em] text-fg">
+            AI tư vấn cấu hình
+          </h1>
+          <p className="text-sm text-muted max-xl:hidden">
+            Linh kiện và giá lấy từ kho; AI chỉ giải thích, không tự đặt ra sản phẩm hay giá.
+          </p>
+        </div>
         <TabsList className="mx-4 mt-3 mb-3 grid w-auto shrink-0 grid-cols-2 lg:hidden">
           <TabsTrigger value="chat" className="justify-center">
             {mode === 'chat' ? <MessagesSquare aria-hidden /> : <ListChecks aria-hidden />}
@@ -113,18 +121,14 @@ export function AdvisorWorkspace() {
           <TabsTrigger value="builds" className="justify-center">
             <PanelsTopLeft aria-hidden />
             Cấu hình
-            {builds.length > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-xs text-accent-fg tabular-nums">
-                {builds.length}
-              </span>
-            )}
+            {builds.length > 0 && <span className="text-muted tabular-nums">{builds.length}</span>}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent
           value="chat"
           forceMount
-          className="flex min-h-0 flex-1 flex-col data-[state=inactive]:max-lg:hidden lg:rounded-lg lg:border lg:border-border lg:bg-bg/85 lg:shadow-raised lg:backdrop-blur-sm"
+          className="flex min-h-0 flex-1 flex-col rounded-none data-[state=inactive]:max-lg:hidden lg:border-e lg:border-border"
         >
           <Tabs
             value={mode}
@@ -152,7 +156,7 @@ export function AdvisorWorkspace() {
             </TabsContent>
             <TabsContent
               value="form"
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-none"
+              className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-none"
             >
               <QuickRecommendForm quick={quick} values={formValues} onChange={setFormValues} />
             </TabsContent>
@@ -162,7 +166,7 @@ export function AdvisorWorkspace() {
         <TabsContent
           value="builds"
           forceMount
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 data-[state=inactive]:max-lg:hidden lg:px-1 lg:pb-2"
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-none px-4 pb-6 data-[state=inactive]:max-lg:hidden lg:px-6 lg:pt-5"
         >
           <BuildCompare
             builds={compare.builds}
@@ -178,7 +182,6 @@ export function AdvisorWorkspace() {
                 <InfeasiblePanel outcome={quick.outcome} onUseBudget={retryWithBudget} />
               ) : undefined
             }
-            className="lg:pt-1"
           />
         </TabsContent>
       </Tabs>

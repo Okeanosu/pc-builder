@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 function BuilderFallback() {
   return (
     <WorkshopSurface className="grid min-h-[70dvh] flex-1 place-items-center">
-      <Spinner size="lg" label="Đang mở Customizer" className="text-accent-ink" />
+      <Spinner size="lg" label="Đang mở Customizer" className="text-muted" />
     </WorkshopSurface>
   );
 }

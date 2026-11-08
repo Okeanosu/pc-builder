@@ -1,9 +1,10 @@
 'use client';
 
 import { CATEGORY_KEYS, type CategoryKey, PURPOSE_LABELS, PURPOSES, type Purpose } from '@pc/shared';
-import { FileDown, Save, Sparkles, Trash2 } from 'lucide-react';
+import { FileDown, MessageSquareText, Save, Trash2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AllocationBar } from '@/components/domain/AllocationBar';
 import { WorkshopSurface } from '@/components/layout/WorkshopSurface';
 import { Button } from '@/components/ui/Button';
 import {
@@ -18,8 +19,10 @@ import { Field, Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
+import { SheetTotal } from '@/features/advisor/BuildSheet';
 import { useHeaderOffset } from '@/features/advisor/useHeaderOffset';
 import { ApiError } from '@/lib/api';
+import { formatVnd } from '@/lib/format';
 import { useBuilderStore } from '@/stores/builder';
 import { BuildSlot } from './BuildSlot';
 import { type BuildSummary, BuildSummaryBar, BuildSummaryPanel, IssueList } from './BuildSummaryBar';
@@ -106,7 +109,7 @@ function BudgetInput({ disabled }: { disabled: boolean }) {
     <Field label="Ngân sách" hint="Không bắt buộc. Có ngân sách thì cảnh báo khi vượt hoặc dùng quá ít.">
       <Input
         inputMode="numeric"
-        mono
+        className="tabular-nums"
         placeholder="Ví dụ 25.000.000"
         value={budget ? vnd.format(budget) : ''}
         onChange={(e) => {
@@ -194,6 +197,13 @@ export function BuilderWorkspace() {
     saving: actions.saving,
     addingToCart: actions.addingToCart,
   };
+  const allocation = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(summary.amounts).map(([k, v]) => [k, (v ?? 0) / (summary.total || 1)]),
+      ) as BuildSummary['amounts'],
+    [summary],
+  );
   const empty = summary.count === 0;
   const busy = !ready || loadingBuild;
 
@@ -201,11 +211,10 @@ export function BuilderWorkspace() {
     <WorkshopSurface data-workshop-shell className="flex min-h-dvh flex-1 flex-col">
       <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex max-w-xl flex-col gap-1.5">
-            <span className="tabular-nums text-xs font-semibold tracking-wider text-accent-ink">
-              PC CUSTOMIZER
-            </span>
-            <h1 className="text-2xl font-bold text-fg">Tự build PC</h1>
+          <div className="flex max-w-xl flex-col gap-2">
+            <h1 className="text-2xl font-semibold font-stretch-expanded tracking-[-0.03em] text-fg sm:text-3xl">
+              Tự build PC
+            </h1>
             <p className="text-sm text-muted">
               Chọn từng linh kiện; tương thích được kiểm tra ngay khi bạn chọn, kể cả trước khi bấm chọn trong
               danh sách.
@@ -235,8 +244,8 @@ export function BuilderWorkspace() {
             <Save aria-hidden />
             Lưu &amp; chia sẻ
           </Button>
-          <Button size="sm" variant="workshop" onClick={actions.askAi}>
-            <Sparkles aria-hidden />
+          <Button size="sm" variant="outline" onClick={actions.askAi}>
+            <MessageSquareText aria-hidden />
             Hỏi AI tối ưu
           </Button>
           <Button size="sm" variant="ghost" onClick={actions.quote} disabled={empty}>
@@ -245,42 +254,71 @@ export function BuilderWorkspace() {
           </Button>
         </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <section aria-label="Linh kiện" className="flex flex-col gap-4">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10">
+          <section aria-label="Linh kiện" className="@container flex min-w-0 flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-fg">
-                Linh kiện <span className="text-sm text-muted tabular-nums">{summary.count}/8</span>
+              <h2 className="text-lg font-semibold text-fg">
+                Linh kiện{' '}
+                <span className="text-sm font-normal text-muted tabular-nums">{summary.count}/8</span>
               </h2>
               <ClearBuildButton disabled={empty || busy} />
             </div>
             {summary.issues.length > 0 && (
-              <div className="rounded-md border border-border bg-surface p-4 lg:hidden" role="status">
+              <div className="border-y border-border py-3 lg:hidden" role="status">
                 <IssueList issues={summary.issues} />
               </div>
             )}
             {busy ? (
-              <ul className="flex flex-col gap-4" aria-busy>
-                {CATEGORY_KEYS.map((k) => (
-                  <li key={k} className="grid gap-4 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
-                    <Skeleton className="h-4 w-20 sm:mt-3" />
-                    <Skeleton className="h-24 w-full rounded-md" />
-                  </li>
-                ))}
-              </ul>
+              <div className="flex flex-col gap-4" aria-busy>
+                <Skeleton className="h-2 w-full" />
+                <ul className="flex flex-col">
+                  {CATEGORY_KEYS.map((k) => (
+                    <li key={k} className="flex items-center gap-4 border-b border-border py-4">
+                      <Skeleton className="h-4 w-24 shrink-0" />
+                      <Skeleton className="h-4 flex-1" />
+                      <Skeleton className="h-4 w-16 shrink-0" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : (
-              <ol className="flex flex-col gap-4">
-                {CATEGORY_KEYS.map((k) => (
-                  <BuildSlot
-                    key={k}
-                    category={k}
-                    product={parts[k]}
-                    severity={severity[k]}
-                    issues={report.issues.filter((i) => i.code !== 'C14' && i.categories.includes(k))}
-                    onPick={() => setPicking(k)}
-                    onRemove={() => remove(k)}
+              <div className="flex flex-col gap-4">
+                {summary.count > 0 ? (
+                  <AllocationBar allocation={allocation} legend="none" size="sm" />
+                ) : (
+                  <div className="h-2 rounded-xs bg-surface-2" aria-hidden />
+                )}
+                <div className="flex flex-col">
+                  <ol className="flex flex-col">
+                    {CATEGORY_KEYS.map((k) => (
+                      <BuildSlot
+                        key={k}
+                        category={k}
+                        product={parts[k]}
+                        severity={severity[k]}
+                        issues={report.issues.filter((i) => i.code !== 'C14' && i.categories.includes(k))}
+                        onPick={() => setPicking(k)}
+                        onRemove={() => remove(k)}
+                      />
+                    ))}
+                  </ol>
+                  <SheetTotal
+                    label={`Tổng ${summary.count}/8 linh kiện`}
+                    note={
+                      budget ? (
+                        summary.total > budget ? (
+                          <span className="font-medium text-danger-ink">
+                            vượt ngân sách {formatVnd(summary.total - budget)}
+                          </span>
+                        ) : (
+                          `còn dư ${formatVnd(budget - summary.total)}`
+                        )
+                      ) : undefined
+                    }
+                    amount={summary.total}
                   />
-                ))}
-              </ol>
+                </div>
+              </div>
             )}
           </section>
 

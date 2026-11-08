@@ -24,17 +24,32 @@ async function BuildContent({ params }: Pick<PageProps<'/builds/[id]'>, 'params'
 
 function BuildSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8" aria-busy>
-      <Skeleton className="h-4 w-48" />
-      <Skeleton className="h-8 w-80 max-w-full" />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-8">
-        <div className="flex flex-col gap-3">
-          {Array.from({ length: 8 }, (_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
-            <Skeleton key={i} className="h-24 w-full rounded-md" />
-          ))}
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 lg:px-6 lg:py-8" aria-busy>
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-10 w-96 max-w-full" />
+        <Skeleton className="h-5 w-72 max-w-full" />
+      </div>
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-2 w-full" />
+          <div className="flex flex-col">
+            {Array.from({ length: 8 }, (_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
+              <div key={i} className="flex items-center gap-4 border-b border-border py-2.5">
+                <Skeleton className="h-3.5 w-20" />
+                <Skeleton className="h-3.5 flex-1" />
+                <Skeleton className="h-3.5 w-16" />
+              </div>
+            ))}
+          </div>
         </div>
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-12 w-full rounded-full" />
+        </div>
       </div>
     </div>
   );

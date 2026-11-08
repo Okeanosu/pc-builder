@@ -63,13 +63,13 @@ const components: Components = {
     <ul className="flex list-disc flex-col gap-1 ps-5 marker:text-muted" {...props} />
   ),
   ol: ({ node: _n, ...props }) => (
-    <ol className="flex list-decimal flex-col gap-1 ps-5 marker:font-mono marker:text-muted" {...props} />
+    <ol className="flex list-decimal flex-col gap-1 ps-5 marker:text-muted marker:tabular-nums" {...props} />
   ),
   strong: ({ node: _n, ...props }) => <strong className="font-semibold text-fg" {...props} />,
   a: ({ node: _n, href, ...props }) => (
     <a
       href={href}
-      className="font-medium text-accent-ink underline underline-offset-4"
+      className="focus-ring rounded-xs text-fg underline decoration-border-strong underline-offset-4 hover:decoration-current"
       {...(href?.startsWith('/') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
       {...props}
     />

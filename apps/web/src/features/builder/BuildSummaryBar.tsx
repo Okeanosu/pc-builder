@@ -5,13 +5,12 @@ import type { CategoryKey } from '@pc/shared';
 import {
   FileDown,
   Gauge,
+  MessageSquareText,
   OctagonX,
   Save,
   ShoppingCart,
-  Sparkles,
   TriangleExclamationPoint,
 } from 'lucide-react';
-import { AllocationBar } from '@/components/domain/AllocationBar';
 import { CompatibilityBadge, getCompatibilityStatus } from '@/components/domain/CompatibilityBadge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -122,7 +121,7 @@ function statusSentence(issues: readonly CompatibilityIssue[], count: number): s
   return count === 8 ? 'Đủ 8 linh kiện và tương thích.' : `Đã chọn ${count}/8 linh kiện, chưa có xung đột.`;
 }
 
-/** Desktop "Tổng quan" column: status, total, budget, power, allocation, issues and actions. */
+/** Desktop summary column: status, total, budget, power, issues and actions (the split is atop the sheet). */
 export function BuildSummaryPanel({
   summary,
   actions,
@@ -132,7 +131,7 @@ export function BuildSummaryPanel({
   actions: BuildSummaryActions;
   className?: string;
 }) {
-  const { total, count, issues, budget, amounts } = summary;
+  const { total, count, issues, budget } = summary;
   const empty = count === 0;
   return (
     <Card className={cn('flex flex-col gap-5 p-5', className)}>
@@ -158,17 +157,6 @@ export function BuildSummaryPanel({
       </div>
 
       {!empty && <WattageLine summary={summary} />}
-      {count > 1 && (
-        <AllocationBar
-          allocation={Object.fromEntries(
-            Object.entries(amounts).map(([k, v]) => [k, (v ?? 0) / (total || 1)]),
-          )}
-          amounts={amounts}
-          total={total}
-          size="sm"
-          legend="compact"
-        />
-      )}
       <IssueList issues={issues} className="border-t border-border pt-4" />
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
@@ -180,8 +168,8 @@ export function BuildSummaryPanel({
           <Save aria-hidden />
           Lưu &amp; chia sẻ
         </Button>
-        <Button variant="workshop" onClick={actions.onAskAi}>
-          <Sparkles aria-hidden />
+        <Button variant="outline" onClick={actions.onAskAi}>
+          <MessageSquareText aria-hidden />
           Hỏi AI tối ưu
         </Button>
         <Button
@@ -212,7 +200,7 @@ export function BuildSummaryBar({
   return (
     <div
       className={cn(
-        'sticky bottom-0 z-30 border-t border-border bg-surface/92 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur',
+        'sticky bottom-0 z-30 border-t border-border bg-bg px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
         className,
       )}
     >

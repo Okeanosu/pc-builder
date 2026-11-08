@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 function AdvisorFallback() {
   return (
     <WorkshopSurface className="grid min-h-[70dvh] flex-1 place-items-center">
-      <Spinner size="lg" label="Đang mở trợ lý tư vấn" className="text-accent-ink" />
+      <Spinner size="lg" label="Đang mở trợ lý tư vấn" className="text-muted" />
     </WorkshopSurface>
   );
 }

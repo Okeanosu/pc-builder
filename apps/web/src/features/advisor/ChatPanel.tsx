@@ -25,14 +25,7 @@ function Welcome({ compact, onPick }: { compact: boolean; onPick: (t: string) =>
   return (
     <div className={cn('flex flex-col gap-5', compact ? 'py-2' : 'py-6 sm:py-10')}>
       <div className="flex flex-col gap-2">
-        <span className="inline-flex items-center gap-2 tabular-nums text-xs uppercase tracking-wider text-accent-ink">
-          <span
-            aria-hidden
-            className="size-1.5 animate-blink-dot rounded-full bg-accent shadow-(--led-shadow)"
-          />
-          Trợ lý cấu hình PC
-        </span>
-        <h2 className={cn('font-bold text-fg', compact ? 'text-lg' : 'text-xl sm:text-2xl')}>
+        <h2 className={cn('font-semibold text-fg', compact ? 'text-base' : 'text-lg')}>
           Nói nhu cầu, AI chọn cấu hình từ hàng có sẵn
         </h2>
         <p className="max-w-prose text-sm text-muted">
@@ -69,7 +62,7 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  // Text is revealed gradually and cards animate in, so follow size changes too, not just store updates.
+  // Text is revealed gradually and cards fade in, so follow size changes too, not just store updates.
   useEffect(() => {
     const el = listRef.current;
     const content = contentRef.current;
@@ -89,15 +82,8 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
       <div className="flex min-h-11 shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2">
-        <span className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-muted">
-          <span
-            aria-hidden
-            className={cn(
-              'size-1.5 shrink-0 rounded-full bg-accent shadow-(--led-shadow)',
-              streaming && 'animate-blink-dot',
-            )}
-          />
-          <span className="truncate">{streaming ? 'Đang trả lời…' : 'Trợ lý cấu hình'}</span>
+        <span className="min-w-0 truncate text-sm font-medium text-muted">
+          {streaming ? 'Đang trả lời…' : 'Trợ lý cấu hình'}
         </span>
         <div className="flex shrink-0 items-center gap-1">
           {actions}
@@ -125,7 +111,7 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
         aria-live="polite"
         aria-busy={streaming}
         aria-label="Hội thoại với trợ lý"
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4"
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4"
       >
         <div ref={contentRef}>
           {historyStatus !== 'ready' && messages.length === 0 ? (
@@ -161,7 +147,7 @@ export function ChatPanel({ variant = 'page', onShowBuilds, actions, className }
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-border bg-bg/70 px-3 pt-3 pb-2 backdrop-blur sm:px-4">
+      <div className="shrink-0 border-t border-border bg-bg px-3 pt-3 pb-2 sm:px-4">
         <Composer
           onSend={sendAndFollow}
           onStop={stop}

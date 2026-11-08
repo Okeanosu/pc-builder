@@ -32,26 +32,32 @@ const CHAT_EMPTY = {
     'Nhập nhu cầu và ngân sách, ví dụ “chơi game 25 triệu”. Ba cấu hình tương thích, chọn từ hàng trong kho, sẽ xếp cạnh nhau để so sánh.',
 };
 
-function SkeletonCard({ index }: { index: number }) {
+function SkeletonCard() {
   return (
-    <Card
-      className="flex w-[min(20rem,85cqw)] shrink-0 animate-card-in snap-start flex-col gap-4 p-5 @min-[44rem]:w-auto"
-      style={{ animationDelay: `${index * 110}ms` }}
-    >
+    <Card className="flex w-[min(20rem,85cqw)] shrink-0 snap-start flex-col gap-4 p-4 sm:p-5 @min-[44rem]:w-auto">
       <div className="flex justify-between">
-        <Skeleton className="h-6 w-24" />
+        <Skeleton className="h-5 w-24" />
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
-      <Skeleton className="h-8 w-40" />
+      <Skeleton className="h-1 w-full" />
       <Skeleton className="h-2 w-full" />
-      <Skeleton className="h-2 w-full" />
-      <div className="flex flex-col gap-2.5 border-t border-border pt-3">
+      <div className="flex flex-col">
         {Array.from({ length: 8 }, (_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows
-          <Skeleton key={i} className="h-3.5 w-full" />
+          <div key={i} className="flex flex-col gap-1.5 border-b border-border py-2">
+            <div className="flex justify-between gap-4">
+              <Skeleton className="h-3.5 w-16" />
+              <Skeleton className="h-3.5 w-14" />
+            </div>
+            <Skeleton className="h-3.5 w-4/5" />
+          </div>
         ))}
+        <div className="flex justify-between gap-4 border-t-2 border-border pt-3">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-6 w-28" />
+        </div>
       </div>
-      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full rounded-full" />
     </Card>
   );
 }
@@ -87,7 +93,7 @@ export function BuildCompare({
           </p>
         </div>
         {pending && (
-          <span className="inline-flex items-center gap-2 text-sm text-accent-ink" role="status">
+          <span className="inline-flex items-center gap-2 text-sm text-muted" role="status">
             <Spinner size="sm" label={null} />
             Đang chọn linh kiện trong kho…
           </span>
@@ -97,25 +103,27 @@ export function BuildCompare({
       {pending ? (
         <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0">
           {[0, 1, 2].map((i) => (
-            <SkeletonCard key={i} index={i} />
+            <SkeletonCard key={i} />
           ))}
         </div>
       ) : builds.length === 0 ? (
         (emptySlot ?? (
-          <Card className="border-dashed bg-transparent">
-            <EmptyState icon={<Cpu />} title={empty.title} description={empty.description} />
-          </Card>
+          <EmptyState
+            icon={<Cpu />}
+            title={empty.title}
+            description={empty.description}
+            className="border-y border-border"
+          />
         ))
       ) : (
         <div
           key={builds.map((b) => b.id).join()}
           className="no-scrollbar -mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0"
         >
-          {builds.map((b, i) => (
+          {builds.map((b) => (
             <BuildCard
               key={b.id}
               build={b}
-              index={i}
               selected={b.id === selectedId}
               onSelect={() => onSelect(b.id)}
               className="w-[min(20rem,85cqw)] shrink-0 snap-start @min-[44rem]:w-auto"

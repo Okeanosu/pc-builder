@@ -68,7 +68,7 @@ export function Composer({
         submit();
       }}
     >
-      <div className="flex items-end gap-2 rounded-md border border-border-strong bg-surface p-1.5 ps-3.5 shadow-raised transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/20">
+      <div className="flex items-end gap-2 rounded-[22px] border border-border-strong bg-bg p-1.5 ps-4 transition-[border-color,box-shadow] duration-150 focus-within:border-fg focus-within:ring-1 focus-within:ring-fg">
         <textarea
           ref={ref}
           rows={1}
@@ -93,8 +93,8 @@ export function Composer({
       </div>
       <div className="flex min-h-6 items-center justify-between gap-3 px-1">
         <span className="text-xs text-muted max-sm:hidden">
-          <kbd className="font-mono">Enter</kbd> để gửi · <kbd className="font-mono">Shift+Enter</kbd> xuống
-          dòng
+          <kbd className="font-sans font-medium">Enter</kbd> để gửi ·{' '}
+          <kbd className="font-sans font-medium">Shift+Enter</kbd> xuống dòng
         </span>
         <span className="ms-auto flex items-center gap-2">
           {nearLimit && (

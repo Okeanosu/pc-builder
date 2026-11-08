@@ -217,8 +217,8 @@ function PickerContent({
                       className={cn(
                         'focus-ring inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors',
                         on
-                          ? 'border-accent bg-accent/15 font-semibold text-accent-ink'
-                          : 'border-border-strong text-fg hover:bg-surface-2',
+                          ? 'border-fg font-medium text-fg shadow-[inset_0_0_0_1px_var(--color-fg)]'
+                          : 'border-border-strong text-fg hover:border-fg',
                       )}
                     >
                       {formatSpecValue(f.type === 'boolean' ? v.value === 'true' : v.value, { key: f.key }) ??
@@ -296,7 +296,7 @@ function PickerContent({
                   maxSpecs={3}
                   className={cn(
                     incompatible && 'opacity-55 hover:opacity-90',
-                    isCurrent && 'border-accent shadow-[0_0_0_1px_var(--color-accent)]',
+                    isCurrent && 'border-fg shadow-[0_0_0_1px_var(--color-fg)] hover:border-fg',
                   )}
                   action={
                     isCurrent ? (

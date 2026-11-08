@@ -24,8 +24,8 @@ export function ToolStatusChip({ chip, className }: { chip: ToolChip; className?
   return (
     <span
       className={cn(
-        'inline-flex h-7 max-w-full animate-pop-in items-center gap-1.5 rounded-full border px-3 text-xs',
-        running ? 'border-accent/40 bg-accent/10 text-accent-ink' : 'border-border bg-surface text-muted',
+        'inline-flex h-6 max-w-full animate-fade-in items-center gap-1.5 text-sm',
+        running ? 'text-fg' : 'text-muted',
         className,
       )}
     >

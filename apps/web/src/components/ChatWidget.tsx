@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/Drawer';
+import { Spinner } from '@/components/ui/Spinner';
 import { ThemeScope } from '@/components/ui/ThemeScope';
 import { ChatPanel } from '@/features/advisor/ChatPanel';
 import { cn } from '@/lib/cn';
@@ -31,17 +32,9 @@ function ChatWidgetInner() {
             )}
             aria-label="Mở trợ lý AI tư vấn cấu hình"
           >
-            <span className="relative">
-              <MessageCircle aria-hidden />
-              <span
-                aria-hidden
-                className={cn(
-                  'absolute -end-0.5 -top-0.5 size-2 rounded-full bg-cyan shadow-[0_0_6px_var(--color-cyan)]',
-                  streaming ? 'animate-blink-dot' : 'opacity-90',
-                )}
-              />
-            </span>
-            <span className="max-sm:sr-only">AI tư vấn</span>
+            {/* While an answer is still arriving the icon becomes a spinner; the label says why. */}
+            {streaming ? <Spinner size="md" label={null} /> : <MessageCircle aria-hidden />}
+            <span className="max-sm:sr-only">{streaming ? 'Đang trả lời…' : 'AI tư vấn'}</span>
           </Button>
         </DrawerTrigger>
         <DrawerContent

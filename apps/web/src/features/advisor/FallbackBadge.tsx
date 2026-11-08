@@ -11,7 +11,7 @@ export function FallbackBadge({ className }: { className?: string }) {
       <button
         type="button"
         className={cn(
-          'focus-ring inline-flex h-6 shrink-0 cursor-help items-center gap-1.5 rounded-full border border-warn/45 bg-warn/14 px-2.5 text-xs font-semibold text-warn-ink',
+          'focus-ring inline-flex h-6 shrink-0 cursor-help items-center gap-1.5 rounded-full bg-warn/14 px-2.5 text-xs font-medium text-warn-ink',
           className,
         )}
       >

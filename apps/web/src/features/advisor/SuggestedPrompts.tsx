@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export const SUGGESTED_PROMPTS = [
@@ -26,9 +25,8 @@ export function SuggestedPrompts({
             type="button"
             disabled={disabled}
             onClick={() => onPick(p)}
-            className="focus-ring inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3.5 text-sm text-fg transition-colors hover:border-accent hover:bg-accent/10 disabled:opacity-45"
+            className="focus-ring inline-flex h-9 items-center rounded-full bg-surface-2 px-3.5 text-sm text-fg transition-colors hover:bg-surface-3 disabled:opacity-45"
           >
-            <Sparkles className="size-3.5 text-accent-ink" aria-hidden />
             {p}
           </button>
         </li>

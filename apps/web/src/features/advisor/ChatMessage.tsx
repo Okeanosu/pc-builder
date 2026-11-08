@@ -1,9 +1,10 @@
 'use client';
 
-import { type BuildDTO, formatVndShort } from '@pc/shared';
+import { type BuildDTO, CATEGORY_KEYS, formatVndShort } from '@pc/shared';
 import { ArrowRight, LogIn, OctagonX, RotateCcw, Square } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { CATEGORY_COLOR } from '@/components/domain/category';
 import { ProductCard } from '@/components/domain/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
@@ -26,18 +27,29 @@ interface ChatMessageProps {
   className?: string;
 }
 
-function TypingDots() {
+/** Before the first words arrive: plain text, announced once. */
+function Thinking() {
   return (
-    <span className="inline-flex h-7 items-center gap-1" role="status">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          aria-hidden
-          className="size-1.5 animate-blink-dot rounded-full bg-accent"
-          style={{ animationDelay: `${i * 160}ms` }}
-        />
-      ))}
-      <span className="sr-only">Trợ lý đang trả lời</span>
+    <p className="text-sm text-muted" role="status">
+      Đang soạn câu trả lời…
+    </p>
+  );
+}
+
+/** The builds' eight-colour split as a thin strip, so each line reads as the same sheet as the compare panel. */
+function AllocationStrip({ allocation }: { allocation: BuildDTO['allocation'] }) {
+  return (
+    <span aria-hidden className="flex h-1.5 w-full gap-px overflow-hidden rounded-xs">
+      {CATEGORY_KEYS.map((key) => {
+        const share = allocation[key] ?? 0;
+        return share > 0 ? (
+          <span
+            key={key}
+            className="h-full min-w-[2px] basis-0"
+            style={{ flexGrow: share, backgroundColor: CATEGORY_COLOR[key] }}
+          />
+        ) : null;
+      })}
     </span>
   );
 }
@@ -54,33 +66,37 @@ function BuildsSummary({
   onShowBuilds?: () => void;
 }) {
   return (
-    <div className="flex animate-card-in flex-col gap-1 rounded-md border border-border bg-surface/80 p-1.5">
-      <p className="px-2 pt-1 text-xs font-medium text-muted">
-        {builds.length} cấu hình tương thích, giá lấy từ kho
-      </p>
+    <div className="flex animate-fade-in flex-col gap-1.5">
+      <p className="text-sm text-muted">{builds.length} cấu hình tương thích, giá lấy từ kho</p>
       <ul className="flex flex-col">
-        {builds.map((b) => (
-          <li key={b.id}>
-            <button
-              type="button"
-              onClick={() => {
-                onSelectBuild?.(b.id);
-                onShowBuilds?.();
-              }}
-              className={cn(
-                'focus-ring flex w-full items-center justify-between gap-3 rounded-sm px-2 py-1.5 text-start text-sm transition-colors hover:bg-surface-2',
-                b.id === selectedBuildId && 'bg-surface-2',
-              )}
-            >
-              <span className="font-medium text-fg">{buildTitle(b)}</span>
-              <span className="flex items-center gap-2">
-                <span className="text-sm text-fg tabular-nums">{formatVndShort(b.totalPrice)}</span>
-                <span className="text-xs text-muted tabular-nums">{Math.round(b.score)} điểm</span>
-                <ArrowRight className="size-3.5 text-muted" aria-hidden />
-              </span>
-            </button>
-          </li>
-        ))}
+        {builds.map((b) => {
+          const selected = b.id === selectedBuildId;
+          return (
+            <li key={b.id} className="border-b border-border">
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectBuild?.(b.id);
+                  onShowBuilds?.();
+                }}
+                className={cn(
+                  'focus-ring group -mx-2 grid w-[calc(100%+1rem)] grid-cols-[minmax(0,1fr)_3.5rem_auto_auto] items-center gap-x-3 rounded-sm px-2 py-2.5 text-start text-sm transition-colors hover:bg-surface-2 sm:grid-cols-[minmax(0,1fr)_6rem_auto_auto] sm:gap-x-4',
+                  selected && 'bg-surface-2',
+                )}
+              >
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className={cn('truncate text-fg', selected ? 'font-semibold' : 'font-medium')}>
+                    {buildTitle(b)}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted tabular-nums">{Math.round(b.score)} điểm</span>
+                </span>
+                <AllocationStrip allocation={b.allocation} />
+                <span className="text-end text-fg tabular-nums">{formatVndShort(b.totalPrice)}</span>
+                <ArrowRight className="size-3.5 text-muted group-hover:text-fg" aria-hidden />
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -101,7 +117,7 @@ function AssistantBody({
   return (
     <div className="flex min-w-0 flex-col gap-3">
       {tools.length > 0 && (
-        <ul className="flex min-w-0 flex-wrap gap-2" aria-label="Trạng thái tra cứu">
+        <ul className="flex min-w-0 flex-wrap gap-x-4 gap-y-1" aria-label="Trạng thái tra cứu">
           {tools.map((t) => (
             <li key={t.key} className="min-w-0 max-w-full">
               <ToolStatusChip chip={t} />
@@ -113,11 +129,10 @@ function AssistantBody({
       {builds.length > 0 &&
         (buildsDisplay === 'cards' ? (
           <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1">
-            {builds.map((b, i) => (
+            {builds.map((b) => (
               <BuildCard
                 key={b.id}
                 build={b}
-                index={i}
                 selected={b.id === selectedBuildId}
                 onSelect={() => onSelectBuild?.(b.id)}
                 className="w-[17.5rem] shrink-0 snap-start"
@@ -133,7 +148,7 @@ function AssistantBody({
           />
         ))}
 
-      {shown ? <Markdown text={shown} streaming={revealing} /> : thinking && <TypingDots />}
+      {shown ? <Markdown text={shown} streaming={revealing} /> : thinking && <Thinking />}
 
       {products.length > 0 && (
         <ul className="flex flex-col gap-2" aria-label="Sản phẩm gợi ý">
@@ -192,7 +207,7 @@ export function ChatMessage({ message, className, ...rest }: ChatMessageProps) {
   if (message.role === 'user') {
     return (
       <div className={cn('flex justify-end', className)}>
-        <p className="max-w-[85%] whitespace-pre-wrap rounded-md rounded-ee-xs bg-accent px-4 py-2.5 text-sm font-medium text-accent-fg [overflow-wrap:anywhere] sm:max-w-md">
+        <p className="max-w-[85%] whitespace-pre-wrap rounded-md rounded-ee-xs bg-surface-2 px-4 py-2.5 text-base text-fg [overflow-wrap:anywhere] sm:max-w-md">
           <span className="sr-only">Bạn: </span>
           {message.text}
         </p>
