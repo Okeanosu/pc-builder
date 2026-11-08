@@ -101,7 +101,7 @@ export function BuildCompare({
       </div>
 
       {pending ? (
-        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0">
+        <div className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0">
           {[0, 1, 2].map((i) => (
             <SkeletonCard key={i} />
           ))}
@@ -118,7 +118,7 @@ export function BuildCompare({
       ) : (
         <div
           key={builds.map((b) => b.id).join()}
-          className="no-scrollbar -mx-4 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0"
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 items-stretch gap-4 overflow-x-auto px-4 pb-1 @min-[44rem]:mx-0 @min-[44rem]:grid @min-[44rem]:grid-cols-3 @min-[44rem]:overflow-visible @min-[44rem]:px-0"
         >
           {builds.map((b) => (
             <BuildCard
