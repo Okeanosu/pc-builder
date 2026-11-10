@@ -11,6 +11,45 @@ spec.loader.exec_module(script)
 FPS, W, H = 30, 1920, 1080
 LEAD, GAP, TAIL, FADE = 0.5, 0.35, 0.7, 0.4
 VOICE, RATE = 'Linh', '165'
+# Neural voice (Microsoft Edge read-aloud); the service drops some requests at random, so each line is retried.
+NEURAL_VOICE, NEURAL_RATE = os.environ.get('TTS_VOICE', 'vi-VN-NamMinhNeural'), os.environ.get('TTS_RATE', '+0%')
+ENGINE = os.environ.get('TTS', 'edge')
+
+# Words a Vietnamese neural voice tends to misread; subtitles keep the original spelling.
+SPEECH_FIXES = [
+    ('Next.js', 'Next JS'), ('Node.js', 'Node JS'), ('PostgreSQL', 'Postgres'), ('JSONB', 'JSON B'),
+    ('AC-3', 'A C 3'), ('Branch & Bound', 'Branch and Bound'), ('recommend_builds', 'recommend builds'),
+    ('VietQR', 'Việt QR'), (' (VPS)', ''), (' (CSP)', ''), (' (MCKP)', ''), ('1.512', '1512'),
+    ('2.000', '2000'), ('1.000', '1000'), ('…', '.'), ('“', ''), ('”', ''),
+]
+
+def speech_text(cap):
+    for a, b in SPEECH_FIXES:
+        cap = cap.replace(a, b)
+    return cap
+
+def tts_edge(text, mp3):
+    import asyncio, hashlib, shutil, time, edge_tts
+    # Cache by voice + text: the service throttles bursts, so finished lines are never requested again.
+    key = hashlib.sha1(f'{NEURAL_VOICE}|{NEURAL_RATE}|{text}'.encode()).hexdigest()[:16]
+    cached = f'{work}/tts-cache/{key}.mp3'
+    os.makedirs(f'{work}/tts-cache', exist_ok=True)
+    if os.path.exists(cached) and os.path.getsize(cached) > 1000:
+        shutil.copy(cached, mp3)
+        return
+    async def go():
+        await edge_tts.Communicate(text, NEURAL_VOICE, rate=NEURAL_RATE).save(cached)
+    for attempt in range(12):
+        try:
+            asyncio.run(go())
+            if os.path.getsize(cached) > 1000:
+                shutil.copy(cached, mp3)
+                time.sleep(1.2)  # pace requests to stay under the service's burst limit
+                return
+        except Exception:
+            pass
+        time.sleep(min(3 + 2 * attempt, 20))
+    sys.exit(f'TTS failed for: {text[:60]}')
 os.makedirs(f'{work}/build', exist_ok=True)
 
 def run(cmd):
@@ -36,16 +75,32 @@ def zoompan(motion, frames):
     y = f'({y0}+({y1 - y0})*{e})*ih'
     return f"scale=7680:4320,zoompan=z='{z}':x='{x}':y='{y}':d={frames}:s={W}x{H}:fps={FPS}"
 
+# Fetch every line's speech first: the service throttles, and a failure then costs no re-rendering.
+if ENGINE == 'edge':
+    for sc in script.SCENES[:limit]:
+        for li, (_say, cap) in enumerate(sc['lines']):
+            tts_edge(speech_text(cap), f"{work}/build/{sc['id']}-{li}.mp3")
+    print('speech ready', flush=True)
+
 timeline, srt, t_global = [], [], 0.0
 scene_files = []
 for si, scene in enumerate(script.SCENES[:limit]):
     sid = scene['id']
     parts, caps, t = [], [], LEAD
     for li, (say, cap) in enumerate(scene['lines']):
-        aiff = f'{work}/build/{sid}-{li}.aiff'
+        raw = f'{work}/build/{sid}-{li}.' + ('mp3' if ENGINE == 'edge' else 'aiff')
         wav = f'{work}/build/{sid}-{li}.wav'
-        run(['say', '-v', VOICE, '-r', RATE, '-o', aiff, say])
-        run(['ffmpeg', '-y', '-v', 'error', '-i', aiff, '-ar', '48000', '-ac', '1', wav])
+        if ENGINE == 'f5':
+            raw = f'{work}/f5/{sid}-{li}.wav'  # generated beforehand by f5/f5_gen.py
+            if not os.path.exists(raw):
+                sys.exit(f'missing F5 audio {raw}; run f5_gen.py first')
+        elif ENGINE == 'edge':
+            tts_edge(speech_text(cap), raw)
+        else:
+            run(['say', '-v', VOICE, '-r', RATE, '-o', raw, say])
+        # Trim the silence the engine adds at both ends so pauses come only from GAP.
+        trim = 'silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse'
+        run(['ffmpeg', '-y', '-v', 'error', '-i', raw, '-af', trim, '-ar', '48000', '-ac', '1', wav])
         d = duration(wav)
         caps.append((f'{work}/captions/{sid}-{li}.png', t, t + d))
         srt.append((t_global + t, t_global + t + d, cap))
@@ -90,7 +145,15 @@ for si, scene in enumerate(script.SCENES[:limit]):
 with open(f'{work}/build/list.txt', 'w') as f:
     for p in scene_files:
         f.write(f"file '{p}'\n")
-run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/build/list.txt', '-c', 'copy',
+joined = f'{work}/build/joined.mp4'
+run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/build/list.txt', '-c', 'copy', joined])
+# Two-pass loudnorm to -16 LUFS (YouTube/podcast level) with a high-pass to drop low rumble.
+probe = subprocess.run(['ffmpeg', '-hide_banner', '-i', joined, '-af', 'highpass=f=70,loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json',
+                        '-f', 'null', '-'], capture_output=True, text=True).stderr
+meas = json.loads(probe[probe.rindex('{'):probe.rindex('}') + 1])
+ln = (f"highpass=f=70,loudnorm=I=-16:TP=-1.5:LRA=11:measured_I={meas['input_i']}:measured_TP={meas['input_tp']}"
+      f":measured_LRA={meas['input_lra']}:measured_thresh={meas['input_thresh']}:offset={meas['target_offset']}:linear=true")
+run(['ffmpeg', '-y', '-v', 'error', '-i', joined, '-c:v', 'copy', '-af', ln, '-ar', '48000', '-c:a', 'aac', '-b:a', '192k',
      '-movflags', '+faststart', out_mp4])
 
 def ts(sec):

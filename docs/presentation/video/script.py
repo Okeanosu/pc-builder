@@ -6,7 +6,7 @@ SCENES = [
     {
         "id": "s01-title", "visual": "slide:title", "motion": [(0, 0, 1), (0.03, 0.03, 0.94)],
         "lines": [
-            ("PC Builder.", "PC Builder."),
+            ("Xin chào, đây là PC Builder.", "Xin chào, đây là PC Builder."),
             ("Hệ thống thương mại điện tử linh kiện máy tính, tích hợp trợ lý trí tuệ nhân tạo gợi ý cấu hình PC phù hợp nhu cầu người dùng.",
              "Hệ thống thương mại điện tử linh kiện máy tính, tích hợp trợ lý AI gợi ý cấu hình PC phù hợp nhu cầu người dùng."),
         ],
