@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tương thích linh kiện</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #ffffff; --plate: #f1f2f3; --rule: #e3e5e8; --ink: #0d0f12; --muted: #5d636a;
+    --hard: #b42318; --soft: #a14e05; --ok: #1f7a45; --code-bg: #f4f5f6;
+    --cpu: #2a78d6; --mainboard: #14a38b; --ram: #8b7cf0; --gpu: #d55181; --storage: #a35ce0; --psu: #c0713a; --case: #5b5fe0; --cooler: #0e9fb8;
+    --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-code: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.62; margin: 0; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 16px 96px; }
+  header.top { display: flex; flex-direction: column; gap: 18px; padding-bottom: 32px; border-bottom: 1px solid var(--rule); margin-bottom: 32px; }
+  .kicker { color: var(--muted); font-size: 14px; margin: 0; }
+  h1 { font-stretch: 125%; font-weight: 700; font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.08; letter-spacing: -0.035em; margin: 0; text-wrap: balance; max-width: 20ch; }
+  .lead { font-size: 1.12rem; margin: 0; max-width: 68ch; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 8px 0 0; border-top: 1px solid var(--rule); }
+  .facts div { padding: 14px 16px 4px 0; border-bottom: 1px solid var(--rule); }
+  .facts dt { font-size: 13px; color: var(--muted); }
+  .facts dd { margin: 2px 0 0; font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .facts dd small { font-size: 12px; font-weight: 500; color: var(--muted); display: block; letter-spacing: 0; }
+
+  nav.toc { font-size: 14px; border: 1px solid var(--rule); border-radius: 8px; padding: 16px 18px; margin-bottom: 40px; }
+  nav.toc p { margin: 0 0 10px; font-weight: 600; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2px 24px; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a { display: grid; grid-template-columns: 1.8em 1fr; color: var(--ink); text-decoration: none; padding: 3px 0; }
+  nav.toc a::before { content: counter(toc) "."; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  article { display: flex; flex-direction: column; gap: 56px; counter-reset: sec; }
+  section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  h2 { counter-increment: sec; font-stretch: 112%; font-weight: 650; font-size: 1.65rem; line-height: 1.2; letter-spacing: -0.025em; margin: 0; display: flex; gap: 0.6em; align-items: baseline; text-wrap: balance; }
+  h2::before { content: counter(sec); color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; min-width: 1.2em; }
+  h3 { font-size: 1.08rem; font-weight: 650; margin: 10px 0 0; letter-spacing: -0.01em; }
+  p, ul, ol { margin: 0; max-width: 72ch; }
+  ul, ol.plain { padding-left: 1.2em; display: grid; gap: 6px; }
+  li::marker { color: var(--muted); }
+  strong { font-weight: 650; }
+  code { font-family: var(--font-code); font-size: 0.85em; background: var(--code-bg); padding: 0.06em 0.34em; border-radius: 3px; }
+  pre.code { font-family: var(--font-code); font-size: 12.5px; line-height: 1.6; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; margin: 0; overflow-x: auto; }
+  pre.code code { background: none; padding: 0; font-size: inherit; }
+  pre.code .k { color: var(--muted); }
+  pre.code .e { color: var(--hard); font-weight: 600; }
+  .note { font-size: 14px; color: var(--muted); max-width: 72ch; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 6px; }
+  figure .svgbox { border: 1px solid var(--rule); border-radius: 8px; padding: 14px; }
+  figure .svgbox svg { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 14px; color: var(--muted); max-width: 72ch; }
+  figure.side { display: grid; grid-template-columns: minmax(0, 58%) minmax(0, 1fr); gap: 20px; align-items: end; }
+  @media (max-width: 640px) { figure.side { grid-template-columns: minmax(0, 1fr); } }
+
+  .table { overflow-x: auto; border-top: 1px solid var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; font-size: 13px; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.code { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.group td { font-weight: 650; padding-top: 16px; border-bottom: 1px solid var(--ink); font-size: 13.5px; }
+  .sev { white-space: nowrap; font-size: 13px; font-weight: 600; }
+  .sev.hard { color: var(--hard); } .sev.soft { color: var(--soft); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 7px; vertical-align: 0; }
+  .bar { display: inline-block; height: 8px; border-radius: 2px; background: var(--ink); vertical-align: 1px; margin-right: 8px; }
+
+  .formula { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); border-top: 1px solid var(--ink); }
+  .formula > div { padding: 11px 16px 11px 0; border-bottom: 1px solid var(--rule); }
+  .formula b { font-weight: 650; }
+  .formula .math { font-variant-numeric: tabular-nums; }
+
+  .three { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); border-top: 1px solid var(--ink); }
+  .three > div { padding: 14px 20px 14px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+  .three h3 { margin: 0; }
+  .three .where { font-size: 13px; color: var(--muted); }
+  .three p { font-size: 15px; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; border-top: 1px solid var(--ink); counter-reset: st; max-width: none; }
+  ol.steps li { counter-increment: st; display: grid; grid-template-columns: 2em minmax(0, 1fr); padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  ol.steps li::before { content: counter(st); color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  ol.steps b { font-weight: 650; }
+
+  .map { display: grid; grid-template-columns: minmax(0, 23rem) minmax(0, 1fr); border-top: 1px solid var(--ink); }
+  .map > div { padding: 8px 16px 8px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .map code { background: none; padding: 0; font-size: 12.5px; word-break: break-all; }
+  @media (max-width: 640px) { .formula, .map { grid-template-columns: minmax(0, 1fr); } .formula > div:nth-child(odd), .map > div:nth-child(odd) { border-bottom: 0; padding-bottom: 0; } }
+</style>
+<style media="print">
+  @page { size: A4; margin: 20mm 17mm 20mm 17mm; }
+  @page erd { size: A4 landscape; margin: 12mm; }
+  html, body { background: #ffffff !important; }
+  body { font-size: 10.5pt; line-height: 1.55; }
+  .wrap { max-width: none; padding: 0; }
+  header.top { padding-bottom: 18px; margin-bottom: 20px; }
+  h1 { font-size: 30pt; max-width: none; }
+  .lead { font-size: 12pt; max-width: none; }
+  p, ul, ol, .note, figcaption { max-width: none; }
+  .facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .three p { font-size: 9.6pt; }
+  nav.toc { margin-bottom: 26px; break-inside: avoid; }
+  nav.toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  article { gap: 28px; }
+  section { gap: 10px; }
+  h2 { font-size: 16pt; break-after: avoid; }
+  h3 { break-after: avoid; }
+  figure, .formula, .three > div, ol.steps li, .map > div, tr, pre.code, .facts { break-inside: avoid; }
+  table { font-size: 9.3pt; }
+  th, td { padding: 6px 10px 6px 0; }
+  pre.code { font-size: 8.4pt; white-space: pre-wrap; }
+  .map > div { font-size: 9.3pt; }
+  .map code { font-size: 8.3pt; }
+  figure img { max-height: 150mm; width: auto; max-width: 100%; margin: 0 auto; }
+  figure.side img { max-height: 135mm; margin: 0; }
+  .erd-sec { page: erd; break-before: page; }
+  .erd-sec figure img { width: 268mm; max-width: none; max-height: none; border: 0; }
+  .pb { break-before: page; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="kicker">Đồ án tốt nghiệp PC Builder · tài liệu kỹ thuật cho chương 4 và 5</p>
+    <h1>Tương thích linh kiện và cấu trúc dữ liệu</h1>
+    <p class="lead">Một bộ PC gồm 8 linh kiện thuộc 8 danh mục. Chúng phải lắp vừa nhau, đủ điện và nằm trong ngân sách của khách. PC Builder kiểm tra điều đó bằng 15 luật có mã C01 đến C15, viết một lần trong gói <code>@pc/engine</code> và dùng chung ở ba nơi: Customizer trên trình duyệt, API ở server và Optimization Engine. Tài liệu giải thích thông số linh kiện được lưu thế nào trong PostgreSQL, từng luật kiểm tra gì, và dữ liệu tương thích đi qua 15 bảng của hệ thống ra sao.</p>
+    <dl class="facts">
+      <div><dt>Luật tương thích</dt><dd>15<small>10 cứng, 3 mềm, 2 cả hai mức</small></dd></div>
+      <div><dt>Sản phẩm đang bán</dt><dd>240<small>8 danh mục</small></dd></div>
+      <div><dt>Tổ hợp 8 linh kiện</dt><dd>626,9 tỷ<small>trước khi xét luật</small></dd></div>
+      <div><dt>Bảng trong CSDL</dt><dd>15<small>128 cột, 19 khóa ngoại</small></dd></div>
+      <div><dt>Test liên quan</dt><dd>104<small>unit, tích hợp, E2E</small></dd></div>
+    </dl>
+  </header>
+
+  <nav class="toc" aria-label="Mục lục">
+    <p>Mục lục</p>
+    <ol>
+      <li><a href="#bai-toan">Bài toán tương thích</a></li>
+      <li><a href="#thong-so">Thông số linh kiện nằm ở đâu</a></li>
+      <li><a href="#bo-luat">Mười lăm luật C01–C15</a></li>
+      <li><a href="#do-thi">Đồ thị ràng buộc</a></li>
+      <li><a href="#nguon">Luật công suất nguồn C08</a></li>
+      <li><a href="#vi-du">Một cấu hình sai bị phát hiện thế nào</a></li>
+      <li><a href="#ba-noi">Một bộ luật, ba nơi dùng</a></li>
+      <li><a href="#engine">Luật trong Optimization Engine</a></li>
+      <li><a href="#csdl">Cấu trúc cơ sở dữ liệu</a></li>
+      <li><a href="#erd">Sơ đồ ERD</a></li>
+      <li><a href="#luong">Dữ liệu tương thích đi qua các bảng</a></li>
+      <li><a href="#kiem-thu">Kiểm thử</a></li>
+      <li><a href="#han-che">Giới hạn và hướng phát triển</a></li>
+      <li><a href="#ma-nguon">Bản đồ mã nguồn</a></li>
+    </ol>
+  </nav>
+
+  <article>
+    <section id="bai-toan">
+      <h2>Bài toán tương thích</h2>
+      <p>Kho hiện có 240 sản phẩm đang bán: 30 CPU, 36 mainboard, 26 bộ RAM, 32 card đồ họa, 27 ổ cứng, 29 nguồn, 33 vỏ case và 27 tản nhiệt. Chọn mỗi danh mục một món cho ra <strong>626.883.079.680</strong> tổ hợp. Phần lớn trong số đó không dùng được, vì chỉ cần một cặp linh kiện xung khắc là cả bộ máy không lắp được hoặc không khởi động.</p>
+      <p>Bảng dưới đếm trên kho thật (ngày 12/11/2026) số cặp linh kiện thỏa luật cứng của cặp đó. CPU và mainboard khắt khe nhất: chưa đến một phần ba số cặp khớp socket.</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Cặp linh kiện</th><th>Luật</th><th class="num">Cặp hợp lệ</th><th>Tỷ lệ</th></tr></thead>
+          <tbody>
+            <tr><td>CPU – mainboard</td><td>C01</td><td class="num">310 / 1.080</td><td><span class="bar" style="width:40px"></span>28,7%</td></tr>
+            <tr><td>Mainboard – RAM</td><td>C02, C03</td><td class="num">548 / 936</td><td><span class="bar" style="width:82px"></span>58,5%</td></tr>
+            <tr><td>CPU – RAM</td><td>C02</td><td class="num">526 / 780</td><td><span class="bar" style="width:94px"></span>67,4%</td></tr>
+            <tr><td>Mainboard – vỏ case</td><td>C04</td><td class="num">850 / 1.188</td><td><span class="bar" style="width:100px"></span>71,5%</td></tr>
+            <tr><td>Tản nhiệt – vỏ case</td><td>C06</td><td class="num">660 / 891</td><td><span class="bar" style="width:104px"></span>74,1%</td></tr>
+            <tr><td>Nguồn – vỏ case</td><td>C12</td><td class="num">736 / 957</td><td><span class="bar" style="width:108px"></span>76,9%</td></tr>
+            <tr><td>Card đồ họa – vỏ case</td><td>C05</td><td class="num">990 / 1.056</td><td><span class="bar" style="width:131px"></span>93,8%</td></tr>
+            <tr><td>CPU – tản nhiệt</td><td>C07</td><td class="num">790 / 810</td><td><span class="bar" style="width:137px"></span>97,5%</td></tr>
+            <tr><td>CPU – card đồ họa</td><td>C10</td><td class="num">960 / 960</td><td><span class="bar" style="width:140px"></span>100%</td></tr>
+            <tr><td>Mainboard – ổ cứng</td><td>C11</td><td class="num">972 / 972</td><td><span class="bar" style="width:140px"></span>100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">C10 và C11 đạt 100% trên kho hiện tại: phép đếm cặp CPU – card luôn có card rời, và mọi mainboard đang bán đều có khe M.2. Hai luật vẫn cần cho cấu hình văn phòng không card rời (10 trong 30 CPU không có đồ họa tích hợp) và cho mainboard đời cũ nhập về sau.</p>
+      <p>Người mua phổ thông không tự dò hết các ràng buộc này. Hệ thống vì thế phải kiểm tra tự động, giải thích lỗi bằng tiếng Việt kèm số liệu, và khi gợi ý cấu hình thì chỉ đưa ra tổ hợp đã thỏa mọi luật cứng.</p>
+    </section>
+
+    <section id="thong-so">
+      <h2>Thông số linh kiện nằm ở đâu</h2>
+      <p>Mỗi danh mục có bộ thông số riêng: CPU có socket và TDP, vỏ case có chiều dài card tối đa, nguồn có công suất. Thay vì 8 bảng con hoặc hàng chục cột phần lớn để trống, PC Builder lưu thông số vào một cột JSONB <code>products.specs</code>. Danh sách trường của từng danh mục (tên, kiểu, đơn vị, bắt buộc hay không, có làm bộ lọc không) nằm trong cột JSONB <code>categories.spec_schema</code>.</p>
+      <pre class="code"><code><span class="k">-- products.specs của AMD Ryzen 7 7800X3D</span>
+{ "socket": "AM5", "memoryTypes": ["DDR5"], "tdpW": 120, "integratedGraphics": true,
+  "cores": 8, "threads": 16, "baseClockGHz": 4.2, "boostClockGHz": 5 }</code></pre>
+      <h3>Hai lớp kiểm tra khi lưu sản phẩm</h3>
+      <ul>
+        <li><strong>Lớp 1, <code>spec_schema</code> trong CSDL:</strong> trường bắt buộc, kiểu dữ liệu, danh sách giá trị cho phép. Lược đồ này sinh ra biểu mẫu nhập sản phẩm, bảng thông số trên trang chi tiết và bộ lọc ở trang danh mục. Quản trị viên sửa được mà không cần sửa code.</li>
+        <li><strong>Lớp 2, schema Zod có kiểu trong <code>@pc/shared</code> (<code>SPEC_SCHEMAS</code>):</strong> bảo đảm mọi khóa mà bộ luật đọc luôn có mặt và đúng kiểu (ví dụ <code>tdpW</code> là số nguyên dương).</li>
+      </ul>
+      <p>Hàm <code>validateSpecs</code> chỉ cho lưu khi qua cả hai lớp, và bỏ các khóa mà không lớp nào biết. Trên trang lược đồ, khóa mà bộ luật dùng có biểu tượng khóa và không đổi tên hay xóa được, nên quản trị viên không thể vô tình làm gãy luật tương thích.</p>
+      <figure>
+        <img src="{{img:admin-schema}}" alt="Trang Lược đồ thông số của danh mục CPU: mỗi trường có khóa JSONB, nhãn, kiểu, đơn vị; các khóa socket, cores có nhãn Bộ luật tương thích dùng; bên phải là bản xem trước biểu mẫu.">
+        <figcaption>Hình 1. Trang quản trị “Lược đồ thông số” của danh mục CPU. Khóa <code>socket</code>, <code>tdpW</code>… gắn nhãn “Bộ luật tương thích dùng”; bên phải là biểu mẫu sinh ra từ lược đồ đang sửa.</figcaption>
+      </figure>
+      <h3>Trường thông số mà bộ luật đọc</h3>
+      <div class="table">
+        <table>
+          <thead><tr><th>Danh mục</th><th>Khóa trong <code>specs</code></th><th>Luật dùng</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot" style="background:var(--cpu)"></span>CPU</td><td>socket, memoryTypes, tdpW, integratedGraphics; điểm benchmark</td><td>C01, C02, C07–C10, C13, C15</td></tr>
+            <tr><td><span class="dot" style="background:var(--mainboard)"></span>Mainboard</td><td>socket, memoryType, memorySlots, maxMemoryGB, formFactor, m2Slots, chipset</td><td>C01–C04, C11, C15</td></tr>
+            <tr><td><span class="dot" style="background:var(--ram)"></span>RAM</td><td>type, modules, capacityGB</td><td>C02, C03</td></tr>
+            <tr><td><span class="dot" style="background:var(--gpu)"></span>Card đồ họa</td><td>lengthMm, tgpW; điểm benchmark</td><td>C05, C08, C13</td></tr>
+            <tr><td><span class="dot" style="background:var(--storage)"></span>Ổ cứng</td><td>interface, formFactor</td><td>C11</td></tr>
+            <tr><td><span class="dot" style="background:var(--psu)"></span>Nguồn</td><td>wattage, formFactor</td><td>C08, C12</td></tr>
+            <tr><td><span class="dot" style="background:var(--case)"></span>Vỏ case</td><td>supportedFormFactors, maxGpuLengthMm, maxCoolerHeightMm, radiatorSupportMm, psuFormFactors</td><td>C04–C06, C12</td></tr>
+            <tr><td><span class="dot" style="background:var(--cooler)"></span>Tản nhiệt</td><td>type, sockets, heightMm, radiatorMm, tdpRatingW</td><td>C06, C07, C09</td></tr>
+            <tr><td>Mọi danh mục</td><td>giá bán (<code>products.price</code>, <code>sale_price</code>)</td><td>C14</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Chỉ mục và bộ nhớ đệm</h3>
+      <ul>
+        <li><strong>GIN <code>jsonb_path_ops</code> trên <code>specs</code>:</strong> lọc theo thông số bằng phép chứa, ví dụ <code>specs @&gt; '{"socket":"AM5"}'</code>, không phải quét cả bảng.</li>
+        <li><strong>B-tree <code>(category_id, price)</code>:</strong> trang danh mục sắp theo giá, và Engine lấy miền giá trị theo danh mục.</li>
+        <li><strong>Redis:</strong> danh mục sản phẩm dạng Engine (giá hiệu lực, tồn kho khả dụng, thông số, benchmark) được đệm theo một số phiên bản. Mỗi lần sửa sản phẩm hoặc lược đồ, phiên bản tăng lên nên gợi ý và kiểm tra tương thích không đọc dữ liệu cũ.</li>
+      </ul>
+    </section>
+
+    <section id="bo-luat">
+      <h2>Mười lăm luật C01–C15</h2>
+      <p>Mỗi luật là một hàm thuần trong <code>packages/engine/src/rules.ts</code>. Hàm nhận các linh kiện đã chọn và trả về danh sách vấn đề <code>{ code, severity, message, categories }</code>. <strong>Luật cứng</strong> (mức <code>error</code>) nghĩa là không lắp được hoặc không chạy được. <strong>Luật mềm</strong> (mức <code>warning</code>) nghĩa là chạy được nhưng chưa tốt. Luật nào thiếu linh kiện liên quan thì bỏ qua, nên kiểm tra được cả cấu hình đang lắp dở.</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Mã</th><th>Kiểm tra</th><th>Điều kiện (theo code)</th><th>Mức</th></tr></thead>
+          <tbody>
+            <tr class="group"><td colspan="4">Lắp vừa về vật lý</td></tr>
+            <tr><td class="code">C01</td><td>Socket CPU khớp mainboard</td><td>cpu.socket = mainboard.socket</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C02</td><td>Chuẩn RAM</td><td>ram.type = mainboard.memoryType và ram.type ∈ cpu.memoryTypes</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C03</td><td>Số thanh và dung lượng RAM</td><td>ram.modules ≤ memorySlots; ram.capacityGB ≤ maxMemoryGB</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C04</td><td>Mainboard vừa vỏ case</td><td>mainboard.formFactor ∈ case.supportedFormFactors</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C05</td><td>Card đồ họa vừa vỏ case</td><td>gpu.lengthMm ≤ case.maxGpuLengthMm</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C06</td><td>Tản nhiệt vừa vỏ case</td><td>tản khí: heightMm ≤ maxCoolerHeightMm; tản nước AIO: radiatorMm ∈ radiatorSupportMm</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C07</td><td>Tản nhiệt hỗ trợ socket</td><td>cpu.socket ∈ cooler.sockets</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C11</td><td>Ổ M.2 cần khe M.2</td><td>ổ NVMe hoặc dạng M.2 ⇒ mainboard.m2Slots ≥ 1</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C12</td><td>Kiểu nguồn vừa vỏ case</td><td>psu.formFactor ∈ case.psuFormFactors (ATX hoặc SFX)</td><td class="sev hard">lỗi</td></tr>
+            <tr class="group"><td colspan="4">Điện và chức năng</td></tr>
+            <tr><td class="code">C08</td><td>Nguồn đủ công suất</td><td>wattage ≥ ⌈(TDP + TGP + 75) × 1,3⌉; dưới × 1,5 thì cảnh báo</td><td class="sev hard">lỗi <span class="sev soft">/ cảnh báo</span></td></tr>
+            <tr><td class="code">C10</td><td>Có đường xuất hình</td><td>không có card rời ⇒ CPU có đồ họa tích hợp</td><td class="sev hard">lỗi</td></tr>
+            <tr><td class="code">C09</td><td>Tản nhiệt đủ sức tản</td><td>cooler.tdpRatingW ≥ cpu.tdpW</td><td class="sev soft">cảnh báo</td></tr>
+            <tr class="group"><td colspan="4">Cân bằng hiệu năng</td></tr>
+            <tr><td class="code">C13</td><td>Cân bằng CPU – card (chơi game)</td><td>|cấp CPU − cấp card| ≤ 2; cấp 1–5 theo phân vị điểm benchmark trong kho</td><td class="sev soft">cảnh báo</td></tr>
+            <tr><td class="code">C15</td><td>CPU cao cấp trên chipset phổ thông</td><td>chipset A520, A620, H610, H810 và CPU có TDP &gt; 105 W hoặc cấp ≥ 4</td><td class="sev soft">cảnh báo</td></tr>
+            <tr class="group"><td colspan="4">Ngân sách</td></tr>
+            <tr><td class="code">C14</td><td>Tổng giá</td><td>Σ giá ≤ ngân sách (lỗi); Σ giá ≥ 85% ngân sách (cảnh báo)</td><td class="sev hard">lỗi <span class="sev soft">/ cảnh báo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Thông điệp luôn kèm số liệu để khách tự sửa được, ví dụ “Card đồ họa dài 358mm vượt giới hạn vỏ case (240mm)” thay vì một câu “không tương thích” chung chung. Mỗi luật còn có một nút đặc tả riêng trong spec graph (<code>docs/graph/nodes/rules/R-C01.md</code> đến <code>R-C15.md</code>), ghi điều kiện, giả định và test tương ứng.</p>
+    </section>
+
+    <section id="do-thi">
+      <h2>Đồ thị ràng buộc</h2>
+      <p>Coi mỗi danh mục là một biến và mỗi luật là một ràng buộc giữa các biến, ta được đồ thị dưới đây. Mười luật cứng chỉ liên quan đến hai danh mục (bảng <code>PAIR_RULES</code> trong code) là các cạnh. Luật mềm hai ngôi được ghi trên cùng cạnh, màu cam.</p>
+      <figure>
+        <div class="svgbox">{{svg:graph}}</div>
+        <figcaption>Hình 2. Đồ thị ràng buộc. Cạnh là luật hai ngôi (đen: cứng, cam: mềm). Nhãn C08 đánh dấu ba biến của luật công suất nguồn.</figcaption>
+      </figure>
+      <ul>
+        <li><strong>CPU, mainboard và vỏ case có bậc cao nhất (4 cạnh).</strong> Đổi một trong ba món này thường kéo theo nhiều món khác phải đổi theo, ví dụ đổi CPU từ AM5 sang LGA1700 thì mainboard, có thể cả RAM và tản nhiệt, phải đổi.</li>
+        <li><strong>C08 là ràng buộc ba ngôi</strong> (CPU, card, nguồn): công suất cần thiết phụ thuộc đồng thời TDP CPU và TGP card, không tách được thành hai luật hai ngôi.</li>
+        <li><strong>C14 là ràng buộc toàn cục</strong> trên tổng giá cả 8 món. Engine xử lý nó bằng cận ngân sách khi tìm kiếm thay vì một cạnh.</li>
+      </ul>
+    </section>
+
+    <section id="nguon">
+      <h2>Luật công suất nguồn C08</h2>
+      <p>C08 là luật duy nhất có ba ngưỡng. Code tính bằng số nguyên (ví dụ <code>⌈x × 13 / 10⌉</code>) vì 1,3 không biểu diễn chính xác được ở dạng dấu phẩy động.</p>
+      <div class="formula">
+        <div><b>Công suất ước tính</b></div><div class="math">TDP CPU + TGP card + 75 W cho mainboard, RAM, ổ cứng và quạt</div>
+        <div><b>Tối thiểu</b></div><div class="math">⌈ước tính × 1,3⌉. Nguồn thấp hơn mức này là <span class="sev hard">lỗi</span>.</div>
+        <div><b>Gợi ý trên màn hình</b></div><div class="math">ước tính × 1,3, làm tròn lên bậc 50 W (cỡ nguồn bán trên thị trường)</div>
+        <div><b>Mức thoải mái</b></div><div class="math">⌈ước tính × 1,5⌉. Nguồn thấp hơn là <span class="sev soft">cảnh báo</span> “hơi sát tải”.</div>
+      </div>
+      <h3>Ví dụ: Ryzen 7 7800X3D (120 W) và RTX 4090 (450 W)</h3>
+      <div class="table">
+        <table>
+          <thead><tr><th>Đại lượng</th><th>Phép tính</th><th class="num">Kết quả</th></tr></thead>
+          <tbody>
+            <tr><td>Ước tính</td><td>120 + 450 + 75</td><td class="num">645 W</td></tr>
+            <tr><td>Tối thiểu</td><td>⌈645 × 1,3⌉ = ⌈838,5⌉</td><td class="num">839 W</td></tr>
+            <tr><td>Gợi ý</td><td>⌈645 × 1,3 / 50⌉ × 50</td><td class="num">850 W</td></tr>
+            <tr><td>Thoải mái</td><td>⌈645 × 1,5⌉ = ⌈967,5⌉</td><td class="num">968 W</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Với cấu hình này, nguồn 450 W báo lỗi “cần tối thiểu 839W”, nguồn 850 W qua được nhưng có cảnh báo “khuyến nghị từ 968W”, nguồn 1000 W đạt cả hai mức.</p>
+      <p class="note">Giả định: <code>tdpW</code> trong dữ liệu là công suất cơ sở (Intel PBP, AMD TDP), không phải công suất đỉnh. Với CPU có công suất đỉnh cao hơn nhiều (Intel Core thế hệ 12–14, PL2 khoảng 250 W), mức tối thiểu có thể hơi lạc quan khi chạy tải nặng kéo dài; mức cảnh báo × 1,5 bù một phần.</p>
+    </section>
+
+    <section id="vi-du" class="pb">
+      <h2>Một cấu hình sai bị phát hiện thế nào</h2>
+      <p>Cấu hình dưới cố ý chọn sai sáu chỗ, toàn bộ là sản phẩm thật trong kho.</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Danh mục</th><th>Sản phẩm</th><th>Thông số liên quan</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot" style="background:var(--cpu)"></span>CPU</td><td>AMD Ryzen 7 7800X3D</td><td>AM5, DDR5, 120 W</td></tr>
+            <tr><td><span class="dot" style="background:var(--mainboard)"></span>Mainboard</td><td>MSI PRO B660M-A DDR4</td><td>LGA1700, DDR4, mATX</td></tr>
+            <tr><td><span class="dot" style="background:var(--ram)"></span>RAM</td><td>Crucial 16GB (2x8GB) DDR5 5200MHz</td><td>DDR5</td></tr>
+            <tr><td><span class="dot" style="background:var(--gpu)"></span>Card đồ họa</td><td>ASUS ROG Strix RTX 4090 OC 24GB</td><td>dài 358 mm, 450 W</td></tr>
+            <tr><td><span class="dot" style="background:var(--case)"></span>Vỏ case</td><td>Cooler Master Elite 110 Mini-ITX</td><td>chỉ ITX, card ≤ 240 mm, chỉ nguồn SFX</td></tr>
+            <tr><td><span class="dot" style="background:var(--psu)"></span>Nguồn</td><td>DeepCool PK450D 450W</td><td>450 W, chuẩn ATX</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Gửi sáu mã sản phẩm tới <code>POST /api/compatibility/check</code> nhận về (rút gọn):</p>
+      <pre class="code"><code>{ "ok": false,
+  "issues": [
+    { "code": "C01", "severity": <span class="e">"error"</span>, "message": "Socket CPU (AM5) không khớp mainboard (LGA1700)" },
+    { "code": "C02", "severity": <span class="e">"error"</span>, "message": "RAM DDR5 không tương thích mainboard (hỗ trợ DDR4)" },
+    { "code": "C04", "severity": <span class="e">"error"</span>, "message": "Vỏ case không hỗ trợ mainboard chuẩn mATX" },
+    { "code": "C05", "severity": <span class="e">"error"</span>, "message": "Card đồ họa dài 358mm vượt giới hạn vỏ case (240mm)" },
+    { "code": "C08", "severity": <span class="e">"error"</span>, "message": "Nguồn 450W không đủ công suất, cần tối thiểu 839W" },
+    { "code": "C12", "severity": <span class="e">"error"</span>, "message": "Vỏ case không hỗ trợ nguồn chuẩn ATX" } ],
+  "estimatedWattage": 645, "recommendedPsuWattage": 850 }</code></pre>
+      <p>Mỗi vấn đề có trường <code>categories</code> nêu các danh mục liên quan (ví dụ C08 là nguồn, CPU và card). Customizer dùng trường này để đánh dấu đúng các slot cần sửa.</p>
+      <figure>
+        <img src="{{img:builder-conflict}}" alt="Trang Tự build PC với 6 linh kiện, mỗi slot liệt kê lỗi kèm mã luật màu đỏ; khung Tổng quan bên phải ghi 6 xung đột và công suất ước tính 645W trên nguồn 450W.">
+        <figcaption>Hình 3. Cùng cấu hình trong Customizer. Luật chạy ngay trên trình duyệt: mỗi slot hiện lỗi của mình, khung Tổng quan đếm 6 xung đột và vạch công suất ~645W trên nguồn 450W chuyển đỏ.</figcaption>
+      </figure>
+    </section>
+
+    <section id="ba-noi">
+      <h2>Một bộ luật, ba nơi dùng</h2>
+      <p>Luật nằm trong gói TypeScript thuần <code>@pc/engine</code>, không phụ thuộc framework, nên cùng một đoạn code chạy được ở trình duyệt lẫn server (ADR-001). Nhờ vậy kết quả Customizer hiển thị luôn trùng với kết quả server chấp nhận.</p>
+      <div class="three">
+        <div>
+          <h3>Customizer</h3>
+          <span class="where">Trình duyệt · <code>features/builder/compat.ts</code></span>
+          <p>Mỗi lần đổi linh kiện, <code>buildReport</code> gọi <code>checkCompatibility</code> tại chỗ, không chờ mạng. Trong hộp chọn linh kiện, <code>previewCandidate</code> thử đặt từng ứng viên vào slot, làm mờ món xung đột và ghi mã luật bên dưới.</p>
+        </div>
+        <div>
+          <h3>API</h3>
+          <span class="where">Server · <code>POST /api/compatibility/check</code>, <code>POST /api/builds</code></span>
+          <p>Nạp sản phẩm đang bán theo id (404 nếu không tồn tại, 422 nếu hai món cùng danh mục) rồi chạy cùng bộ luật. Khi lưu cấu hình từ Customizer, lỗi cứng bị từ chối bằng 422 <code>INCOMPATIBLE</code>: server là nguồn chân lý.</p>
+        </div>
+        <div>
+          <h3>Optimization Engine</h3>
+          <span class="where">Server · <code>packages/engine</code></span>
+          <p>Luật cứng thành ràng buộc của bài toán CSP để cắt nhánh khi tìm kiếm; luật mềm thành điểm trừ. Mọi cấu hình gợi ý, từ form hay từ chatbot, đều đã thỏa luật cứng.</p>
+        </div>
+      </div>
+      <figure class="side">
+        <img src="{{img:picker-dim}}" alt="Hộp chọn mainboard khi đã chọn CPU AM5: các mainboard LGA1700 và LGA1851 bị làm mờ với dòng chữ đỏ C01 Socket CPU (AM5) không khớp mainboard; mainboard AM5 hiện dấu tích Tương thích với cấu hình hiện tại.">
+        <figcaption>Hình 4. Đã chọn CPU AM5, mở hộp chọn mainboard: bo mạch LGA1700 và LGA1851 bị làm mờ kèm lý do C01, bo mạch AM5 được đánh dấu tương thích. Ô “Ẩn linh kiện không tương thích” lọc hẳn các món này đi.</figcaption>
+      </figure>
+      <h3>Hai chỗ client và server cố ý khác nhau</h3>
+      <ul>
+        <li><strong>C13 chỉ tính ở server.</strong> Cấp hiệu năng 1–5 là phân vị điểm benchmark trong cả kho, mà trình duyệt không tải cả kho. Khi gọi API với mục đích chơi game, server nạp danh mục tham chiếu và thêm cảnh báo C13 nếu có.</li>
+        <li><strong>Khi xem trước ứng viên, bỏ qua C10 và C14.</strong> Hai luật này nói về món chưa chọn (chưa có card) hoặc về cả bộ (tổng giá), nên không được làm mờ một ứng viên vô can. Vượt ngân sách vẫn được báo riêng.</li>
+      </ul>
+    </section>
+
+    <section id="engine">
+      <h2>Luật trong Optimization Engine</h2>
+      <p>Engine giải bài toán thỏa ràng buộc (CSP) kết hợp bài toán chọn ba lô nhiều lớp (MCKP): mỗi danh mục chọn đúng một món, thỏa mọi luật cứng, tổng giá không vượt ngân sách, tổng điểm theo mục đích sử dụng lớn nhất. Các luật đi vào Engine theo sáu bước:</p>
+      <ol class="steps">
+        <li><div><b>Lọc miền giá trị.</b> Mỗi danh mục chỉ giữ sản phẩm đang bán, còn hàng khả dụng và khớp sở thích của khách (hãng, màu, có card rời…); món khách giữ cố định thì miền chỉ còn đúng món đó. Khung phân bổ ngân sách theo mục đích (bảng <code>purpose_weights</code>) không loại món nào, chỉ quyết định món nào được thử trước.</div></li>
+        <li><div><b>Bảng quan hệ.</b> Với mỗi cặp trong <code>PAIR_RULES</code>, <code>buildProblem</code> tính sẵn mảng <code>Uint8Array</code> kích thước |A| × |B|; ô bằng 1 khi hai món thỏa mọi luật cứng của cặp. Khi tìm kiếm, kiểm tra tương thích chỉ còn là một phép tra mảng.</div></li>
+        <li><div><b>Loại món bị trội.</b> Một món bị bỏ nếu có món khác cùng danh mục điểm không kém, giá không cao hơn và “dễ lắp” ít nhất bằng nó (ví dụ vỏ case hỗ trợ đủ chuẩn mainboard, card dài hơn, tản cao hơn). Không áp dụng cho CPU và card để giữ đa dạng gợi ý.</div></li>
+        <li><div><b>AC-3.</b> Loại khỏi miền những giá trị không có giá trị tương thích nào ở biến láng giềng; C08 ba ngôi dùng nhất quán theo cận (bounds consistency) vì công suất cần thiết tăng đơn điệu theo TDP và TGP.</div></li>
+        <li><div><b>Nhánh cận với forward checking.</b> Sau mỗi lần gán, xóa khỏi miền các biến chưa gán mọi món không tương thích, vượt ngân sách còn lại, hoặc làm nguồn thiếu công suất. Miền rỗng thì quay lui ngay.</div></li>
+        <li><div><b>Luật mềm trừ điểm.</b> Mỗi cảnh báo C08 (sát tải), C09, C13, C15 trừ 2 điểm, nên cấu hình ít cảnh báo được xếp trên; cảnh báo còn lại đi kèm cấu hình để giao diện hiển thị.</div></li>
+      </ol>
+      <p>Đo trên kho thật, một lần chạy trên máy phát triển:</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Nhu cầu</th><th class="num">Nút đã xét</th><th class="num">Loại bởi forward checking</th><th class="num">Loại bởi cận</th><th class="num">Loại vì bị trội</th><th class="num">AC-3</th><th class="num">Thời gian</th></tr></thead>
+          <tbody>
+            <tr><td>Chơi game, 25 triệu</td><td class="num">1.883</td><td class="num">13.542</td><td class="num">1.464</td><td class="num">85</td><td class="num">0</td><td class="num">15,3 ms</td></tr>
+            <tr><td>Văn phòng, 12 triệu</td><td class="num">334</td><td class="num">4.930</td><td class="num">212</td><td class="num">92</td><td class="num">0</td><td class="num">3,6 ms</td></tr>
+            <tr><td>Lập trình và AI, 45 triệu</td><td class="num">1.713</td><td class="num">6.401</td><td class="num">1.453</td><td class="num">77</td><td class="num">0</td><td class="num">7,3 ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">AC-3 không loại được giá trị nào trên kho này vì mỗi socket đều có cả CPU lẫn mainboard, nên giá trị nào cũng còn hỗ trợ. Báo cáo không ghi công tăng tốc cho AC-3; nó được giữ vì rẻ và phát hiện ngay trường hợp vô nghiệm hiển nhiên (ví dụ chỉ còn mainboard AM5 trong kho). Forward checking mới là bước thu nhỏ miền chính.</p>
+      <p>Khi không tìm được cấu hình, Engine nói rõ lý do thay vì trả danh sách rỗng: <code>BUDGET_TOO_LOW</code> (kèm ngân sách khả thi thấp nhất), <code>FIXED_PART_CONFLICT</code> (linh kiện khách giữ cố định xung khắc nhau) hoặc <code>NO_COMPATIBLE_COMBINATION</code>.</p>
+    </section>
+
+    <section id="csdl" class="pb">
+      <h2>Cấu trúc cơ sở dữ liệu</h2>
+      <p>PostgreSQL 16, truy cập qua Drizzle ORM, lược đồ định nghĩa trong <code>apps/api/src/db/schema.ts</code> và thay đổi bằng ba migration (<code>0000_init</code>, <code>0001_commerce_hardening</code>, <code>0002_chat_price_check</code>). Có 15 bảng, 128 cột, 19 khóa ngoại và 9 kiểu enum, chia thành 7 nhóm:</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Nhóm</th><th>Bảng</th><th>Lưu gì</th></tr></thead>
+          <tbody>
+            <tr><td>Sản phẩm</td><td><code>categories</code>, <code>brands</code>, <code>products</code></td><td>8 danh mục kèm lược đồ thông số; hãng; sản phẩm với giá, tồn kho, thông số JSONB</td></tr>
+            <tr><td>Kho và hiệu năng</td><td><code>benchmarks</code>, <code>inventory_movements</code></td><td>điểm CPU đơn nhân, đa nhân, điểm GPU; nhật ký nhập, xuất, điều chỉnh kho</td></tr>
+            <tr><td>Cấu hình PC</td><td><code>builds</code>, <code>purpose_weights</code></td><td>cấu hình đã gợi ý hoặc tự lắp; trọng số và khung ngân sách theo mục đích</td></tr>
+            <tr><td>Tài khoản</td><td><code>users</code></td><td>khách hàng, nhân viên, quản trị viên</td></tr>
+            <tr><td>Giỏ hàng</td><td><code>carts</code>, <code>cart_items</code></td><td>giỏ của tài khoản; dòng hàng lẻ hoặc thuộc một cấu hình</td></tr>
+            <tr><td>Đơn hàng và thanh toán</td><td><code>orders</code>, <code>order_items</code>, <code>payments</code></td><td>đơn lẻ hoặc đơn lắp ráp; dòng hàng chụp tên và giá lúc mua; giao dịch VietQR</td></tr>
+            <tr><td>Trợ lý AI</td><td><code>chat_sessions</code>, <code>chat_messages</code></td><td>phiên chat, chế độ AI hoặc dự phòng; tin nhắn, lời gọi công cụ, kết quả kiểm giá</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Các quyết định thiết kế chính</h3>
+      <ul>
+        <li><strong>JSONB cho dữ liệu đổi theo danh mục</strong> (<code>specs</code>, <code>spec_schema</code>) và <strong>cho ảnh chụp tại một thời điểm</strong> (<code>builds.items</code>, <code>builds.warnings</code>, lời gọi công cụ của chatbot). Dữ liệu cần ràng buộc toàn vẹn (đơn hàng, tồn kho) vẫn là cột và khóa ngoại thông thường.</li>
+        <li><strong>Tiền là <code>bigint</code> theo đồng</strong>, không dùng số thực, nên tổng giá và so sánh ngân sách không sai số.</li>
+        <li><strong>Tồn kho hai cột <code>stock</code> và <code>reserved</code>.</strong> Hàng được giữ khi đơn chờ thanh toán; Engine chỉ dùng phần khả dụng (<code>stock − reserved</code>). Mọi thay đổi ghi vào <code>inventory_movements</code> để truy vết.</li>
+        <li><strong>Không xóa sản phẩm, chỉ ẩn</strong> (<code>status = HIDDEN</code>), vì đơn hàng và cấu hình cũ còn tham chiếu tới nó. API kiểm tra tương thích coi sản phẩm ẩn như không tồn tại.</li>
+        <li><strong>Chụp lại giá trị lúc mua</strong>: <code>order_items.name_snapshot</code>, <code>price_snapshot</code>; đổi giá sau này không làm sai đơn cũ.</li>
+      </ul>
+    </section>
+
+    <section id="erd" class="erd-sec">
+      <h2>Sơ đồ ERD</h2>
+      <figure>
+        <img src="{{img:erd}}" alt="Sơ đồ quan hệ thực thể của 15 bảng, chia 7 nhóm theo cột: Trợ lý AI, Tài khoản, Cấu hình PC, Giỏ hàng, Đơn hàng và thanh toán, Sản phẩm, Kho và hiệu năng.">
+        <figcaption>Hình 5. ERD đầy đủ 15 bảng, mỗi cột kèm kiểu SQL và vai trò khóa. Bản tương tác ở <code>docs/reports/erd-co-so-du-lieu.html</code>; giải thích từng cột ở tài liệu “Từ điển dữ liệu”.</figcaption>
+      </figure>
+    </section>
+
+    <section id="luong">
+      <h2>Dữ liệu tương thích đi qua các bảng</h2>
+      <p>Từ lúc quản trị viên khai báo thông số tới lúc khách thanh toán một bộ máy, dữ liệu tương thích đi qua các bảng theo thứ tự:</p>
+      <ol class="steps">
+        <li><div><b><code>categories.spec_schema</code></b> quy định danh mục có những trường nào; trang quản trị sinh biểu mẫu từ đây.</div></li>
+        <li><div><b><code>products.specs</code></b> nhận giá trị đã qua hai lớp kiểm tra; <b><code>benchmarks</code></b> giữ điểm hiệu năng dùng để xếp cấp cho C13, C15 và để chấm điểm.</div></li>
+        <li><div><b>Danh mục Engine trong Redis</b> gộp sản phẩm, giá hiệu lực, tồn kho khả dụng và benchmark; đệm theo phiên bản, tự làm mới khi dữ liệu đổi.</div></li>
+        <li><div><b><code>builds</code></b> lưu cấu hình: danh sách món kèm tên và giá lúc đó (<code>items</code>), <code>warnings</code> còn lại, <code>estimated_wattage</code>, <code>recommended_psu_wattage</code>. Trang chia sẻ cấu hình hiển thị đúng kết luận đã đưa ra, kể cả khi kho thay đổi sau đó.</div></li>
+        <li><div><b><code>cart_items.build_id</code></b> gom các món của một cấu hình trong giỏ; ràng buộc duy nhất <code>(cart_id, product_id, build_id)</code> với <code>NULLS NOT DISTINCT</code> giúp thêm vào giỏ an toàn khi bấm nhiều lần.</div></li>
+        <li><div><b><code>orders.type = BUILD</code></b> và <b><code>orders.build_id</code></b> đánh dấu đơn lắp ráp (có phí lắp ráp); <b><code>order_items</code></b> chụp tên và giá từng món.</div></li>
+      </ol>
+    </section>
+
+    <section id="kiem-thu">
+      <h2>Kiểm thử</h2>
+      <div class="table">
+        <table>
+          <thead><tr><th>Tệp test</th><th class="num">Số ca</th><th>Nội dung</th></tr></thead>
+          <tbody>
+            <tr><td><code>packages/engine/src/rules.test.ts</code></td><td class="num">61</td><td>từng luật: trường hợp đúng, sai và giá trị biên (ví dụ C08 với mức tối thiểu 520 W: nguồn 520 W đạt, 519 W báo lỗi)</td></tr>
+            <tr><td><code>packages/engine/src/ac3.test.ts</code></td><td class="num">6</td><td>AC-3 loại đúng giá trị, lan truyền bắc cầu, nhất quán theo cận cho C08</td></tr>
+            <tr><td><code>packages/engine/src/solve.infeasible.test.ts</code></td><td class="num">9</td><td>ngân sách quá thấp, linh kiện cố định xung khắc, mọi chiến lược cho cùng chẩn đoán</td></tr>
+            <tr><td><code>apps/web/src/features/builder/compat.test.ts</code></td><td class="num">10</td><td>đánh dấu slot, làm mờ ứng viên kèm lý do, không làm mờ vì luật thiếu món</td></tr>
+            <tr><td><code>apps/api/.../compatibility.int.test.ts</code></td><td class="num">9</td><td>API trên PostgreSQL thật: 404 cho sản phẩm ẩn, 422 trùng danh mục, C13 khi chơi game</td></tr>
+            <tr><td><code>apps/api/.../spec-validator.test.ts</code></td><td class="num">8</td><td>kiểm tra hai lớp <code>spec_schema</code> và Zod</td></tr>
+            <tr><td><code>e2e/customizer-conflict.spec.ts</code></td><td class="num">1</td><td>Playwright: đổi sang mainboard LGA1700 cho CPU AM5, huy hiệu đỏ C01 hiện ra, lưu bị server từ chối 422</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Ngoài ra, script <code>bench:equivalence</code> sinh ngẫu nhiên nhiều kho thử và kiểm tra chiến lược đầy đủ (có cắt nhánh) cho ra đúng các cấu hình và chẩn đoán như forward checking duyệt hết, nên việc cắt nhánh không làm mất lời giải.</p>
+    </section>
+
+    <section id="han-che">
+      <h2>Giới hạn và hướng phát triển</h2>
+      <ul>
+        <li><strong>Công suất CPU là mức cơ sở.</strong> Thêm trường công suất đỉnh (PL2, PPT) vào thông số CPU và dùng nó trong C08.</li>
+        <li><strong>Chưa xét khoảng hở giữa các linh kiện</strong>: chiều cao RAM dưới tản khí lớn, độ dày card (số khe), vị trí radiator so với RAM.</li>
+        <li><strong>Chưa xét đầu cấp nguồn</strong> (12VHPWR, số đầu PCIe 8 pin) và <strong>phiên bản BIOS</strong> khi mainboard đời cũ dùng CPU đời mới.</li>
+        <li><strong>Mỗi cấu hình một ổ cứng.</strong> Nhiều ổ cần thêm luật số khe M.2 và cổng SATA.</li>
+        <li><strong>Cấp hiệu năng C13 dựa trên điểm benchmark tổng hợp</strong>, chưa tách hiệu năng chơi game riêng, nên CPU có bộ nhớ đệm lớn (X3D) có thể bị xếp cấp thấp hơn thực tế khi chơi game.</li>
+        <li><strong>Thông số nhập tay.</strong> Sai một con số (ví dụ chiều dài card) làm sai kết luận; có thể đối chiếu tự động với trang của nhà sản xuất.</li>
+      </ul>
+    </section>
+
+    <section id="ma-nguon">
+      <h2>Bản đồ mã nguồn</h2>
+      <div class="map">
+        <div><code>packages/engine/src/rules.ts</code></div><div>15 luật, bảng <code>PAIR_RULES</code>, công thức công suất nguồn</div>
+        <div><code>packages/engine/src/compatibility.ts</code></div><div><code>checkCompatibility</code>: chạy C01–C15 theo thứ tự, trả công suất ước tính và gợi ý</div>
+        <div><code>packages/engine/src/domains.ts</code></div><div>miền giá trị, bảng quan hệ <code>rel</code>, loại món bị trội, điểm trừ luật mềm</div>
+        <div><code>packages/engine/src/ac3.ts</code></div><div>AC-3 và nhất quán theo cận cho C08</div>
+        <div><code>packages/engine/src/search.ts</code></div><div>nhánh cận, forward checking</div>
+        <div><code>packages/shared/src/specs.ts</code></div><div>schema Zod thông số 8 danh mục, kiểu <code>SpecField</code></div>
+        <div><code>apps/web/src/features/builder/compat.ts</code></div><div>luật trên trình duyệt, <code>previewCandidate</code></div>
+        <div><code>apps/api/src/modules/compatibility/</code></div><div><code>POST /api/compatibility/check</code></div>
+        <div><code>apps/api/src/modules/builds/builds.service.ts</code></div><div>lưu cấu hình, từ chối 422 <code>INCOMPATIBLE</code></div>
+        <div><code>apps/api/src/modules/admin/products/spec-validator.ts</code></div><div>kiểm tra thông số hai lớp</div>
+        <div><code>apps/api/src/db/schema.ts</code>, <code>apps/api/drizzle/</code></div><div>15 bảng, chỉ mục, migration</div>
+        <div><code>docs/graph/nodes/rules/R-C01.md</code> … <code>R-C15.md</code></div><div>đặc tả từng luật trong spec graph</div>
+      </div>
+    </section>
+  </article>
+</div>
+</body>
+</html>

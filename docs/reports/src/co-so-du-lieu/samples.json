@@ -1,0 +1,399 @@
+{
+ "users": {
+  "id": "835b0ce7-4ae9-4fe9-b017-0a4f7ec32518",
+  "email": "khach@pcbuilder.vn",
+  "password_hash": "$2b$10$4uRtl.…",
+  "full_name": "Nguyễn Văn Khách",
+  "phone": "0900000003",
+  "role": "CUSTOMER",
+  "created_at": "2026-11-07T18:27:27.100778+00:00"
+ },
+ "categories": {
+  "id": "da78d4b2-ef44-4f18-8b7b-6e12701fcfcc",
+  "key": "cpu",
+  "slug": "cpu",
+  "name": "CPU",
+  "sort_order": 1,
+  "spec_schema_first": {
+   "key": "socket",
+   "type": "enum",
+   "label": "Socket",
+   "options": [
+    "AM4",
+    "AM5",
+    "LGA1700",
+    "LGA1851"
+   ],
+   "required": true,
+   "filterable": true
+  },
+  "n": 8
+ },
+ "brands": {
+  "id": "6835773c-e20f-4c6e-b2f2-f95a9626d67e",
+  "name": "AMD"
+ },
+ "products": {
+  "id": "d64662b9-f6b7-4037-9611-b8ac7cdafc29",
+  "category_id": "da78d4b2-ef44-4f18-8b7b-6e12701fcfcc",
+  "brand_id": "6835773c-e20f-4c6e-b2f2-f95a9626d67e",
+  "sku": "CPU-AMD-R7-7800X3D",
+  "slug": "amd-ryzen-7-7800x3d",
+  "name": "AMD Ryzen 7 7800X3D",
+  "price": 10990000,
+  "sale_price": null,
+  "stock": 8,
+  "reserved": 0,
+  "images": [],
+  "specs": {
+   "tdpW": 120,
+   "cores": 8,
+   "socket": "AM5",
+   "threads": 16,
+   "memoryTypes": [
+    "DDR5"
+   ],
+   "baseClockGHz": 4.2,
+   "boostClockGHz": 5,
+   "integratedGraphics": true
+  },
+  "description": "AMD Ryzen 7 7800X3D: 8 nhân 16 luồng, xung nhịp tối đa 5 GHz, TDP 120W, socket AM5, có đồ họa tích hợp.",
+  "status": "ACTIVE",
+  "commercial_boost": 0,
+  "created_at": "2026-11-07T18:27:26.869715+00:00",
+  "updated_at": "2026-11-07T18:27:26.869715+00:00"
+ },
+ "benchmarks": {
+  "product_id": "d64662b9-f6b7-4037-9611-b8ac7cdafc29",
+  "cpu_single": 1780,
+  "cpu_multi": 18200,
+  "gpu_score": null,
+  "source": "Cinebench R23",
+  "updated_at": "2026-11-07T18:27:26.887165+00:00"
+ },
+ "benchmarks_gpu": {
+  "product_id": "7ca01ba2-5879-4dc1-910f-ba2622963438",
+  "cpu_single": null,
+  "cpu_multi": null,
+  "gpu_score": 6200,
+  "source": "3DMark Time Spy",
+  "updated_at": "2026-11-07T18:27:26.887165+00:00"
+ },
+ "inventory_movements": {
+  "id": "baabb866-346e-440a-9393-03fa80693d6f",
+  "product_id": "08f9dae0-562a-4414-ac0a-3d439946610e",
+  "delta": -1,
+  "reason": "ORDER",
+  "ref": "PCBV3JQZCV7",
+  "actor_id": null,
+  "created_at": "2026-11-10T05:48:16.00586+00:00"
+ },
+ "inventory_reasons": [
+  {
+   "reason": "ORDER",
+   "count": 16
+  },
+  {
+   "reason": "IMPORT",
+   "count": 213
+  }
+ ],
+ "purpose_weights": {
+  "purpose": "gaming",
+  "weights": {
+   "cpu": 0.22,
+   "gpu": 0.42,
+   "psu": 0.05,
+   "ram": 0.1,
+   "case": 0.04,
+   "cooler": 0.03,
+   "storage": 0.07,
+   "mainboard": 0.07
+  },
+  "allocation": {
+   "cpu": {
+    "max": 0.3,
+    "min": 0.14
+   },
+   "gpu": {
+    "max": 0.5,
+    "min": 0.34
+   },
+   "psu": {
+    "max": 0.13,
+    "min": 0
+   },
+   "ram": {
+    "max": 0.18,
+    "min": 0.02
+   },
+   "case": {
+    "max": 0.12,
+    "min": 0
+   },
+   "cooler": {
+    "max": 0.11,
+    "min": 0
+   },
+   "storage": {
+    "max": 0.15,
+    "min": 0
+   },
+   "mainboard": {
+    "max": 0.15,
+    "min": 0
+   }
+  },
+  "updated_by": null,
+  "updated_at": "2026-11-07T18:27:27.10368+00:00"
+ },
+ "builds": {
+  "id": "30b3da45-85a8-4cc6-b636-a037fc817347",
+  "user_id": null,
+  "name": "Lập trình / AI · Tối ưu hiệu năng",
+  "label": "performance",
+  "purpose": "ai",
+  "budget": 100000000,
+  "items": [
+   {
+    "name": "Intel Core Ultra 9 285K",
+    "price": 15490000,
+    "category": "cpu",
+    "productId": "4f2d4fae-5336-47fe-94ec-b31179001294"
+   },
+   {
+    "name": "ASUS PRIME B860M-A WIFI",
+    "price": 4270000,
+    "category": "mainboard",
+    "productId": "16cec1a2-5a74-4ee2-8557-6bbbac3157da"
+   },
+   {
+    "name": "Kingston FURY Beast 64GB (2x32GB) DDR5 6000MHz CL36",
+    "price": 5590000,
+    "category": "ram",
+    "productId": "2e841c4b-accf-4190-aab7-e5571c58bbcb"
+   },
+   {
+    "name": "PowerColor Reaper Radeon RX 9070 XT 16GB",
+    "price": 18890000,
+    "category": "gpu",
+    "productId": "aa0f7ef8-afb6-4dbf-98d8-821472c8a4aa"
+   },
+   {
+    "name": "Samsung 9100 PRO 2TB NVMe PCIe 5.0",
+    "price": 8270000,
+    "category": "storage",
+    "productId": "c4f057b3-974f-4a2a-bac4-b8820facf305"
+   },
+   {
+    "name": "Corsair HX1200i 1200W 80+ Platinum Full Modular",
+    "price": 6890000,
+    "category": "psu",
+    "productId": "f251d056-7a6a-402c-af2a-2c16b27fdf16"
+   },
+   {
+    "name": "DeepCool CC560 V2",
+    "price": 1190000,
+    "category": "case",
+    "productId": "5c96df66-8933-4f07-a3c1-e6c76e5a713f"
+   },
+   {
+    "name": "Thermalright Frozen Warframe 360 ARGB",
+    "price": 1690000,
+    "category": "cooler",
+    "productId": "e8e99074-0314-4243-b1c9-0a896a01a371"
+   }
+  ],
+  "total_price": 62280000,
+  "score": 98.22,
+  "score_breakdown": {
+   "cpu": 100,
+   "gpu": 96.3,
+   "psu": 100,
+   "ram": 100,
+   "case": 100,
+   "cooler": 100,
+   "storage": 100,
+   "mainboard": 100
+  },
+  "allocation": {
+   "cpu": 0.2487,
+   "gpu": 0.3033,
+   "psu": 0.1106,
+   "ram": 0.0898,
+   "case": 0.0191,
+   "cooler": 0.0271,
+   "storage": 0.1328,
+   "mainboard": 0.0686
+  },
+  "estimated_wattage": 504,
+  "recommended_psu_wattage": 700,
+  "warnings": [
+   {
+    "code": "C14",
+    "message": "Tổng giá chỉ dùng 62% ngân sách 100.000.000₫",
+    "severity": "warning",
+    "categories": [
+     "cpu",
+     "mainboard",
+     "ram",
+     "gpu",
+     "storage",
+     "psu",
+     "case",
+     "cooler"
+    ]
+   }
+  ],
+  "source": "CHAT",
+  "created_at": "2026-11-07T18:32:49.541528+00:00"
+ },
+ "builds_src": [
+  {
+   "source": "CHAT",
+   "count": 33
+  },
+  {
+   "source": "FORM",
+   "count": 102
+  }
+ ],
+ "carts": {
+  "id": "b1228c6a-a342-4bfc-be4f-aa7322fae4b2",
+  "user_id": "0114476e-f63e-48b5-9d21-bd29e4ceb4a3",
+  "updated_at": "2026-11-08T06:00:04.568+00:00"
+ },
+ "cart_items": {
+  "id": "4d682889-5fda-4355-ab1e-dc54c0cd37ea",
+  "cart_id": "b1228c6a-a342-4bfc-be4f-aa7322fae4b2",
+  "product_id": "12a30d2a-928a-4755-9656-cdc7376f7614",
+  "qty": 1,
+  "build_id": null
+ },
+ "orders": {
+  "id": "8f652169-3af3-4d42-aa07-c82921b72490",
+  "code": "PCB6ROVU7IJ",
+  "user_id": null,
+  "type": "BUILD",
+  "status": "PAID",
+  "payment_status": "PAID",
+  "build_id": "535af8f8-c27e-4b9e-b9fb-0e7b42ffc3c5",
+  "subtotal": 24920000,
+  "assembly_fee": 200000,
+  "shipping_fee": 0,
+  "total": 25120000,
+  "shipping_name": "Nguyễn Văn An",
+  "phone": "0912345678",
+  "address": "12 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+  "note": null,
+  "paid_at": "2026-11-10T05:49:39.231+00:00",
+  "expires_at": "2026-11-10T06:04:34.667+00:00",
+  "created_at": "2026-11-10T05:49:34.667+00:00",
+  "updated_at": "2026-11-10T05:49:39.231+00:00",
+  "guest_id": "WTPfIQbbP_XuCfeANILST"
+ },
+ "order_status": [
+  {
+   "type": "BUILD",
+   "status": "PAID",
+   "payment_status": "PAID",
+   "count": 2
+  },
+  {
+   "type": "BUILD",
+   "status": "CANCELLED",
+   "payment_status": "UNPAID",
+   "count": 2
+  }
+ ],
+ "order_items": {
+  "id": "e595d393-873b-4343-ada4-d2c4fff07920",
+  "order_id": "b4b95bda-0b1d-449d-b248-e428882144e2",
+  "product_id": "f6b894b3-93cf-4d9f-a834-b5b1c58ce4e0",
+  "name_snapshot": "Intel Core i5-12400",
+  "price_snapshot": 3190000,
+  "qty": 1,
+  "build_id": "8617a0ad-2d76-46b4-ace7-ed0138d8152e"
+ },
+ "payments": {
+  "id": "64ed0ccf-ae7a-4012-8797-bcdab0c89646",
+  "order_id": "8f652169-3af3-4d42-aa07-c82921b72490",
+  "provider": "SIMULATOR",
+  "amount": 25120000,
+  "transfer_content": "PCB6ROVU7IJ thanh toan don hang",
+  "provider_txn_id": "SIM-PCB6ROVU7IJ-1794289779227",
+  "raw": {
+   "id": "SIM-PCB6ROVU7IJ-1794289779227",
+   "content": "PCB6ROVU7IJ thanh toan don hang",
+   "gateway": "SIMULATOR",
+   "transferType": "in",
+   "accountNumber": "0000000000",
+   "referenceCode": "SIMULATED",
+   "transferAmount": 25120000,
+   "transactionDate": "2026-11-10T05:49:39.227Z"
+  },
+  "status": "SUCCESS",
+  "created_at": "2026-11-10T05:49:39.227555+00:00"
+ },
+ "chat_sessions": {
+  "id": "de167449-b1dc-4c22-8744-016e9804c21a",
+  "user_id": null,
+  "guest_id": "WTPfIQbbP_XuCfeANILST",
+  "title": "chơi game 25 triệu",
+  "mode": "FALLBACK",
+  "created_at": "2026-11-10T05:49:15.941016+00:00"
+ },
+ "chat_tool": {
+  "id": "840d559a-d929-488e-b8e7-a5e2b8255001",
+  "session_id": "de167449-b1dc-4c22-8744-016e9804c21a",
+  "role": "tool",
+  "content": "",
+  "tool_name": "recommend_builds",
+  "tool_args": {
+   "budget": 25000000,
+   "purpose": "gaming",
+   "preferences": {}
+  },
+  "tool_result_head": "{\"budget\": 25000000, \"builds\": [{\"id\": \"535af8f8-c27e-4b9e-b9fb-0e7b42ffc3c5\", \"label\": \"performance\", \"parts\": [{\"name\": \"Intel Core i5-12400\", \"price\": 3190000, \"category\": \"cpu\", \"productId\": \"f6b894b3-93cf-4d9f-a834-b5b1c58ce4e0\"}, {\"name\": \"ASRock H610M-HDV/M.2\", \"price\": 1490000, \"category\": \"mainboard\", \"productId\": \"08f9dae0-562a-4414-ac0a-3d439946610e\"}, {\"name\": \"G.Skill Ripjaws V 32GB (",
+  "build_ids": [
+   "535af8f8-c27e-4b9e-b9fb-0e7b42ffc3c5",
+   "a8bb8425-d3e0-4a7b-93b0-a34dd0ab0ad1",
+   "3071491e-0406-47e3-ae21-97bd25bd53e1"
+  ],
+  "mode": null,
+  "latency_ms": null,
+  "price_check": null,
+  "created_at": "2026-11-10T05:49:15.996+00:00"
+ },
+ "chat_assistant": {
+  "id": "1bd59c4c-a1dc-4f81-8d2d-76a6c2aea786",
+  "role": "assistant",
+  "content": "Em gợi ý 3 cấu hình chơi game trong ngân sách 25.000.000₫:\n\n1. Tối ưu hiệu năng — 24.920.000₫: dồn ngân sách nhiều nhất cho Card đồ họa (57%) và CPU (13%); CPU Intel Core i5-12400; card Sapphire PULSE Radeon RX 7900 GRE 16GB.\n2. Cân bằng — ",
+  "build_ids": [
+   "535af8f8-c27e-4b9e-b9fb-0e7b42ffc3c5",
+   "a8bb8425-d3e0-4a7b-93b0-a34dd0ab0ad1",
+   "3071491e-0406-47e3-ae21-97bd25bd53e1"
+  ],
+  "mode": "FALLBACK",
+  "latency_ms": 38,
+  "price_check": null,
+  "created_at": "2026-11-10T05:49:15.997+00:00"
+ },
+ "chat_roles": [
+  {
+   "role": "user",
+   "tool_name": null,
+   "count": 15
+  },
+  {
+   "role": "assistant",
+   "tool_name": null,
+   "count": 15
+  },
+  {
+   "role": "tool",
+   "tool_name": "recommend_builds",
+   "count": 14
+  }
+ ]
+}

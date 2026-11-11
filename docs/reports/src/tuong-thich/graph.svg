@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" role="img" aria-labelledby="g-title" class="cgraph">
+  <title id="g-title">Đồ thị ràng buộc giữa 8 danh mục linh kiện</title>
+  <style>
+    .cgraph text { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; fill: #0d0f12; }
+    .cgraph .edge { stroke: #0d0f12; stroke-width: 1.6; }
+    .cgraph .node rect.box { fill: #ffffff; stroke: #0d0f12; stroke-width: 1.4; }
+    .cgraph .node text { font-size: 16px; font-weight: 600; }
+    .cgraph .lbl rect { fill: #ffffff; }
+    .cgraph .lbl text { font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
+    .cgraph .lbl .soft { fill: #a14e05; font-weight: 600; }
+    .cgraph .tern rect { fill: #c0713a; }
+    .cgraph .tern text { fill: #ffffff; font-size: 11.5px; font-weight: 700; }
+  </style>
+
+  <!-- edges: centre to centre, drawn under the nodes -->
+  <g class="edges">
+    <line class="edge" x1="120" y1="60" x2="380" y2="60"/>
+    <line class="edge" x1="120" y1="60" x2="120" y2="210"/>
+    <line class="edge" x1="380" y1="60" x2="120" y2="210"/>
+    <line class="edge" x1="380" y1="60" x2="380" y2="210"/>
+    <line class="edge" x1="380" y1="60" x2="640" y2="210"/>
+    <line class="edge" x1="120" y1="210" x2="120" y2="360"/>
+    <line class="edge" x1="120" y1="210" x2="380" y2="360"/>
+    <line class="edge" x1="380" y1="210" x2="380" y2="360"/>
+    <line class="edge" x1="640" y1="210" x2="380" y2="360"/>
+    <line class="edge" x1="640" y1="360" x2="380" y2="360"/>
+  </g>
+
+  <!-- edge labels -->
+  <g class="lbl">
+    <rect x="226" y="50" width="48" height="20" rx="3"/><text x="250" y="65" text-anchor="middle">C02</text>
+    <rect x="80" y="125" width="80" height="20" rx="3"/><text x="120" y="140" text-anchor="middle">C02 · C03</text>
+    <rect x="208" y="125" width="84" height="20" rx="3"/><text x="250" y="140" text-anchor="middle">C01 · <tspan class="soft">C15</tspan></text>
+    <rect x="338" y="125" width="84" height="20" rx="3"/><text x="380" y="140" text-anchor="middle">C10 · <tspan class="soft">C13</tspan></text>
+    <rect x="468" y="125" width="84" height="20" rx="3"/><text x="510" y="140" text-anchor="middle">C07 · <tspan class="soft">C09</tspan></text>
+    <rect x="96" y="275" width="48" height="20" rx="3"/><text x="120" y="290" text-anchor="middle">C11</text>
+    <rect x="226" y="275" width="48" height="20" rx="3"/><text x="250" y="290" text-anchor="middle">C04</text>
+    <rect x="356" y="275" width="48" height="20" rx="3"/><text x="380" y="290" text-anchor="middle">C05</text>
+    <rect x="486" y="275" width="48" height="20" rx="3"/><text x="510" y="290" text-anchor="middle">C06</text>
+    <rect x="486" y="350" width="48" height="20" rx="3"/><text x="510" y="365" text-anchor="middle">C12</text>
+  </g>
+
+  <!-- nodes: 150 x 46, colour bar = category colour -->
+  <g class="node"><rect class="box" x="45" y="37" width="150" height="46" rx="7"/><rect x="45" y="37" width="7" height="46" rx="2" fill="#8b7cf0"/><text x="128" y="66" text-anchor="middle">RAM</text></g>
+  <g class="node"><rect class="box" x="305" y="37" width="150" height="46" rx="7"/><rect x="305" y="37" width="7" height="46" rx="2" fill="#2a78d6"/><text x="388" y="66" text-anchor="middle">CPU</text></g>
+  <g class="node"><rect class="box" x="45" y="187" width="150" height="46" rx="7"/><rect x="45" y="187" width="7" height="46" rx="2" fill="#14a38b"/><text x="128" y="216" text-anchor="middle">Mainboard</text></g>
+  <g class="node"><rect class="box" x="305" y="187" width="150" height="46" rx="7"/><rect x="305" y="187" width="7" height="46" rx="2" fill="#d55181"/><text x="388" y="216" text-anchor="middle">Card đồ họa</text></g>
+  <g class="node"><rect class="box" x="565" y="187" width="150" height="46" rx="7"/><rect x="565" y="187" width="7" height="46" rx="2" fill="#0e9fb8"/><text x="648" y="216" text-anchor="middle">Tản nhiệt</text></g>
+  <g class="node"><rect class="box" x="45" y="337" width="150" height="46" rx="7"/><rect x="45" y="337" width="7" height="46" rx="2" fill="#a35ce0"/><text x="128" y="366" text-anchor="middle">Ổ cứng</text></g>
+  <g class="node"><rect class="box" x="305" y="337" width="150" height="46" rx="7"/><rect x="305" y="337" width="7" height="46" rx="2" fill="#5b5fe0"/><text x="388" y="366" text-anchor="middle">Vỏ case</text></g>
+  <g class="node"><rect class="box" x="565" y="337" width="150" height="46" rx="7"/><rect x="565" y="337" width="7" height="46" rx="2" fill="#c0713a"/><text x="648" y="366" text-anchor="middle">Nguồn</text></g>
+
+  <!-- C08 marks the three variables of the ternary wattage rule -->
+  <g class="tern"><rect x="427" y="27" width="38" height="18" rx="9"/><text x="446" y="40" text-anchor="middle">C08</text></g>
+  <g class="tern"><rect x="427" y="177" width="38" height="18" rx="9"/><text x="446" y="190" text-anchor="middle">C08</text></g>
+  <g class="tern"><rect x="687" y="327" width="38" height="18" rx="9"/><text x="706" y="340" text-anchor="middle">C08</text></g>
+
+  <text x="380" y="418" text-anchor="middle" style="font-size:13px;fill:#5d636a">C14 (tổng giá trong ngân sách) ràng buộc cả 8 đỉnh nên không vẽ thành cạnh</text>
+</svg>
