@@ -23,6 +23,9 @@ SPEECH_FIXES = [
     ('2.000', '2000'), ('1.000', '1000'), ('…', '.'), ('“', ''), ('”', ''),
 ]
 
+# A script may add its own fixes (checked first), e.g. for product names in that video.
+SPEECH_FIXES = list(getattr(script, 'SPEECH_FIXES', [])) + SPEECH_FIXES
+
 def speech_text(cap):
     for a, b in SPEECH_FIXES:
         cap = cap.replace(a, b)
@@ -39,7 +42,7 @@ def tts_edge(text, mp3):
         return
     async def go():
         await edge_tts.Communicate(text, NEURAL_VOICE, rate=NEURAL_RATE).save(cached)
-    for attempt in range(12):
+    for attempt in range(int(os.environ.get('TTS_RETRIES', '12'))):
         try:
             asyncio.run(go())
             if os.path.getsize(cached) > 1000:
