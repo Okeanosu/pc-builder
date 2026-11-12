@@ -1,8 +1,3 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Từ điển dữ liệu PC Builder</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,33 +83,7 @@
   ul.notes { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 14px; color: var(--muted); max-width: 78ch; }
   .overview td a { color: var(--ink); }
 </style>
-<style>
-  @page { size: A4; margin: 18mm 15mm 18mm 15mm; }
-  @page erd { size: A4 landscape; margin: 12mm; }
-  html, body { background: #fff !important; }
-  body { font-size: 10pt; line-height: 1.5; }
-  .wrap { display: block; max-width: none; padding: 0 !important; }
-  header.top { padding-bottom: 14px; margin-bottom: 16px; }
-  h1 { font-size: 28pt; }
-  nav.toc { position: static !important; max-height: none; overflow: visible; border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; margin: 0 0 20px; break-inside: avoid; }
-  nav.toc > ol { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 16px; }
-  article { gap: 26px; }
-  .erd-sec { page: erd; break-before: page; }
-  .erd-sec figure img { width: 268mm; max-width: none; height: auto; max-height: none; display: block; border: 0; }
-  .erd-sec figcaption { max-width: 268mm; }
-  .group { gap: 22px; }
-  .group > h2 { break-after: avoid; }
-  #g-5 { break-before: page; }
-  .tbl { gap: 6px; }
-  .tbl header, .tbl > p, h2, h3 { break-after: avoid; }
-  .table { overflow: visible; }
-  table { min-width: 0; font-size: 8.8pt; }
-  th, td { padding: 4px 8px 4px 0; }
-  td code { font-size: 8.3pt; } td.type, td.cons { font-size: 8pt; }
-  tr { break-inside: avoid; }
-  ul.notes { font-size: 9pt; }
-</style>
-</head><body>
+
 <div class="wrap">
   <header class="top">
     <p class="kicker">Đồ án tốt nghiệp PC Builder · tài liệu thiết kế cơ sở dữ liệu</p>
@@ -179,7 +148,7 @@
       <div class="table"><table>
         <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"></colgroup>
         <thead><tr><th>Cột</th><th>Kiểu</th><th>Ràng buộc</th><th>Lưu để làm gì</th></tr></thead>
-        <tbody><tr><td><code>id</code></td><td class="type">uuid</td><td class="cons"><b class="k pk">PK</b><br>mặc định gen_random_uuid()</td><td>Mã định danh của dòng, sinh ngẫu nhiên.</td></tr><tr><td><code>email</code></td><td class="type">text</td><td class="cons"><b class="k uk">UK</b><br>NOT NULL</td><td>Email đăng nhập, không được trùng giữa các tài khoản.</td></tr><tr><td><code>password_hash</code></td><td class="type">text</td><td class="cons">NOT NULL</td><td>Mật khẩu đã băm một chiều bằng bcrypt; hệ thống không lưu mật khẩu gốc.</td></tr><tr><td><code>full_name</code></td><td class="type">text</td><td class="cons">NOT NULL</td><td>Họ tên hiển thị trên giao diện và điền sẵn khi đặt hàng.</td></tr><tr><td><code>phone</code></td><td class="type">text?</td><td class="cons"><span class="muted">cho phép NULL</span></td><td>Số điện thoại (10 chữ số, bắt đầu bằng 0), không bắt buộc.</td></tr><tr><td><code>role</code></td><td class="type">role</td><td class="cons">NOT NULL<br>mặc định CUSTOMER</td><td>Vai trò quyết định quyền: CUSTOMER mua hàng; STAFF vào trang quản trị nhưng một số thao tác chỉ xem; ADMIN toàn quyền.</td></tr><tr><td><code>created_at</code></td><td class="type">timestamptz</td><td class="cons">NOT NULL<br>mặc định now()</td><td>Thời điểm tạo tài khoản.</td></tr></tbody>
+        <tbody><tr><td><code>id</code></td><td class="type">uuid</td><td class="cons"><b class="k pk">PK</b><br>mặc định gen_random_uuid()</td><td>Mã định danh của dòng, sinh ngẫu nhiên.</td></tr><tr><td><code>email</code></td><td class="type">text</td><td class="cons"><b class="k uk">UK</b><br>NOT NULL</td><td>Email đăng nhập, không được trùng giữa các tài khoản.</td></tr><tr><td><code>password_hash</code></td><td class="type">text</td><td class="cons">NOT NULL</td><td>Mật khẩu đã băm một chiều bằng bcrypt; hệ thống không lưu mật khẩu gốc.</td></tr><tr><td><code>full_name</code></td><td class="type">text</td><td class="cons">NOT NULL</td><td>Họ tên hiển thị trên giao diện và điền sẵn khi đặt hàng.</td></tr><tr><td><code>phone</code></td><td class="type">text?</td><td class="cons"><span class="muted">cho phép NULL</span></td><td>Số điện thoại (10 chữ số, bắt đầu bằng 0), không bắt buộc.</td></tr><tr><td><code>role</code></td><td class="type">role</td><td class="cons">NOT NULL<br>mặc định CUSTOMER</td><td>Vai trò quyết định quyền: CUSTOMER mua hàng; STAFF vào được trang quản trị; ADMIN có thêm quyền sửa lược đồ thông số, trọng số thuật toán, xác nhận thanh toán tay và hủy đơn đã thanh toán.</td></tr><tr><td><code>created_at</code></td><td class="type">timestamptz</td><td class="cons">NOT NULL<br>mặc định now()</td><td>Thời điểm tạo tài khoản.</td></tr></tbody>
       </table></div>
       
     </section></section><section class="group" id="g-1"><h2>Sản phẩm</h2>
@@ -277,7 +246,7 @@
       <div class="table"><table>
         <colgroup><col class="c1"><col class="c2"><col class="c3"><col class="c4"></colgroup>
         <thead><tr><th>Cột</th><th>Kiểu</th><th>Ràng buộc</th><th>Lưu để làm gì</th></tr></thead>
-        <tbody><tr><td><code>purpose</code></td><td class="type">text</td><td class="cons"><b class="k pk">PK</b></td><td>Mục đích: gaming, graphics, ai, office.</td></tr><tr><td><code>weights</code></td><td class="type">jsonb</td><td class="cons">NOT NULL</td><td>Trọng số của từng danh mục (tổng bằng 1). Ví dụ chơi game đặt trọng số lớn cho card đồ họa.</td></tr><tr><td><code>allocation</code></td><td class="type">jsonb</td><td class="cons">NOT NULL</td><td>Khoảng tỷ lệ ngân sách {min, max} cho từng danh mục; engine không cho một danh mục vượt ra ngoài khoảng này.</td></tr><tr><td><code>updated_by</code></td><td class="type">uuid?</td><td class="cons"><b class="k fk">FK</b> →&nbsp;users.id</td><td>Quản trị viên sửa lần cuối.</td></tr><tr><td><code>updated_at</code></td><td class="type">timestamptz</td><td class="cons">NOT NULL<br>mặc định now()</td><td>Thời điểm sửa gần nhất.</td></tr></tbody>
+        <tbody><tr><td><code>purpose</code></td><td class="type">text</td><td class="cons"><b class="k pk">PK</b></td><td>Mục đích: gaming, graphics, ai, office.</td></tr><tr><td><code>weights</code></td><td class="type">jsonb</td><td class="cons">NOT NULL</td><td>Trọng số của từng danh mục (tổng bằng 1). Ví dụ chơi game đặt trọng số lớn cho card đồ họa.</td></tr><tr><td><code>allocation</code></td><td class="type">jsonb</td><td class="cons">NOT NULL</td><td>Khoảng tỷ lệ ngân sách {min, max} gợi ý cho từng danh mục; engine thử trước các món có giá nằm trong khoảng, món ngoài khoảng vẫn hợp lệ nhưng được thử sau.</td></tr><tr><td><code>updated_by</code></td><td class="type">uuid?</td><td class="cons"><b class="k fk">FK</b> →&nbsp;users.id</td><td>Quản trị viên sửa lần cuối.</td></tr><tr><td><code>updated_at</code></td><td class="type">timestamptz</td><td class="cons">NOT NULL<br>mặc định now()</td><td>Thời điểm sửa gần nhất.</td></tr></tbody>
       </table></div>
       <ul class="notes"><li>Mỗi lần lưu làm tăng phiên bản catalog (catalog:version) trong Redis, nên cache gợi ý cũ tự hết hiệu lực.</li></ul>
     </section></section><section class="group" id="g-4"><h2>Giỏ hàng</h2>
@@ -381,4 +350,4 @@
     </section></section>
   </article>
 </div>
-</body></html>
+
