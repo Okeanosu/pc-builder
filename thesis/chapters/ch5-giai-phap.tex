@@ -1,0 +1,286 @@
+\chapter{CÁC GIẢI PHÁP VÀ ĐÓNG GÓP NỔI BẬT}
+\label{chap:giai-phap}
+
+Trong chương này, em xin trình bày những giải pháp mà em cho là có đóng góp lớn nhất trong đồ án. Các giải pháp này đều xuất phát từ những vấn đề cụ thể em gặp phải khi xây dựng hệ thống: bài toán tìm cấu hình có không gian tìm kiếm quá lớn, mô hình ngôn ngữ có thể bịa thông tin, dịch vụ AI có thể không dùng được, nhiều khách có thể tranh mua món hàng cuối cùng, và thông số linh kiện thay đổi theo từng danh mục. Mỗi giải pháp được trình bày theo trình tự: đặt vấn đề, giải pháp và kết quả đạt được, kèm số liệu đo thực tế. Tuy có thể các giải pháp chưa phải là tối ưu nhất, nhưng chúng đã giải quyết được vấn đề đặt ra và em sẽ tiếp tục hoàn thiện trong tương lai.
+
+\section{Bộ máy tối ưu kết hợp CSP và MCKP}
+\label{sec:engine}
+
+\subsection{Đặt vấn đề}
+
+Bài toán gợi ý cấu hình có hai yêu cầu đan xen. Thứ nhất, cấu hình phải \emph{hợp lệ}: tám linh kiện thỏa mọi luật tương thích cứng và tổng giá không vượt ngân sách. Thứ hai, cấu hình phải \emph{tốt nhất}: trong các cấu hình hợp lệ, chọn cấu hình có hiệu năng cao nhất theo mục đích sử dụng. Ngoài ra, người dùng cần vài lựa chọn khác nhau thật sự để so sánh, chứ không phải ba biến thể gần giống nhau.
+
+Cách làm đơn giản nhất là vét cạn: thử mọi cách ghép rồi giữ cách tốt nhất. Tuy nhiên với kho thử nghiệm 250 sản phẩm và nhu cầu chơi game 25 triệu, kích thước các miền giá trị lần lượt là $29 \times 34 \times 25 \times 32 \times 27 \times 25 \times 27 \times 22$, tức khoảng $3{,}16 \times 10^{11}$ tổ hợp. Ở tốc độ đo được khoảng 42 nghìn tổ hợp mỗi mili giây, vét cạn cần khoảng 2,1 giờ cho một yêu cầu, trong khi mục tiêu là dưới 300 ms. Mặt khác, hai bài toán kinh điển mà phiếu giao nhiệm vụ đề cập đều không đủ nếu đứng riêng: bài toán thỏa mãn ràng buộc (CSP) chỉ tìm cấu hình hợp lệ chứ không tối ưu, còn bài toán cái túi đa lựa chọn (MCKP) tối ưu được theo ngân sách nhưng không biểu diễn được các ràng buộc giữa các nhóm như socket hay kích thước.
+
+\subsection{Giải pháp}
+
+\subsubsection{Mô hình hóa}
+
+Em mô hình hóa bài toán thành một \textbf{CSP có hàm mục tiêu}, trong đó cấu trúc MCKP được dùng để tính cận trên cho tìm kiếm nhánh cận.
+
+\textbf{Biến và miền giá trị.} Mỗi nhóm linh kiện $c$ thuộc tập
+\[
+\mathcal{C} = \{\text{cpu}, \text{mainboard}, \text{ram}, \text{gpu}, \text{storage}, \text{psu}, \text{case}, \text{cooler}\}
+\]
+là một biến $x_c$. Miền giá trị $D_c$ là tập sản phẩm của nhóm đó đang bán, còn hàng và khớp sở thích của khách; với mục đích văn phòng, miền của card đồ họa có thêm giá trị ``không có card rời''.
+
+\textbf{Ràng buộc.} Mười luật tương thích cứng chỉ liên quan đến hai nhóm (socket, chuẩn RAM, kích thước\ldots) là các ràng buộc hai ngôi $R_{ab} \subseteq D_a \times D_b$. Luật công suất nguồn C08 là ràng buộc ba ngôi:
+\begin{equation}
+\text{watt}(x_{\text{psu}}) \ge \left\lceil 1{,}3 \times \big(\text{tdp}(x_{\text{cpu}}) + \text{tgp}(x_{\text{gpu}}) + 75\big) \right\rceil
+\label{eq:c08}
+\end{equation}
+và ngân sách là ràng buộc toàn cục $\sum_{c} \text{price}(x_c) \le B$.
+
+\textbf{Hàm mục tiêu.} Với mục đích sử dụng $u$, mỗi sản phẩm $p$ thuộc nhóm $c$ có giá trị
+\begin{equation}
+v(p) = w_{u,c} \cdot \big( s_u(p) \cdot \varphi_u(p) + 5\,\beta(p) \big) + \gamma(p)
+\label{eq:value}
+\end{equation}
+trong đó $w_{u,c}$ là trọng số của nhóm $c$ với mục đích $u$ (lấy từ ma trận trọng số do quản trị viên chỉnh), $s_u(p) \in [0, 100]$ là điểm hiệu năng chuẩn hóa trong nhóm, $\varphi_u(p)$ là hệ số hệ sinh thái (card không phải NVIDIA bị nhân 0,55 với mục đích AI và 0,8 với đồ họa, vì các thư viện học sâu và phần mềm dựng hình chạy tốt nhất trên CUDA), $\beta(p)$ là hệ số ưu tiên thương mại và $\gamma(p)$ là điểm thưởng khi đúng màu khách thích. Cấu hình $x$ cần tìm là cấu hình thỏa mọi ràng buộc cứng và làm cực đại
+\begin{equation}
+f(x) = \sum_{c \in \mathcal{C}} v(x_c) \;-\; 2 \cdot \big|W(x)\big|
+\label{eq:objective}
+\end{equation}
+với $W(x)$ là tập cảnh báo mềm của cấu hình (nguồn sát tải, tản nhiệt yếu, CPU và card lệch cấp, CPU mạnh trên mainboard phổ thông).
+
+Điểm hiệu năng $s_u(p)$ được tính khác nhau cho hai loại linh kiện. CPU và card đồ họa được chấm theo điểm benchmark có trọng số theo mục đích: chơi game coi trọng điểm đơn nhân và điểm đồ họa, đồ họa coi trọng điểm đa nhân và dung lượng bộ nhớ card, AI coi trọng bộ nhớ card. Các linh kiện còn lại như nguồn, mainboard, tản nhiệt được chấm theo \emph{mức đủ dùng}: phần vượt quá nhu cầu không được thưởng thêm. Em đưa ra quyết định này sau khi chạy thử phiên bản đầu: bộ giải chọn nguồn 750--1200 W cho máy chỉ cần 330--500 W, vì mỗi đồng bỏ vào nguồn đều ``mua'' thêm điểm, làm tiền bị rút khỏi CPU và card đồ họa.
+
+\textbf{Liên hệ với MCKP.} Nếu bỏ đi các ràng buộc giữa các nhóm, bài toán còn lại chính là MCKP~\cite{knapsack}: mỗi nhóm là một lớp, phải chọn đúng một phần tử mỗi lớp, trọng lượng là giá, sức chứa là ngân sách và giá trị là $v(p)$. Nới lỏng tuyến tính (LP) của MCKP giải được rất nhanh và cho một \emph{cận trên} của hàm mục tiêu, là thứ tìm kiếm nhánh cận cần để cắt nhánh.
+
+\subsubsection{Thuật toán}
+
+Bộ giải gồm sáu bước, được tóm tắt trong thuật toán~\ref{alg:solve}.
+
+\begin{enumerate}
+  \item \textbf{Lọc miền giá trị} theo tồn kho và sở thích; món khách giữ cố định thì miền chỉ còn đúng món đó.
+  \item \textbf{Tính trước bảng quan hệ:} với mỗi cặp nhóm có luật hai ngôi, tính một mảng bit $|D_a| \times |D_b|$, ô bằng 1 khi hai sản phẩm tương thích. Khi tìm kiếm, kiểm tra tương thích chỉ còn là một phép tra mảng.
+  \item \textbf{Loại giá trị bị trội:} trong các nhóm mainboard, RAM, ổ cứng, nguồn, vỏ case, tản nhiệt, loại sản phẩm B nếu có sản phẩm A cùng nhóm có giá trị không thấp hơn, giá không cao hơn và ``dễ lắp'' ít nhất bằng B dưới mọi luật (ví dụ vỏ case hỗ trợ đủ các chuẩn mainboard, chứa được card dài hơn). CPU và card đồ họa không bị loại để giữ sự đa dạng giữa các cấu hình.
+  \item \textbf{AC-3}~\cite{mackworth} trên các ràng buộc hai ngôi để loại sớm giá trị không có hỗ trợ; ràng buộc ba ngôi C08 được xử lý bằng nhất quán theo cận (bounds consistency), dựa trên việc công suất cần thiết tăng đơn điệu theo TDP và TGP.
+  \item \textbf{Nhánh cận với forward checking}~\cite{haralick}: gán lần lượt từng biến; sau mỗi lần gán, xóa khỏi miền các biến chưa gán mọi giá trị không tương thích, vượt ngân sách còn lại hoặc làm nguồn thiếu công suất; miền nào rỗng thì quay lui ngay. Tại mỗi nút, cận trên LP của MCKP trên các biến còn lại được so với cấu hình tốt nhất đã tìm được để cắt nhánh.
+  \item \textbf{Chọn ba cấu hình theo nhãn} Tối ưu hiệu năng, Cân bằng và Tiết kiệm.
+\end{enumerate}
+
+\begin{algorithm}[H]
+\caption{Tìm cấu hình tối ưu (rút gọn)}
+\label{alg:solve}
+\begin{algorithmic}[1]
+\Require ngân sách $B$, mục đích $u$, sở thích, danh mục sản phẩm $P$
+\Ensure tối đa 3 cấu hình hoặc lý do vô nghiệm
+\State $D \gets$ \Call{LọcMiền}{$P$, sở thích}; \; $R \gets$ \Call{BảngQuanHệ}{$D$}
+\State $D \gets$ \Call{LoạiTrội}{$D$}
+\If{\Call{AC3}{$D, R$} làm rỗng một miền} \Return vô nghiệm \EndIf
+\State $x^{*} \gets \varnothing$; \; \Call{NhánhCận}{$\varnothing, D$}
+\State \Return \Call{ChọnNhãn}{$x^{*}$, các cấu hình ứng viên}
+\Statex
+\Procedure{NhánhCận}{$A, D$}
+  \If{$A$ đã gán đủ 8 biến}
+    \If{$f(A) > f(x^{*})$} $x^{*} \gets A$ \EndIf
+    \State \Return
+  \EndIf
+  \State $c \gets$ biến chưa gán có miền một phần tử, nếu không thì biến có trọng số lớn nhất
+  \For{$p \in D_c$ theo thứ tự ưu tiên}
+    \If{$p$ tương thích với $A$ theo $R$, C08 và ngân sách}
+      \State $D' \gets$ \Call{ForwardCheck}{$A \cup \{x_c = p\}, D$}
+      \If{không miền nào rỗng \textbf{và} $f(A \cup \{x_c = p\}) + \text{UB}_{\text{LP}}(D') > f(x^{*})$}
+        \State \Call{NhánhCận}{$A \cup \{x_c = p\}, D'$}
+      \EndIf
+    \EndIf
+  \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Cận trên LP của MCKP.} Với mỗi nhóm chưa gán, bộ giải dựng \emph{bao lồi trên} của các điểm (giá, giá trị) trong miền còn lại. Cận trên bằng tổng giá trị của phần tử rẻ nhất mỗi nhóm, cộng thêm phần tăng thu được khi lần lượt ``nâng cấp'' theo các đoạn của bao lồi có hiệu suất (giá trị tăng thêm trên mỗi đồng) cao nhất, cho tới khi hết ngân sách còn lại; đoạn cuối được lấy một phần (phân số). Đây là lời giải đúng của nới lỏng LP của MCKP~\cite{sinha,knapsack}. Vì nó bỏ qua ràng buộc giữa các nhóm và cho phép chọn phân số, giá trị này không bao giờ nhỏ hơn giá trị thật của mọi cách hoàn thành cấu hình, nên cắt nhánh theo nó không làm mất lời giải tối ưu.
+
+\textbf{Thứ tự biến theo hàm mục tiêu.} Kế hoạch ban đầu dùng heuristic MRV (biến có miền nhỏ nhất đi trước), vốn phổ biến trong CSP~\cite{aima}. Khi đo thực tế, em thấy MRV rẽ nhánh sớm vào những nhóm có miền nhỏ nhưng giá trị thấp như ổ cứng, nguồn, khiến cận LP siết chậm. Em đổi sang thứ tự theo hàm mục tiêu: biến chỉ còn một giá trị đi trước, sau đó là các nhóm có trọng số lớn nhất (với chơi game là card đồ họa, rồi CPU). Nhờ vậy cấu hình tốt tìm được rất sớm và cận cắt được nhiều nhánh hơn. MRV được giữ lại làm phiên bản đối chứng.
+
+\textbf{Hợp đồng nhãn.} Ban đầu em gán nhãn bằng cách sắp ba cấu hình tốt nhất theo điểm, nhưng cách này làm mất vai trò: có trường hợp cấu hình ``Tiết kiệm'' lại đắt hơn ``Cân bằng''. Em định nghĩa lại như sau. Gọi $P$ là cấu hình có điểm cao nhất (Tối ưu hiệu năng). Cấu hình Tiết kiệm là cấu hình \emph{rẻ nhất} có điểm không dưới $0{,}85$ lần điểm của $P$. Cấu hình Cân bằng là cấu hình có \emph{tỷ số điểm trên giá} lớn nhất trong các cấu hình có điểm không dưới trung bình điểm của $P$ và Tiết kiệm. Các cấu hình phải có giá không vượt $P$ và dùng cặp CPU -- card đồ họa khác nhau. Mỗi vai trò được giải bằng một lượt nhánh cận có thêm ràng buộc; riêng bài toán tối đa tỷ số điểm trên giá được giải bằng phương pháp Dinkelbach~\cite{dinkelbach}. Các bất biến giá Tiết kiệm $\le$ giá Cân bằng $\le$ giá Hiệu năng luôn được kiểm thử.
+
+\subsection{Kết quả đạt được}
+
+Em đo bốn phiên bản thuật toán trên các kho sinh ngẫu nhiên có cùng cơ cấu với dữ liệu thật (khoảng 10\% sản phẩm hết hàng), mỗi kho chạy bốn kịch bản (văn phòng 20 triệu, chơi game 25 triệu, đồ họa 40 triệu, AI 60 triệu), giới hạn 2 triệu nút tìm kiếm mỗi lần giải. Kết quả ở bảng~\ref{tab:bench}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{2.2cm}|L{4.2cm}|R{1.5cm}|R{1.5cm}|R{2.4cm}|}
+\hline
+\textbf{Kho (còn hàng)} & \textbf{Phiên bản} & \textbf{p50 (ms)} & \textbf{p95 (ms)} & \textbf{Số nút TB} \\ \hline
+\multirow{4}{*}{50 (47)} & Vét cạn & 38,4 & 57,09 & 1.581.865 \\ \cline{2-5}
+ & Quay lui & 3,09 & 5,87 & 35.315 \\ \cline{2-5}
+ & + Forward checking & 1,55 & 9,9 & 29.034 \\ \cline{2-5}
+ & \textbf{Đầy đủ} & \textbf{0,45} & \textbf{1,19} & \textbf{300} \\ \hline
+\multirow{4}{*}{250 (221)} & Vét cạn & 44,56 & 52,42 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & Quay lui & 171,2 & 193,89 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & + Forward checking & 232,01 & 243,38 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & \textbf{Đầy đủ} & \textbf{6,77} & \textbf{11,5} & \textbf{8.937} \\ \hline
+\multirow{4}{*}{500 (443)} & Vét cạn & 52,77 & 69,11 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & Quay lui & 167,49 & 188,08 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & + Forward checking & 228,83 & 260,32 & 2.000.000$^\dagger$ \\ \cline{2-5}
+ & \textbf{Đầy đủ} & \textbf{10,84} & \textbf{40,29} & \textbf{16.775} \\ \hline
+\end{tabular}
+\caption{So sánh bốn phiên bản thuật toán ($\dagger$: chạm giới hạn 2 triệu nút, kết quả có thể chưa tối ưu)}
+\label{tab:bench}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.9\textwidth, height=6.4cm,
+  xlabel={Số sản phẩm trong kho}, ylabel={Số nút tìm kiếm trung bình},
+  ymode=log, log basis y=10, xmode=log, log basis x=10,
+  xtick={50,100,250,500}, xticklabels={50,100,250,500},
+  ymin=100, ymax=1e7,
+  legend style={at={(0.5,-0.3)}, anchor=north, font=\small, draw=none, legend columns=4, column sep=8pt},
+  grid=major, grid style={gray!25},
+  tick label style={font=\small}, label style={font=\small},
+]
+\addplot[mark=square*, color=black!60] coordinates {(50,1581865) (100,2000000) (250,2000000) (500,2000000)};
+\addlegendentry{Vét cạn}
+\addplot[mark=triangle*, color=orange!80!black] coordinates {(50,35315) (100,1757769) (250,2000000) (500,2000000)};
+\addlegendentry{Quay lui}
+\addplot[mark=diamond*, color=violet] coordinates {(50,29034) (100,1531640) (250,2000000) (500,2000000)};
+\addlegendentry{+ Forward checking}
+\addplot[mark=*, thick, color=teal] coordinates {(50,300) (100,973) (250,8937) (500,16775)};
+\addlegendentry{Đầy đủ}
+\addplot[dashed, color=red!70, domain=40:600, samples=2, forget plot] {2000000};
+\end{axis}
+\end{tikzpicture}
+\caption{Số nút tìm kiếm theo kích thước kho (thang log; đường nét đứt là giới hạn 2 triệu nút)}
+\label{fig:bench-nodes}
+\end{figure}
+
+Bảng~\ref{tab:bench} và hình~\ref{fig:bench-nodes} cho thấy: trên kho 250 sản phẩm, phiên bản đầy đủ giải xong trong 11,5 ms ở phân vị 95, thấp hơn mục tiêu 300 ms khoảng 26 lần, và chỉ duyệt trung bình 8.937 nút. Ba phiên bản còn lại từ 100 sản phẩm trở lên đều chạm giới hạn 2 triệu nút; thời gian của chúng trông có vẻ ngắn chỉ vì bị dừng giữa chừng và kết quả có thể chưa tối ưu. Trên kho 500 sản phẩm, phiên bản đầy đủ vẫn chỉ mất 40,3 ms ở phân vị 95.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{2.6cm}|R{2.2cm}|R{2cm}|R{3.4cm}|R{2.4cm}|}
+\hline
+\textbf{Kho} & \textbf{Loại vì bị trội} & \textbf{AC-3} & \textbf{Forward checking} & \textbf{Cận LP} \\ \hline
+50 (47) & 7 & 2 & 398 & 173 \\ \hline
+250 (221) & 66 & 0 & 42.068 & 7.411 \\ \hline
+500 (443) & 156 & 0 & 124.110 & 14.638 \\ \hline
+\end{tabular}
+\caption{Số giá trị hoặc nhánh bị loại bởi từng kỹ thuật (trung bình mỗi lần giải)}
+\label{tab:pruning}
+\end{table}
+
+Bảng~\ref{tab:pruning} phân tích kỹ thuật nào thực sự có tác dụng. Forward checking và cận LP là hai kỹ thuật cắt tỉa chính. Em cũng muốn nói thẳng một kết quả: AC-3 gần như không loại được giá trị nào trên các kho thử nghiệm, vì mỗi socket đều có cả CPU lẫn mainboard nên giá trị nào cũng còn hỗ trợ. Vì vậy em không ghi công tăng tốc cho AC-3; nó được giữ lại vì chi phí thấp và phát hiện ngay những trường hợp vô nghiệm hiển nhiên, ví dụ khi kho chỉ còn mainboard AM5 mà khách giữ cố định một CPU LGA1700.
+
+Về thứ tự biến, trên kho 250 sản phẩm, thứ tự theo hàm mục tiêu cho p95 là 11,8 ms với 8.937 nút trung bình, trong khi MRV cần 1.896 ms với 729 nghìn nút và 3 trên 12 lần chạm giới hạn nút. Như vậy việc thay đổi so với kế hoạch ban đầu là có chủ đích và có số liệu chứng minh.
+
+Cuối cùng, để chứng minh phiên bản đầy đủ không làm mất lời giải tối ưu vì cắt nhánh, em so sánh nó với forward checking duyệt hết (không giới hạn nút) trên các kho ngẫu nhiên đủ nhỏ để duyệt hết được: 1.512 trường hợp (1.080 trường hợp với kho 48 sản phẩm và 432 trường hợp với kho 72 sản phẩm), \textbf{không có trường hợp nào sai khác} về cấu hình, nhãn, điểm, tổng giá hay chẩn đoán vô nghiệm. Trên kho dữ liệu thật 240 sản phẩm, yêu cầu chơi game 25 triệu được giải với 1.883 nút trong khoảng 15 ms, cho ba cấu hình giá 24.920.000\,₫, 20.320.000\,₫ và 15.680.000\,₫.
+
+\section{Trợ lý AI: mô hình ngôn ngữ điều phối, bộ máy tối ưu quyết định}
+
+\subsection{Đặt vấn đề}
+
+Mô hình ngôn ngữ lớn hiểu tiếng Việt tự nhiên rất tốt, nhưng có thể ``ảo giác'', tức là sinh ra thông tin nghe hợp lý mà sai sự thật. Với một chatbot tư vấn PC, điều này rất nguy hiểm: mô hình có thể gợi ý linh kiện cửa hàng không bán, nêu giá theo kiến thức cũ, hoặc ghép những linh kiện không tương thích. Kiến thức của mô hình cũng không biết tồn kho hiện tại của cửa hàng. Nếu để mô hình tự chọn linh kiện rồi mới kiểm tra lại, hệ thống vẫn phải xử lý những câu trả lời sai đã gửi tới khách.
+
+\subsection{Giải pháp}
+
+Em thiết kế trợ lý theo nguyên tắc \textbf{mô hình ngôn ngữ chỉ điều phối, bộ máy tối ưu quyết định}, dựa trên cơ chế function calling của Gemini~\cite{gemini-fc}:
+\begin{itemize}
+  \item \textbf{Năm công cụ} được khai báo cho mô hình: \texttt{recommend\_builds} (gợi ý cấu hình), \texttt{modify\_build} (chỉnh cấu hình vừa gợi ý), \texttt{search\_products}, \texttt{get\_product\_details} và \texttt{check\_compatibility}. Mọi công cụ đều chạy trên cơ sở dữ liệu và bộ máy tối ưu thật.
+  \item \textbf{Tách kết quả công cụ làm hai đường.} Phần gửi lại cho mô hình là bản tóm tắt gọn (mã cấu hình, nhãn, tổng giá, tên và giá linh kiện, cảnh báo). Phần gửi tới giao diện là dữ liệu đầy đủ để dựng thẻ cấu hình. Thẻ cấu hình mà khách nhìn thấy vì thế được dựng trực tiếp từ dữ liệu của bộ máy tối ưu, giá trên thẻ không bao giờ đi qua lời của mô hình.
+  \item \textbf{Chỉ dẫn hệ thống} yêu cầu mô hình không tự nêu tên linh kiện, giá hay thông số khi chưa có kết quả công cụ, phải hỏi lại khi thiếu ngân sách hoặc mục đích, dùng \texttt{modify\_build} khi khách muốn chỉnh, và từ chối các câu hỏi ngoài chủ đề.
+  \item \textbf{Kiểm tra giá sau mỗi lượt:} hệ thống trích mọi số tiền trong câu trả lời của mô hình và đối chiếu với các số liệu công cụ đã trả về; số không khớp được ghi lại để giám sát.
+  \item \textbf{Chỉnh cấu hình bằng hội thoại:} \texttt{modify\_build} giữ nguyên mọi linh kiện, chỉ cho đổi nhóm khách yêu cầu rồi giải lại bằng bộ máy tối ưu; nếu giữ nguyên làm bài toán vô nghiệm (ví dụ đổi sang card mạnh hơn mà nguồn không đủ), hệ thống cho phép đổi thêm các linh kiện phụ thuộc và báo rõ cho khách.
+  \item \textbf{Giới hạn mỗi lượt:} tối đa 4 vòng gọi công cụ, 20 giây chờ mô hình, 20 tin nhắn gần nhất làm ngữ cảnh, 10 tin mỗi phút cho mỗi khách.
+\end{itemize}
+
+Bảng~\ref{tab:llm-compare} so sánh cách tiếp cận này với một chatbot dùng mô hình ngôn ngữ thuần.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{4.6cm}|L{4.4cm}|L{4.8cm}|}
+\hline
+\textbf{Tiêu chí} & \textbf{Chatbot LLM thuần} & \textbf{Trợ lý của PC Builder} \\ \hline
+Linh kiện có trong kho & Không bảo đảm & Bảo đảm: lấy từ cơ sở dữ liệu \\ \hline
+Giá trên thẻ cấu hình & Theo kiến thức của mô hình & Từ cơ sở dữ liệu, không qua mô hình \\ \hline
+Tương thích phần cứng & Không bảo đảm & Bảo đảm bằng 15 luật \\ \hline
+Tối ưu theo ngân sách & Ước lượng & Tối ưu chính xác bằng nhánh cận \\ \hline
+Giá trong lời giải thích & Không kiểm soát & Ràng buộc bằng chỉ dẫn, kiểm tra sau mỗi lượt \\ \hline
+Khi dịch vụ AI không dùng được & Không trả lời được & Chế độ dự phòng vẫn trả cấu hình \\ \hline
+\end{tabular}
+\caption{So sánh trợ lý của PC Builder với chatbot dùng LLM thuần}
+\label{tab:llm-compare}
+\end{table}
+
+\subsection{Kết quả đạt được}
+
+Nhờ thiết kế trên, khả năng trợ lý đưa ra linh kiện không có trong kho, sai giá hoặc không tương thích trên thẻ cấu hình bị loại bỏ \emph{bằng cấu trúc} chứ không phụ thuộc vào việc mô hình có ``ngoan'' hay không. Trên bộ 30 kịch bản đánh giá, cả 69 cấu hình trả về đều hợp lệ khi kiểm tra lại bằng bộ luật và ngân sách; trong kiểm thử đầu-cuối, mọi cấu hình của mọi lượt chạy đều được kiểm tra lại bằng API tương thích của máy chủ và đều nằm trong ngân sách. Vì thẻ cấu hình được gửi ngay khi bộ máy tối ưu trả kết quả (ở chế độ dự phòng là khoảng 20 ms kể từ lúc gửi tin nhắn), khách thấy cấu hình trước, còn thời gian chờ mô hình viết lời giải thích ở chế độ AI diễn ra song song. Phần văn bản tự do vẫn có thể chứa con số không khớp; bộ kiểm tra giá không sửa câu trả lời mà chỉ ghi nhận để giám sát, đây là một hạn chế em nêu ở chương~\ref{chap:ket-luan}.
+
+\section{Chế độ dự phòng hiểu tiếng Việt theo luật}
+
+\subsection{Đặt vấn đề}
+
+Gemini được dùng ở gói miễn phí nên có giới hạn số yêu cầu; ngoài ra dịch vụ có thể quá tải, mất mạng hoặc chưa được cấu hình khóa. Nếu trợ lý phụ thuộc hoàn toàn vào Gemini, chỉ cần hết hạn mức đúng lúc trình diễn là chức năng nổi bật nhất của hệ thống ngừng hoạt động.
+
+\subsection{Giải pháp}
+
+Em xây dựng một bộ hiểu ngôn ngữ tiếng Việt theo luật, không dùng mô hình học máy, để thay thế Gemini khi cần. Bộ điều phối chuyển sang chế độ dự phòng ngay trong lượt chat khi gặp một trong bốn trường hợp: không có khóa, lỗi giới hạn (429), quá 20 giây hoặc dịch vụ trả lỗi. Phần chữ đã gửi tới khách được giữ nguyên, phần dự phòng được nối tiếp phía sau. Bộ hiểu ngôn ngữ tách các thông tin:
+\begin{itemize}
+  \item \textbf{Ngân sách} viết theo nhiều kiểu: \emph{25tr}, \emph{25tr5}, \emph{25 triệu rưỡi}, \emph{25.000.000đ}, \emph{30 củ}, số viết bằng chữ (\emph{hai mươi lăm}, \emph{hai lăm}), khoảng giá (\emph{20--25 triệu}, \emph{từ 18 đến 22 triệu}, lấy cận trên).
+  \item \textbf{Mục đích} theo từ khóa (game, Valorant; Premiere, Blender; deep learning; văn phòng, học tập), \textbf{độ phân giải} (1080p, 2K, 4K), \textbf{hãng CPU, GPU} theo họ sản phẩm kể cả phủ định (\emph{không thích Intel}), \textbf{màu}, Wi-Fi, dung lượng RAM và ổ cứng.
+  \item \textbf{Ý muốn chỉnh sửa} (\emph{rẻ hơn}, \emph{mạnh hơn}, \emph{đổi sang card AMD}), được gộp với yêu cầu của lượt trước lưu trong Redis.
+\end{itemize}
+
+Phần khó nhất là đọc đúng tiền trong câu tiếng Việt, vì có nhiều ``bẫy'' mà em phát hiện qua các vòng kiểm thử: số hiệu sản phẩm như \emph{i5 13600K}, \emph{B650M}, \emph{card 3060} trông giống tiền; \emph{củ} (triệu) và \emph{cũ} (đã qua sử dụng) chỉ khác dấu mà người dùng hay gõ không dấu; \emph{mạnh hơn 30 triệu} là mức tuyệt đối nhưng \emph{mạnh hơn bản trước 5 triệu} là mức tăng thêm. Em giải quyết bằng một bộ luật có thứ tự ưu tiên rõ ràng: số dính liền chữ cái hoặc đứng sau từ chỉ linh kiện không được coi là tiền; \emph{cu} không dấu chỉ là đơn vị tiền khi đứng cuối mệnh đề hoặc ngay sau một số nhỏ; mỗi khoản tiền mang theo ngữ cảnh (động từ thêm, bớt, so sánh) để quyết định là mức tuyệt đối hay mức tăng thêm. Sau khi hiểu yêu cầu, chế độ dự phòng gọi đúng công cụ \texttt{recommend\_builds} qua cùng một danh sách công cụ với chế độ AI, rồi viết lời giải thích theo mẫu chỉ từ dữ liệu của công cụ.
+
+\subsection{Kết quả đạt được}
+
+Bộ hiểu ngôn ngữ có hơn 110 ca kiểm thử đơn vị, gồm một bảng các câu thăm dò hồi quy. Ví dụ câu \emph{card 3060 cũ, chơi game 20 triệu} được hiểu đúng là ngân sách 20 triệu; \emph{mạnh hơn bản trước 5 triệu} khi cấu hình trước là 25 triệu được hiểu là ngân sách mới 30 triệu. Trên bộ 30 kịch bản, chế độ dự phòng đạt 26/30 theo cách chấm nghiêm ngặt dành cho trợ lý AI, với độ trễ một lượt 10 ms ở trung vị và 22 ms ở phân vị 95. Quan trọng hơn, toàn bộ kiểm thử đầu-cuối và buổi trình diễn có thể chạy mà không cần kết nối tới Gemini, nên hệ thống không bao giờ ``chết'' vì hết hạn mức.
+
+\section{Giữ hàng và chống bán vượt tồn kho}
+
+\subsection{Đặt vấn đề}
+
+Khi hai khách cùng đặt món hàng cuối cùng gần như cùng lúc, cách làm thông thường là đọc tồn kho, kiểm tra còn đủ rồi mới cập nhật. Giữa bước đọc và bước cập nhật, khách kia có thể đã đặt xong, dẫn tới bán vượt số hàng thực có. Ngoài ra, thanh toán bằng chuyển khoản không tức thời: khách cần vài phút để chuyển tiền, trong thời gian đó món hàng không được bán cho người khác, nhưng nếu khách bỏ ngang thì hàng phải được trả lại. Webhook của ngân hàng cũng có thể gửi lặp lại nhiều lần, hoặc tới đúng lúc đơn vừa bị hủy vì quá hạn.
+
+\subsection{Giải pháp}
+
+\begin{itemize}
+  \item \textbf{Tách tồn kho thành hai cột} \texttt{stock} (hàng thực có) và \texttt{reserved} (hàng đang giữ cho đơn chờ thanh toán). Khi đặt hàng, hệ thống giữ hàng bằng một câu lệnh cập nhật có điều kiện:
+\begin{lstlisting}[language=SQL]
+UPDATE products SET reserved = reserved + :q
+WHERE id = :id AND stock - reserved >= :q
+\end{lstlisting}
+  Điều kiện nằm ngay trong câu lệnh nên được cơ sở dữ liệu thực hiện nguyên tử: nếu không đủ hàng, câu lệnh không cập nhật dòng nào và cả giao dịch đặt hàng bị hủy. Các sản phẩm được cập nhật theo thứ tự mã để hai đơn đồng thời không khóa chéo nhau.
+  \item \textbf{Giữ hàng 15 phút.} Đơn chờ thanh toán có hạn; một tác vụ chạy mỗi phút hủy các đơn quá hạn và trả lại hàng đang giữ.
+  \item \textbf{Chuyển trạng thái có điều kiện.} Mọi thay đổi trạng thái đơn đều đi qua một hàm duy nhất, cập nhật với điều kiện ``trạng thái hiện tại đúng như vừa đọc''. Khi webhook và tác vụ hủy đơn tranh nhau trên cùng một đơn, chỉ một bên thắng; tiền về sau khi đơn đã hủy được lưu lại để quản trị viên xử lý tay.
+  \item \textbf{Webhook lũy đẳng.} Mã giao dịch của ngân hàng là khóa duy nhất trong bảng thanh toán; webhook gửi lặp lại chỉ được ghi nhận một lần. Giao dịch không khớp đơn nào vẫn được lưu để đối soát, không để mất tiền của khách.
+  \item \textbf{Chống bấm đặt hàng hai lần:} với tài khoản, giỏ hàng được khóa trong giao dịch và các dòng đã đặt bị xóa ngay; với khách vãng lai, một khóa ngắn hạn trong Redis từ chối yêu cầu trùng.
+\end{itemize}
+
+\subsection{Kết quả đạt được}
+
+Các kiểm thử đồng thời trên PostgreSQL thật (bảng~\ref{tab:dong-thoi}) đều đạt: năm đơn cùng lúc cho món cuối cùng chỉ có đúng một đơn thành công; N đơn cho M chiếc thì đúng M đơn thành công; webhook trùng gửi song song chỉ thanh toán một lần; tác vụ hủy đơn chạy đua với webhook luôn cho kết quả nhất quán. Khi em tạm thay câu lệnh có điều kiện bằng cách ``đọc rồi cập nhật'', ca kiểm thử đầu tiên lập tức cho kết quả năm đơn đều thành công, chứng tỏ kiểm thử phát hiện được lỗi tranh chấp và giải pháp thực sự có tác dụng.
+
+\section{Thông số động với JSONB, GIN và bộ luật dùng chung}
+
+\subsection{Đặt vấn đề}
+
+Mỗi nhóm linh kiện có bộ thông số khác nhau và cửa hàng cần thêm thông số mới mà không phải sửa mã nguồn. Nhưng bộ luật tương thích lại cần một số thông số chắc chắn tồn tại và đúng kiểu; nếu quản trị viên vô tình xóa trường \emph{socket} của CPU, mọi kiểm tra tương thích sẽ sai. Ngoài ra, việc kiểm tra tương thích phải vừa tức thì trên trình duyệt, vừa đáng tin cậy ở máy chủ.
+
+\subsection{Giải pháp}
+
+Thông số được lưu ở cột JSONB, kèm chỉ mục GIN để lọc nhanh. Danh sách trường của mỗi danh mục nằm trong lược đồ thông số, cũng ở dạng JSONB, và quản trị viên sửa được trên giao diện. Biểu mẫu nhập sản phẩm và bộ lọc ở cửa hàng đều được sinh tự động từ lược đồ này. Khi lưu sản phẩm, thông số được kiểm tra hai lớp: lớp lược đồ trong cơ sở dữ liệu (quản trị viên điều chỉnh được) và lớp schema có kiểu trong mã nguồn mà bộ luật dựa vào. Trên trang sửa lược đồ, những khóa mà bộ luật sử dụng bị khóa, không cho đổi tên hay xóa. Bộ luật tương thích được viết một lần trong gói \texttt{engine} và dùng chung cho trình duyệt, máy chủ và bộ máy tối ưu.
+
+\subsection{Kết quả đạt được}
+
+Quản trị viên có thể thêm trường thông số mới cho một danh mục và trường đó xuất hiện ngay trong biểu mẫu và bộ lọc mà không cần triển khai lại. Truy vấn lọc theo thông số dùng được chỉ mục GIN. Với 240 sản phẩm hiện tại, PostgreSQL chọn quét tuần tự vì bảng nhỏ nên quét hết còn rẻ hơn; khi em tắt quét tuần tự để kiểm tra, kế hoạch thực thi của câu \texttt{specs @> '\{"socket":"AM5"\}'} chuyển sang \texttt{Bitmap Index Scan on products\_specs\_gin}, nghĩa là chỉ mục sẵn sàng phát huy tác dụng khi kho hàng lớn lên. Vì cùng một bộ luật chạy ở mọi nơi, kết quả trên công cụ lắp ráp luôn trùng với kết quả máy chủ chấp nhận; kiểm thử đầu-cuối xác nhận khi trình duyệt báo xung đột C01 thì máy chủ cũng từ chối lưu với đúng mã C01.
+
+\section{Truy vết từ yêu cầu đến mã nguồn và kiểm thử}
+
+\subsection{Đặt vấn đề}
+
+Một đồ án có hơn 38 nghìn dòng mã nguồn và hơn một nghìn ca kiểm thử rất khó trả lời nhanh những câu hỏi như ``yêu cầu này được cài đặt ở đâu, đã được kiểm thử chưa'', nhất là khi thiết kế thay đổi trong quá trình phát triển.
+
+\subsection{Giải pháp}
+
+Em xây dựng một ``đồ thị truy vết'' (Spec-Code Graph): mỗi yêu cầu, use case, tính năng, mô-đun, luật, thuật toán, quyết định thiết kế và ca kiểm thử là một tệp Markdown có phần đầu khai báo các liên kết tới nút khác, tới tệp mã nguồn, tệp kiểm thử và chương báo cáo tương ứng. Một công cụ dòng lệnh đọc toàn bộ các tệp, sinh đồ thị, bảng truy vết và tư liệu theo từng chương, đồng thời báo lỗi nếu liên kết hỏng, nếu một tệp mã nguồn được khai báo nhưng không còn tồn tại, hoặc nếu một nút đã hoàn thành mà không có kiểm thử. Các quyết định thiết kế quan trọng được ghi thành 22 bản ghi quyết định kiến trúc, mỗi bản ghi nêu bối cảnh, quyết định, lý do và hệ quả.
+
+\subsection{Kết quả đạt được}
+
+Đồ thị hiện có 217 nút và 789 cạnh, công cụ kiểm tra báo 0 lỗi và 0 cảnh báo. Mọi yêu cầu chức năng trong phiếu giao nhiệm vụ đều truy vết được tới mã nguồn và kiểm thử. Đồ thị này cũng chính là nguồn tư liệu chính để em viết báo cáo, nhờ đó các số liệu và mô tả trong báo cáo khớp với mã nguồn thực tế.

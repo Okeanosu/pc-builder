@@ -1,0 +1,16 @@
+\chapter*{\centering TÓM TẮT NỘI DUNG ĐỒ ÁN}
+
+Lắp ráp một bộ máy tính cá nhân đòi hỏi người mua phải hiểu hàng loạt chuẩn kỹ thuật: socket của CPU, chuẩn RAM, kích thước mainboard và vỏ case, công suất nguồn. Chỉ cần chọn sai một linh kiện là cả bộ máy có thể không lắp được, trong khi phần lớn người mua chỉ biết mình muốn chơi game hay làm đồ họa và có khoảng bao nhiêu tiền. Các website bán linh kiện hiện nay chủ yếu bán lẻ từng sản phẩm; công cụ xây dựng cấu hình nếu có thì vẫn để người dùng tự chọn, phần kiểm tra tương thích còn sơ sài và gần như chưa có công cụ nào tự đề xuất một cấu hình tối ưu theo ngân sách.
+
+Trong đồ án này, em xây dựng PC Builder, một hệ thống thương mại điện tử bán linh kiện máy tính tích hợp công cụ gợi ý cấu hình PC phù hợp nhu cầu người dùng. Điểm cốt lõi của hệ thống là một bộ máy tối ưu: em mô hình hóa việc kiểm tra tương thích thành bài toán thỏa mãn ràng buộc (CSP) với 15 luật tương thích, và việc chia ngân sách thành bài toán cái túi đa lựa chọn (MCKP), rồi giải bằng tìm kiếm nhánh cận kết hợp AC-3, forward checking và cận trên từ nới lỏng tuyến tính của MCKP. Trên kho 250 sản phẩm, bộ máy tìm ra cấu hình tối ưu trong 11,5 ms ở phân vị 95, trong khi vét cạn cần khoảng 2,1 giờ. Trên nền bộ máy này, em xây dựng trợ lý AI dùng Google Gemini để tư vấn bằng tiếng Việt tự nhiên, trong đó mô hình ngôn ngữ chỉ điều phối còn linh kiện và giá luôn do bộ máy tối ưu quyết định trên dữ liệu kho thật, kèm chế độ dự phòng hiểu tiếng Việt theo luật khi dịch vụ AI không dùng được. Hệ thống còn có công cụ lắp ráp PC tương tác kiểm tra tương thích tức thì, cửa hàng trực tuyến với giỏ hàng, đặt hàng lắp ráp nguyên bộ, thanh toán VietQR tự động xác nhận, xuất báo giá PDF, và trang quản trị với biểu mẫu thông số động dựa trên PostgreSQL JSONB.
+
+Hệ thống được xây dựng bằng Next.js, Node.js, PostgreSQL và Redis, đóng gói bằng Docker. Hơn một nghìn ca kiểm thử tự động, cùng các kiểm thử đầu-cuối, hiệu năng và đồng thời, cho thấy hệ thống hoạt động đúng và đáp ứng các yêu cầu đã đặt ra. Do thời gian có hạn, hệ thống vẫn còn những hạn chế, em rất mong nhận được ý kiến đánh giá của thầy cô để sản phẩm được hoàn thiện hơn.
+
+\vspace{0.4cm}
+\begin{flushright}
+\begin{minipage}{6cm}\centering
+\textbf{Sinh viên thực hiện}\\
+\textit{(Ký và ghi rõ họ tên)}\\[1.6cm]
+Phan Hải Dương
+\end{minipage}
+\end{flushright}

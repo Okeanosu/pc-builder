@@ -1,0 +1,21 @@
+flowchart TB
+  solver["solver.ts<br/>điều phối"]
+  search["search.ts<br/>nhánh cận + FC"]
+  ac3["ac3.ts<br/>AC-3"]
+  topk["topk.ts<br/>chọn 3 nhãn"]
+  brute["bruteforce.ts<br/>vét cạn đối chứng"]
+  domains["domains.ts<br/>miền, bảng quan hệ"]
+  compat["compatibility.ts<br/>kiểm tra một bộ"]
+  rules["rules.ts<br/>15 luật"]
+  scoring["scoring.ts<br/>chấm điểm"]
+  profiles["profiles.ts<br/>trọng số"]
+  solver --> search
+  solver --> ac3
+  solver --> topk
+  solver --> brute
+  search --> domains
+  ac3 --> domains
+  domains --> rules
+  domains --> scoring
+  domains --> profiles
+  compat --> rules

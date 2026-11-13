@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" font-family="'Times New Roman', Times, serif"><title>Quản lý thuật toán gợi ý</title><rect width="100%" height="100%" fill="#fff"/><rect x="170" y="40" width="690" height="358" fill="none" stroke="#111" stroke-width="1.4"/>
+<text x="515.0" y="64" text-anchor="middle" font-size="16" font-weight="bold">Quản lý thuật toán gợi ý</text>
+<line x1="99.0" y1="206.0" x2="299.7" y2="117.0" stroke="#111" stroke-width="1.2"/>
+<line x1="99.0" y1="206.0" x2="243.2" y2="188.2" stroke="#111" stroke-width="1.2"/>
+<line x1="99.0" y1="206.0" x2="260.2" y2="237.8" stroke="#111" stroke-width="1.2"/>
+<line x1="99.0" y1="206.0" x2="304.4" y2="312.3" stroke="#111" stroke-width="1.2"/>
+<line x1="464.7" y1="176.0" x2="580.1" y2="176.0" stroke="#111" stroke-width="1.15" stroke-dasharray="6 4"/>
+<polyline points="569.1,180.9 580.1,176.0 569.1,171.1" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="522.4" y="164.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#222">«include»</text>
+<line x1="416.4" y1="192.7" x2="615.3" y2="237.7" stroke="#111" stroke-width="1.15" stroke-dasharray="6 4"/>
+<polyline points="603.5,240.0 615.3,237.7 605.7,230.5" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="515.9" y="203.2" text-anchor="middle" font-size="12.5" font-style="italic" fill="#222">«include»</text>
+<ellipse cx="342.5" cy="98.0" rx="100.0" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="342.5" y="103.0" text-anchor="middle" font-size="15">Xem ma trận trọng số</text>
+<ellipse cx="342.5" cy="176.0" rx="122.2" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="342.5" y="181.0" text-anchor="middle" font-size="15">Sửa trọng số theo mục đích</text>
+<ellipse cx="342.5" cy="254.0" rx="129.6" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="342.5" y="259.0" text-anchor="middle" font-size="15">Sửa khoảng phân bổ ngân sách</text>
+<ellipse cx="342.5" cy="332.0" rx="111.1" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="342.5" y="337.0" text-anchor="middle" font-size="15">Chạy thử gợi ý cấu hình</text>
+<ellipse cx="687.5" cy="176.0" rx="107.4" ry="30.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="687.5" y="172.5" text-anchor="middle" font-size="15">Kiểm tra tổng trọng số</text>
+<text x="687.5" y="189.5" text-anchor="middle" font-size="15">và khoảng hợp lệ</text>
+<ellipse cx="687.5" cy="254.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="687.5" y="259.0" text-anchor="middle" font-size="15">Làm mới bộ nhớ đệm gợi ý</text>
+<circle cx="75" cy="180" r="11" fill="#fff" stroke="#111" stroke-width="1.4"/>
+<line x1="75" y1="191" x2="75" y2="224" stroke="#111" stroke-width="1.4"/>
+<line x1="57" y1="201" x2="93" y2="201" stroke="#111" stroke-width="1.4"/>
+<line x1="75" y1="224" x2="60" y2="248" stroke="#111" stroke-width="1.4"/>
+<line x1="75" y1="224" x2="90" y2="248" stroke="#111" stroke-width="1.4"/>
+<text x="75" y="268" text-anchor="middle" font-size="15">Quản trị viên</text></svg>

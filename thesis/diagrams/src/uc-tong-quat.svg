@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="690" viewBox="0 0 1060 690" font-family="'Times New Roman', Times, serif"><title>Hệ thống PC Builder</title><rect width="100%" height="100%" fill="#fff"/><rect x="190" y="40" width="680" height="592" fill="none" stroke="#111" stroke-width="1.4"/>
+<text x="530.0" y="64" text-anchor="middle" font-size="16" font-weight="bold">Hệ thống PC Builder</text>
+<line x1="104.0" y1="236.0" x2="323.0" y2="117.9" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="236.0" x2="290.3" y2="192.3" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="236.0" x2="241.1" y2="245.6" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="236.0" x2="311.1" y2="313.7" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="236.0" x2="330.3" y2="389.8" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="546.0" x2="295.8" y2="502.5" stroke="#111" stroke-width="1.2"/>
+<line x1="104.0" y1="546.0" x2="254.4" y2="557.8" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="236.0" x2="735.4" y2="117.1" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="236.0" x2="770.6" y2="192.6" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="236.0" x2="781.9" y2="248.2" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="236.0" x2="748.9" y2="313.7" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="236.0" x2="729.8" y2="389.7" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="546.0" x2="772.1" y2="504.3" stroke="#111" stroke-width="1.2"/>
+<line x1="956.0" y1="546.0" x2="805.6" y2="557.8" stroke="#111" stroke-width="1.2"/>
+<line x1="80" y1="498" x2="80" y2="300" stroke="#111" stroke-width="1.2"/>
+<polygon points="87.7,314.0 80.0,300.0 72.3,314.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<line x1="980" y1="498" x2="980" y2="300" stroke="#111" stroke-width="1.2"/>
+<polygon points="987.7,314.0 980.0,300.0 972.3,314.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<ellipse cx="360.0" cy="98.0" rx="118.5" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="103.0" text-anchor="middle" font-size="15">Xem và tìm kiếm linh kiện</text>
+<ellipse cx="360.0" cy="176.0" rx="111.1" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="181.0" text-anchor="middle" font-size="15">Tư vấn cấu hình bằng AI</text>
+<ellipse cx="360.0" cy="254.0" rx="129.6" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="259.0" text-anchor="middle" font-size="15">Gợi ý cấu hình theo biểu mẫu</text>
+<ellipse cx="360.0" cy="332.0" rx="100.0" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="337.0" text-anchor="middle" font-size="15">Lắp ráp PC tương tác</text>
+<ellipse cx="360.0" cy="410.0" rx="107.4" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="415.0" text-anchor="middle" font-size="15">Mua hàng và thanh toán</text>
+<ellipse cx="360.0" cy="488.0" rx="88.9" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="493.0" text-anchor="middle" font-size="15">Quản lý tài khoản</text>
+<ellipse cx="360.0" cy="566.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="360.0" y="571.0" text-anchor="middle" font-size="15">Quản lý cấu hình của tôi</text>
+<ellipse cx="700.0" cy="98.0" rx="85.2" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="103.0" text-anchor="middle" font-size="15">Quản lý sản phẩm</text>
+<ellipse cx="700.0" cy="176.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="181.0" text-anchor="middle" font-size="15">Quản lý kho và benchmark</text>
+<ellipse cx="700.0" cy="254.0" rx="85.2" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="259.0" text-anchor="middle" font-size="15">Quản lý đơn hàng</text>
+<ellipse cx="700.0" cy="332.0" rx="100.0" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="337.0" text-anchor="middle" font-size="15">Thống kê và đối soát</text>
+<ellipse cx="700.0" cy="410.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="415.0" text-anchor="middle" font-size="15">Xem nhật ký hội thoại AI</text>
+<ellipse cx="700.0" cy="488.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="493.0" text-anchor="middle" font-size="15">Quản lý lược đồ thông số</text>
+<ellipse cx="700.0" cy="566.0" rx="114.8" ry="21.0" fill="#fff" stroke="#111" stroke-width="1.3"/>
+<text x="700.0" y="571.0" text-anchor="middle" font-size="15">Quản lý thuật toán gợi ý</text>
+<circle cx="80" cy="210" r="11" fill="#fff" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="221" x2="80" y2="254" stroke="#111" stroke-width="1.4"/>
+<line x1="62" y1="231" x2="98" y2="231" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="254" x2="65" y2="278" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="254" x2="95" y2="278" stroke="#111" stroke-width="1.4"/>
+<text x="80" y="298" text-anchor="middle" font-size="15">Khách vãng lai</text>
+<circle cx="80" cy="520" r="11" fill="#fff" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="531" x2="80" y2="564" stroke="#111" stroke-width="1.4"/>
+<line x1="62" y1="541" x2="98" y2="541" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="564" x2="65" y2="588" stroke="#111" stroke-width="1.4"/>
+<line x1="80" y1="564" x2="95" y2="588" stroke="#111" stroke-width="1.4"/>
+<text x="80" y="608" text-anchor="middle" font-size="15">Khách hàng</text>
+<circle cx="980" cy="210" r="11" fill="#fff" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="221" x2="980" y2="254" stroke="#111" stroke-width="1.4"/>
+<line x1="962" y1="231" x2="998" y2="231" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="254" x2="965" y2="278" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="254" x2="995" y2="278" stroke="#111" stroke-width="1.4"/>
+<text x="980" y="298" text-anchor="middle" font-size="15">Nhân viên</text>
+<circle cx="980" cy="520" r="11" fill="#fff" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="531" x2="980" y2="564" stroke="#111" stroke-width="1.4"/>
+<line x1="962" y1="541" x2="998" y2="541" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="564" x2="965" y2="588" stroke="#111" stroke-width="1.4"/>
+<line x1="980" y1="564" x2="995" y2="588" stroke="#111" stroke-width="1.4"/>
+<text x="980" y="608" text-anchor="middle" font-size="15">Quản trị viên</text></svg>

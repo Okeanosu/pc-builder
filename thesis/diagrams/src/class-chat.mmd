@@ -1,0 +1,41 @@
+classDiagram
+  direction TB
+  class ChatService {
+    <<module>>
+    sendMessage()
+  }
+  class Orchestrator {
+    <<module>>
+    runTurn() RunTurnResult
+  }
+  class LlmClient {
+    <<interface>>
+    stream()
+  }
+  class GeminiClient
+  class FallbackResponder {
+    <<module>>
+    parseIntent()
+    respondFallback()
+  }
+  class ChatTool {
+    <<interface>>
+    decl
+    run(args, ctx) ToolResult
+  }
+  class ToolResult {
+    forModel
+    events
+    buildIds
+  }
+  class PriceCheck {
+    <<module>>
+    checkPriceMentions()
+  }
+  ChatService --> Orchestrator
+  Orchestrator --> LlmClient : chế độ AI
+  Orchestrator --> FallbackResponder : dự phòng
+  Orchestrator --> ChatTool : 5 công cụ
+  Orchestrator --> PriceCheck
+  LlmClient <|.. GeminiClient
+  ChatTool ..> ToolResult

@@ -1,0 +1,150 @@
+% Định dạng theo mẫu đồ án tốt nghiệp của Trường CNTT&TT, ĐHBK Hà Nội (bản LaTeX).
+% Biên dịch bằng XeLaTeX (Tectonic): Times New Roman 13pt, giãn dòng 1,2, lề trái 3,5 cm.
+\usepackage[fontsize=13pt]{scrextend}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setmonofont[Scale=0.84]{Menlo}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+% polyglossia đặt lại tên mục khi vào \begin{document}, nên ghi đè trong \captionsvietnamese
+\gappto\captionsvietnamese{%
+  \renewcommand{\contentsname}{MỤC LỤC}\renewcommand{\listfigurename}{DANH MỤC HÌNH VẼ}%
+  \renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}\renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}%
+  \renewcommand{\figurename}{Hình}\renewcommand{\tablename}{Bảng}}
+
+\usepackage[a4paper,left=3.5cm,right=2.5cm,top=3cm,bottom=3cm,headheight=16pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.2}
+\setlength{\parindent}{0.75cm}
+\setlength{\parskip}{4pt}
+
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\setmathfont{texgyretermes-math.otf}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pdflscape}
+\usepackage{array,multirow,longtable,tabularx,makecell}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt,parsep=0pt}
+\setlist[itemize]{label=--,leftmargin=1.3cm}
+\setlist[enumerate]{leftmargin=1.3cm}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\floatname{algorithm}{Thuật toán}
+\renewcommand{\algorithmicrequire}{\textbf{Đầu vào:}}
+\renewcommand{\algorithmicensure}{\textbf{Đầu ra:}}
+\renewcommand{\algorithmicif}{\textbf{nếu}}
+\renewcommand{\algorithmicthen}{\textbf{thì}}
+\renewcommand{\algorithmicelse}{\textbf{ngược lại}}
+\renewcommand{\algorithmicfor}{\textbf{với mỗi}}
+\renewcommand{\algorithmicdo}{\textbf{làm}}
+\renewcommand{\algorithmicreturn}{\textbf{trả về}}
+\renewcommand{\algorithmicprocedure}{\textbf{thủ tục}}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{caption}
+\captionsetup{labelsep=colon,font=small,labelfont=bf,skip=6pt}
+\captionsetup[table]{position=below}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+\usepackage[hidelinks]{hyperref}
+\usepackage{indentfirst}
+
+% Màu dùng chung
+\definecolor{codebg}{HTML}{F4F5F6}
+\definecolor{coderule}{HTML}{D7DADF}
+\definecolor{codekw}{HTML}{1D4F91}
+\definecolor{codestr}{HTML}{7A3E00}
+\definecolor{codecmt}{HTML}{5D636A}
+
+% Tên các mục
+\renewcommand{\contentsname}{MỤC LỤC}
+\renewcommand{\listfigurename}{DANH MỤC HÌNH VẼ}
+\renewcommand{\listtablename}{DANH MỤC BẢNG BIỂU}
+\renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\lstlistingname}{Mã nguồn}
+
+% Tiêu đề chương: "CHƯƠNG 1. GIỚI THIỆU ĐỀ TÀI", in hoa, căn giữa
+\titleformat{\chapter}[block]{\centering\bfseries\fontsize{14}{18}\selectfont}{CHƯƠNG \thechapter.}{0.35em}{\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-12pt}{22pt}
+\titleformat{\section}{\bfseries\fontsize{13}{16}\selectfont}{\thesection}{0.9em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titleformat{\subsection}{\bfseries\fontsize{13}{16}\selectfont}{\thesubsection}{0.9em}{}
+\titlespacing*{\subsection}{0.6cm}{8pt}{3pt}
+\titleformat{\subsubsection}{\bfseries\itshape\fontsize{13}{16}\selectfont}{\thesubsubsection}{0.9em}{}
+\titlespacing*{\subsubsection}{0.6cm}{6pt}{2pt}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+% Mục lục: "CHƯƠNG 1. ..." ở cấp chương
+\renewcommand{\cftchappresnum}{CHƯƠNG }
+\renewcommand{\cftchapaftersnum}{.}
+\setlength{\cftchapnumwidth}{6.6em}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftbeforechapskip}{6pt}
+\setlength{\cftsecindent}{0pt}
+\setlength{\cftsecnumwidth}{2.6em}
+\setlength{\cftsubsecindent}{2.6em}
+\setlength{\cftsubsecnumwidth}{3.4em}
+\renewcommand{\cfttoctitlefont}{\hfill\bfseries\fontsize{14}{18}\selectfont}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\cftloftitlefont}{\hfill\bfseries\fontsize{14}{18}\selectfont}
+\renewcommand{\cftafterloftitle}{\hfill}
+\renewcommand{\cftlottitlefont}{\hfill\bfseries\fontsize{14}{18}\selectfont}
+\renewcommand{\cftafterlottitle}{\hfill}
+\renewcommand{\cftfigpresnum}{Hình~}
+\renewcommand{\cfttabpresnum}{Bảng~}
+\setlength{\cftfignumwidth}{5.2em}
+\setlength{\cfttabnumwidth}{5.2em}
+\setlength{\cftfigindent}{0pt}
+\setlength{\cfttabindent}{0pt}
+
+% Đầu trang: tên chương và đường kẻ; chân trang: số trang ở giữa
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{CHƯƠNG \thechapter.\ \MakeUppercase{#1}}{}}
+\fancyhead[L]{\small\leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+% Trang mở chương dùng kiểu plain mặc định (chỉ số trang ở giữa); định nghĩa lại plain bằng fancyhdr sẽ xóa đầu trang của các trang sau.
+
+% Mã nguồn
+\lstset{
+  basicstyle=\ttfamily\small\setstretch{1.0},
+  backgroundcolor=\color{codebg},
+  frame=single, rulecolor=\color{coderule}, framesep=4pt,
+  keywordstyle=\color{codekw}\bfseries, stringstyle=\color{codestr}, commentstyle=\color{codecmt}\itshape,
+  columns=fullflexible, keepspaces=true, breaklines=true, breakatwhitespace=true,
+  showstringspaces=false, tabsize=2, xleftmargin=4pt, xrightmargin=4pt,
+  extendedchars=true, inputencoding=utf8,
+}
+\lstdefinelanguage{TypeScript}{
+  keywords={const,let,function,return,if,else,for,while,of,in,new,export,import,from,type,interface,async,await,true,false,null,undefined,throw,class,extends,implements},
+  sensitive=true, morecomment=[l]{//}, morecomment=[s]{/*}{*/}, morestring=[b]', morestring=[b]", morestring=[b]`,
+}
+
+% Bảng kẻ khung như mẫu: dòng cao hơn một chút
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4.5pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% Chỗ cần sinh viên bổ sung số liệu thật (không bịa)
+\newcommand{\canbosung}[1]{\textcolor{red}{\textbf{[Cần bổ sung:} #1\textbf{]}}}
+
+% Hình: \hinh{file}{độ rộng}{chú thích}{nhãn}
+\newcommand{\hinh}[4]{%
+  \begin{figure}[H]\centering\includegraphics[width=#2,height=0.8\textheight,keepaspectratio]{#1}\caption{#3}\label{#4}\end{figure}}
+
+% Cho phép giãn chữ thêm để tránh dòng tràn lề với từ tiếng Việt dài
+\setlength{\emergencystretch}{3em}

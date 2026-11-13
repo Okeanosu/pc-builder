@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="652" height="816" viewBox="0 0 652 816" font-family="'Times New Roman', Times, serif"><title>seq-dat-hang</title><rect width="100%" height="100%" fill="#fff"/>
+<line x1="70" y1="58" x2="70" y2="760" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="198" y1="58" x2="198" y2="760" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="326" y1="58" x2="326" y2="760" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="454" y1="58" x2="454" y2="760" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="582" y1="58" x2="582" y2="760" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="14" y="592.0" width="624" height="58.0" fill="none" stroke="#555" stroke-width="1"/>
+<path d="M14,592.0 h44 v14 l-6,6 h-38 z" fill="#f1f2f3" stroke="#555" stroke-width="1"/>
+<text x="34.0" y="606.0" text-anchor="middle" font-size="12.5" font-weight="bold">loop</text>
+<text x="66.0" y="606.0" text-anchor="start" font-size="13" font-style="italic">[mỗi 3 giây]</text>
+<line x1="70.0" y1="84.0" x2="196.0" y2="84.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="186.0,79.0 196.0,84.0 186.0,89.0" fill="#111"/>
+<text x="134.0" y="78.0" text-anchor="middle" font-size="14.5" >bấm Đặt hàng</text>
+<circle cx="60.0" cy="84.0" r="7.5" fill="#111"/><text x="60.0" y="87.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">1</text>
+<line x1="198.0" y1="124.0" x2="324.0" y2="124.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="314.0,119.0 324.0,124.0 314.0,129.0" fill="#111"/>
+<text x="262.0" y="118.0" text-anchor="middle" font-size="14.5" >POST /orders</text>
+<circle cx="188.0" cy="124.0" r="7.5" fill="#111"/><text x="188.0" y="127.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">2</text>
+<line x1="326.0" y1="180.0" x2="452.0" y2="180.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="442.0,175.0 452.0,180.0 442.0,185.0" fill="#111"/>
+<text x="390.0" y="158.0" text-anchor="middle" font-size="14.5" >giữ hàng nếu còn đủ</text>
+<text x="390.0" y="174.0" text-anchor="middle" font-size="14.5" >(reserved += q)</text>
+<circle cx="316.0" cy="180.0" r="7.5" fill="#111"/><text x="316.0" y="183.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">3</text>
+<line x1="326.0" y1="236.0" x2="452.0" y2="236.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="442.0,231.0 452.0,236.0 442.0,241.0" fill="#111"/>
+<text x="390.0" y="214.0" text-anchor="middle" font-size="14.5" >tạo đơn chờ thanh toán</text>
+<text x="390.0" y="230.0" text-anchor="middle" font-size="14.5" >hạn 15 phút</text>
+<circle cx="316.0" cy="236.0" r="7.5" fill="#111"/><text x="316.0" y="239.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">4</text>
+<line x1="326.0" y1="276.0" x2="200.0" y2="276.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="210.0,271.0 200.0,276.0 210.0,281.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="262.0" y="270.0" text-anchor="middle" font-size="14.5" >201, mã đơn</text>
+<circle cx="336.0" cy="276.0" r="7.5" fill="#111"/><text x="336.0" y="279.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">5</text>
+<line x1="198.0" y1="332.0" x2="324.0" y2="332.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="314.0,327.0 324.0,332.0 314.0,337.0" fill="#111"/>
+<text x="262.0" y="310.0" text-anchor="middle" font-size="14.5" >lấy thông tin</text>
+<text x="262.0" y="326.0" text-anchor="middle" font-size="14.5" >thanh toán</text>
+<circle cx="188.0" cy="332.0" r="7.5" fill="#111"/><text x="188.0" y="335.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">6</text>
+<line x1="326.0" y1="388.0" x2="200.0" y2="388.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="210.0,383.0 200.0,388.0 210.0,393.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="262.0" y="366.0" text-anchor="middle" font-size="14.5" >ảnh VietQR</text>
+<text x="262.0" y="382.0" text-anchor="middle" font-size="14.5" >đúng số tiền</text>
+<circle cx="336.0" cy="388.0" r="7.5" fill="#111"/><text x="336.0" y="391.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">7</text>
+<line x1="70.0" y1="428.0" x2="580.0" y2="428.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="570.0,423.0 580.0,428.0 570.0,433.0" fill="#111"/>
+<text x="326.0" y="422.0" text-anchor="middle" font-size="14.5" >quét mã, chuyển khoản</text>
+<circle cx="60.0" cy="428.0" r="7.5" fill="#111"/><text x="60.0" y="431.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">8</text>
+<line x1="582.0" y1="468.0" x2="328.0" y2="468.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="338.0,463.0 328.0,468.0 338.0,473.0" fill="#111"/>
+<text x="454.0" y="462.0" text-anchor="middle" font-size="14.5" >webhook báo có</text>
+<circle cx="592.0" cy="468.0" r="7.5" fill="#111"/><text x="592.0" y="471.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">9</text>
+<line x1="326.0" y1="524.0" x2="452.0" y2="524.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="442.0,519.0 452.0,524.0 442.0,529.0" fill="#111"/>
+<text x="390.0" y="502.0" text-anchor="middle" font-size="14.5" >lưu giao dịch, đơn PAID,</text>
+<text x="390.0" y="518.0" text-anchor="middle" font-size="14.5" >trừ kho, ghi nhật ký</text>
+<circle cx="316.0" cy="524.0" r="7.5" fill="#111"/><text x="316.0" y="527.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">10</text>
+<line x1="326.0" y1="564.0" x2="580.0" y2="564.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="570.0,559.0 580.0,564.0 570.0,569.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="454.0" y="558.0" text-anchor="middle" font-size="14.5" >200 OK</text>
+<circle cx="316.0" cy="564.0" r="7.5" fill="#111"/><text x="316.0" y="567.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">11</text>
+<line x1="198.0" y1="622.0" x2="324.0" y2="622.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="314.0,617.0 324.0,622.0 314.0,627.0" fill="#111"/>
+<text x="262.0" y="616.0" text-anchor="middle" font-size="14.5" >hỏi trạng thái đơn</text>
+<circle cx="188.0" cy="622.0" r="7.5" fill="#111"/><text x="188.0" y="625.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">12</text>
+<line x1="326.0" y1="670.0" x2="200.0" y2="670.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="210.0,665.0 200.0,670.0 210.0,675.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="262.0" y="664.0" text-anchor="middle" font-size="14.5" >PAID</text>
+<circle cx="336.0" cy="670.0" r="7.5" fill="#111"/><text x="336.0" y="673.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">13</text>
+<line x1="198.0" y1="710.0" x2="72.0" y2="710.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="82.0,705.0 72.0,710.0 82.0,715.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="134.0" y="704.0" text-anchor="middle" font-size="14.5" >đã nhận thanh toán</text>
+<circle cx="208.0" cy="710.0" r="7.5" fill="#111"/><text x="208.0" y="713.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">14</text>
+<circle cx="70" cy="26" r="6" fill="#fff" stroke="#111" stroke-width="1.2"/><line x1="70" y1="32" x2="70" y2="44" stroke="#111" stroke-width="1.2"/><line x1="61" y1="36" x2="79" y2="36" stroke="#111" stroke-width="1.2"/><line x1="70" y1="44" x2="62" y2="53" stroke="#111" stroke-width="1.2"/><line x1="70" y1="44" x2="78" y2="53" stroke="#111" stroke-width="1.2"/>
+<text x="70.0" y="68.0" text-anchor="middle" font-size="14" font-weight="bold">Khách</text>
+<circle cx="70" cy="768" r="6" fill="#fff" stroke="#111" stroke-width="1.2"/><line x1="70" y1="774" x2="70" y2="786" stroke="#111" stroke-width="1.2"/><line x1="61" y1="778" x2="79" y2="778" stroke="#111" stroke-width="1.2"/><line x1="70" y1="786" x2="62" y2="795" stroke="#111" stroke-width="1.2"/><line x1="70" y1="786" x2="78" y2="795" stroke="#111" stroke-width="1.2"/>
+<text x="70.0" y="810.0" text-anchor="middle" font-size="14" font-weight="bold">Khách</text>
+<rect x="145.0" y="18" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="198.0" y="40.0" text-anchor="middle" font-size="14" font-weight="bold">Web</text>
+<rect x="145.0" y="760" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="198.0" y="782.0" text-anchor="middle" font-size="14" font-weight="bold">Web</text>
+<rect x="273.0" y="18" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="326.0" y="40.0" text-anchor="middle" font-size="14" font-weight="bold">API</text>
+<rect x="273.0" y="760" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="326.0" y="782.0" text-anchor="middle" font-size="14" font-weight="bold">API</text>
+<rect x="401.0" y="18" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="454.0" y="40.0" text-anchor="middle" font-size="14" font-weight="bold">PostgreSQL</text>
+<rect x="401.0" y="760" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="454.0" y="782.0" text-anchor="middle" font-size="14" font-weight="bold">PostgreSQL</text>
+<rect x="529.0" y="18" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="582.0" y="33.0" text-anchor="middle" font-size="14" font-weight="bold">Ngân hàng</text>
+<text x="582.0" y="47.0" text-anchor="middle" font-size="14" font-weight="bold">/ SePay</text>
+<rect x="529.0" y="760" width="106.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="582.0" y="775.0" text-anchor="middle" font-size="14" font-weight="bold">Ngân hàng</text>
+<text x="582.0" y="789.0" text-anchor="middle" font-size="14" font-weight="bold">/ SePay</text>
+</svg>

@@ -1,0 +1,57 @@
+classDiagram
+  direction TB
+  class Solver {
+    <<module>>
+    solve(req, catalog, profile) SolveResult
+  }
+  class SolveRequest {
+    budget
+    purpose
+    preferences
+    fixed
+  }
+  class Problem {
+    items: Item[][]
+    rel: Uint8Array[][]
+    profile: PurposeProfile
+  }
+  class Item {
+    product
+    price
+    value
+  }
+  class PurposeProfile {
+    weights
+    allocation
+  }
+  class SolveResult {
+    builds: Build[]
+    stats
+    infeasibleReason
+  }
+  class Build {
+    label
+    parts
+    totalPrice
+    score
+    warnings
+  }
+  class CompatibilityIssue {
+    code
+    severity
+    message
+  }
+  class Rules {
+    <<module>>
+    RULES
+    PAIR_RULES
+    checkCompatibility()
+  }
+  Solver ..> SolveRequest : nhận
+  Solver ..> Problem : dựng
+  Solver ..> SolveResult : trả về
+  Problem *-- Item
+  Problem o-- PurposeProfile
+  Problem ..> Rules
+  SolveResult *-- Build
+  Build *-- CompatibilityIssue

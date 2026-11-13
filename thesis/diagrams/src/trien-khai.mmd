@@ -1,0 +1,21 @@
+flowchart TB
+  user(["Trình duyệt"])
+  bank[/"SePay"/]
+  gem[/"Gemini API"/]
+  subgraph VPS["Máy chủ đám mây - Docker Compose"]
+    caddy["Caddy 2<br/>HTTPS tự động"]
+    subgraph NET["Mạng nội bộ Docker"]
+      web["web<br/>Next.js :3000"]
+      api["api<br/>Express 5 :4000"]
+      pg[("postgres:16")]
+      rd[("redis:7")]
+    end
+  end
+  user -->|HTTPS| caddy
+  bank -->|webhook| caddy
+  caddy -->|"/api/*"| api
+  caddy -->|còn lại| web
+  web -.->|SSR| api
+  api --> pg
+  api --> rd
+  api --> gem

@@ -1,0 +1,326 @@
+\chapter{KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}
+\label{chap:khao-sat}
+
+Trong chương này, em trình bày kết quả khảo sát bài toán tương thích linh kiện và các công cụ xây dựng cấu hình PC đang có trên thị trường, từ đó xác định những chức năng hệ thống cần có. Tiếp theo, em mô tả tổng quan chức năng bằng biểu đồ use case, các quy trình nghiệp vụ chính, đặc tả chi tiết một số use case quan trọng và các yêu cầu phi chức năng.
+
+\section{Khảo sát hiện trạng}
+
+\subsection{Bài toán tương thích linh kiện máy tính}
+
+Một bộ PC gồm tám nhóm linh kiện và mỗi nhóm có bộ thông số riêng. Các thông số này ràng buộc lẫn nhau theo nhiều cách khác nhau, có thể chia thành bốn loại:
+\begin{itemize}
+  \item \textbf{Lắp vừa về vật lý:} socket của CPU phải trùng socket của mainboard (ví dụ AM5 với AM5, LGA1700 với LGA1700); chuẩn RAM phải được cả CPU lẫn mainboard hỗ trợ (DDR4 hoặc DDR5); kích thước mainboard (ATX, mATX, ITX) phải nằm trong danh sách vỏ case hỗ trợ; card đồ họa và tản nhiệt không được dài hoặc cao hơn khoảng trống trong vỏ case; ổ NVMe cần khe M.2 trên mainboard.
+  \item \textbf{Điện năng:} bộ nguồn phải đủ công suất cho CPU, card đồ họa và các linh kiện còn lại, có dư một khoảng an toàn.
+  \item \textbf{Chức năng:} nếu không có card đồ họa rời thì CPU bắt buộc phải có nhân đồ họa tích hợp, nếu không máy sẽ không có tín hiệu ra màn hình.
+  \item \textbf{Cân bằng hiệu năng và ngân sách:} CPU và card đồ họa nên cùng phân khúc để tránh nghẽn cổ chai; tổng giá phải nằm trong ngân sách và nên dùng gần hết ngân sách.
+\end{itemize}
+
+Các ràng buộc này không khó nếu chỉ xét một cặp linh kiện, nhưng khi xét cả bộ thì số khả năng tăng rất nhanh. Trên kho dữ liệu thử nghiệm của đồ án gồm 240 sản phẩm đang bán, số cách ghép tám linh kiện là 626.883.079.680. Khi em đếm riêng từng cặp, chỉ 28,7\% số cặp CPU -- mainboard khớp socket, 58,5\% số cặp mainboard -- RAM khớp chuẩn và đủ khe, 71,5\% số cặp mainboard -- vỏ case lắp vừa. Nghĩa là nếu chọn ngẫu nhiên, khả năng ra một bộ lắp được là rất thấp. Người dùng phổ thông thường không biết hết các ràng buộc trên, còn nhân viên tư vấn thì phải tra cứu thủ công cho từng khách.
+
+\subsection{Khảo sát các công cụ xây dựng cấu hình hiện có}
+
+Em đã khảo sát công cụ ``build PC'' của một số website trong và ngoài nước tại thời điểm tháng 11/2026. Với mỗi công cụ, em xem các tiêu chí: người dùng có tự chọn từng linh kiện được không, có tự kiểm tra tương thích không, có ước tính công suất không, có tự gợi ý cả bộ theo ngân sách và mục đích không, có tư vấn bằng AI không, có xuất báo giá và đặt mua cả bộ trong một bước không. Kết quả được tổng hợp trong bảng~\ref{tab:khao-sat}.
+
+\begin{table}[H]
+\centering\footnotesize
+\begin{tabular}{|L{2.9cm}|C{1.85cm}|C{1.6cm}|C{1.5cm}|C{1.75cm}|C{2cm}|}
+\hline
+\textbf{Tiêu chí} & \textbf{PCPart\-Picker} & \textbf{Hacom} & \textbf{GearVN} & \textbf{An Phát PC} & \textbf{PC Builder (đồ án)} \\ \hline
+Tự chọn từng linh kiện & Có & Có & Có & Có & Có \\ \hline
+Tự kiểm tra tương thích & Có & Có (socket, RAM, nguồn) & Không thấy & Không thấy & Có (15 luật) \\ \hline
+Ước tính công suất & Có & Không thấy & Không thấy & Không thấy & Có \\ \hline
+Tự gợi ý cả bộ theo ngân sách, mục đích & Không thấy & Bản thử nghiệm & Không thấy & Không thấy & Có \\ \hline
+Tư vấn bằng AI & Không thấy & Bản thử nghiệm & Không thấy & Không thấy & Có, kèm chế độ dự phòng \\ \hline
+Xuất báo giá & Văn bản & Excel, ảnh, in & Tệp, in & Excel, ảnh, in & PDF \\ \hline
+Đặt cả bộ trong một bước & Không thấy & Có & Có & Có & Có, đặt lắp ráp \\ \hline
+\end{tabular}
+\caption{So sánh các công cụ xây dựng cấu hình PC (khảo sát tháng 11/2026)}
+\label{tab:khao-sat}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{PCPartPicker}~\cite{pcpartpicker} là công cụ nổi tiếng nhất ở nước ngoài. Công cụ chỉ cho chọn linh kiện đã biết là tương thích, cảnh báo khi có xung đột, kiểm tra cả chiều dài card đồ họa và chiều cao tản nhiệt so với vỏ case, đồng thời ước tính tổng công suất. Tuy nhiên, PCPartPicker chỉ là trang so sánh giá của nhiều nhà bán, không tự đề xuất cả bộ theo ngân sách, và chính trang này cũng thừa nhận một số giới hạn vật lý chưa kiểm tra tự động được~\cite{pcpartpicker-forum}.
+  \item \textbf{Hacom}~\cite{hacom-buildpc} có công cụ build PC tự kiểm tra socket CPU -- mainboard, RAM và công suất nguồn, xuất cấu hình ra Excel, ảnh, và thêm cả bộ vào giỏ. Đáng chú ý, Hacom đang thử nghiệm nội bộ một trang ``AI Build PC''~\cite{hacom-ai}: người dùng mô tả mục đích và ngân sách, AI hỏi thêm khi cần và đưa ra ba phương án Tiết kiệm, Cân bằng, Hiệu năng cao. Trang này ghi rõ các điểm cần kiểm tra thêm sẽ do kỹ thuật viên xác nhận trước khi lắp ráp. Điều này cho thấy hướng tiếp cận của đồ án đúng với xu hướng của thị trường.
+  \item \textbf{GearVN}~\cite{gearvn} và \textbf{An Phát PC}~\cite{anphat} cho phép chọn linh kiện, in hoặc tải cấu hình và thêm cả bộ vào giỏ. Em không tìm thấy mô tả nào về việc tự kiểm tra tương thích; phần hỏi đáp của GearVN còn khuyên người dùng tự đối chiếu socket, chuẩn RAM, kích thước card và công suất nguồn.
+  \item \textbf{Phong Vũ} cũng có trang build PC, nhưng trang chặn truy cập tự động nên em chưa kiểm chứng được các tính năng và không đưa vào bảng so sánh.
+\end{itemize}
+
+\subsection{Nhận xét}
+
+Từ kết quả khảo sát, em rút ra ba nhận xét. Thứ nhất, các website bán lẻ trong nước đều có công cụ chọn linh kiện và đặt mua cả bộ, nhưng phần kiểm tra tương thích còn thiếu hoặc chỉ kiểm tra vài cặp cơ bản. Thứ hai, việc \emph{tự đề xuất} một cấu hình hoàn chỉnh theo ngân sách và mục đích gần như chưa có, chỉ mới xuất hiện ở dạng thử nghiệm. Thứ ba, khi đưa AI vào tư vấn, các trang hiện có vẫn phải nhờ kỹ thuật viên xác nhận lại, tức là kết quả của AI chưa được bảo đảm tương thích bằng chính hệ thống.
+
+Vì vậy, hệ thống trong đồ án cần: (i) kiểm tra tương thích đầy đủ bằng một bộ luật rõ ràng, dùng thống nhất ở mọi nơi; (ii) có bộ máy tự chọn tổ hợp linh kiện tối ưu theo ngân sách và mục đích; (iii) có trợ lý AI tư vấn bằng tiếng Việt nhưng mọi linh kiện và giá do bộ máy tối ưu quyết định, nên kết quả đưa ra luôn tương thích mà không cần xác nhận lại; (iv) có đầy đủ chức năng của một cửa hàng trực tuyến để khách đặt mua cả bộ ngay sau khi được tư vấn.
+
+\section{Tổng quan chức năng}
+
+\subsection{Biểu đồ use case tổng quát}
+
+Hệ thống có bốn tác nhân là người dùng và hai hệ thống bên ngoài, được mô tả trong bảng~\ref{tab:tac-nhan}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|L{3.1cm}|L{10.9cm}|}
+\hline
+\textbf{Tác nhân} & \textbf{Mô tả} \\ \hline
+Khách vãng lai & Người dùng chưa đăng nhập. Được xem sản phẩm, dùng trợ lý AI, gợi ý cấu hình, lắp ráp PC, thêm vào giỏ và đặt hàng; hệ thống nhận diện bằng cookie mã khách. \\ \hline
+Khách hàng & Người dùng đã đăng nhập, kế thừa mọi quyền của khách vãng lai, có thêm quản lý tài khoản, xem lại đơn hàng và các cấu hình đã lưu. \\ \hline
+Nhân viên & Nhân viên cửa hàng, vào được trang quản trị để quản lý sản phẩm, tồn kho, benchmark, đơn hàng, xem thống kê và nhật ký hội thoại AI. \\ \hline
+Quản trị viên & Kế thừa quyền của nhân viên, có thêm quyền sửa lược đồ thông số của danh mục, sửa ma trận trọng số thuật toán, xác nhận thanh toán thủ công và hủy đơn đã thanh toán. \\ \hline
+Google Gemini & Dịch vụ mô hình ngôn ngữ bên ngoài, giúp trợ lý hiểu câu hỏi tiếng Việt và quyết định gọi công cụ nào. \\ \hline
+Ngân hàng / SePay & Gửi webhook báo có khi khách chuyển khoản, để hệ thống tự xác nhận đơn hàng. \\ \hline
+\end{tabular}
+\caption{Các tác nhân của hệ thống}
+\label{tab:tac-nhan}
+\end{table}
+
+\hinh{figures/uc-tong-quat.pdf}{\textwidth}{Biểu đồ use case tổng quát}{fig:uc-tong-quat}
+
+Hình~\ref{fig:uc-tong-quat} là biểu đồ use case tổng quát. Phía bên trái là nhóm chức năng dành cho người mua: xem và tìm kiếm linh kiện, tư vấn cấu hình bằng AI, gợi ý cấu hình theo biểu mẫu, lắp ráp PC tương tác, mua hàng và thanh toán. Khách hàng đã đăng nhập kế thừa toàn bộ các chức năng đó và có thêm quản lý tài khoản, quản lý cấu hình của mình. Phía bên phải là nhóm chức năng quản trị; quản trị viên kế thừa quyền của nhân viên và có thêm hai chức năng ảnh hưởng tới toàn hệ thống là quản lý lược đồ thông số và quản lý thuật toán gợi ý. Hai hệ thống bên ngoài là Google Gemini và ngân hàng/SePay tham gia vào use case tư vấn bằng AI và use case mua hàng; em thể hiện chúng ở các biểu đồ phân rã tương ứng để biểu đồ tổng quát được gọn.
+
+\subsection{Biểu đồ use case phân rã Tư vấn cấu hình bằng AI}
+
+\hinh{figures/uc-tu-van-ai.pdf}{\textwidth}{Biểu đồ use case phân rã Tư vấn cấu hình bằng AI}{fig:uc-tu-van-ai}
+
+Hình~\ref{fig:uc-tu-van-ai} phân rã chức năng tư vấn bằng AI, đây là chức năng nổi bật nhất của hệ thống. Khách mô tả nhu cầu bằng tiếng Việt; việc phân tích yêu cầu và quyết định gọi công cụ do Google Gemini đảm nhận. Nếu câu hỏi thiếu ngân sách hoặc mục đích, trợ lý hỏi lại. Khi Gemini không dùng được (chưa cấu hình khóa, hết hạn mức hoặc quá thời gian chờ), hệ thống chuyển sang chế độ dự phòng và vẫn trả về cấu hình. Từ kết quả, khách có thể tiếp tục chỉnh cấu hình bằng hội thoại (``đổi sang card AMD'', ``bớt 3 triệu''), hỏi thông tin linh kiện, kiểm tra tương thích, thêm cả bộ vào giỏ hoặc mở cấu hình trong công cụ lắp ráp để tự chỉnh tiếp.
+
+\subsection{Biểu đồ use case phân rã Lắp ráp PC tương tác}
+
+\hinh{figures/uc-lap-rap.pdf}{0.95\textwidth}{Biểu đồ use case phân rã Lắp ráp PC tương tác}{fig:uc-lap-rap}
+
+Hình~\ref{fig:uc-lap-rap} mô tả công cụ lắp ráp tương tác (Customizer). Mỗi lần khách chọn một linh kiện vào một trong tám ô (slot), hệ thống kiểm tra tương thích ngay trên trình duyệt. Trong hộp chọn linh kiện, khách có thể lọc ứng viên, và có thể bật tùy chọn ẩn các linh kiện không tương thích với những món đã chọn. Khách luôn thấy cảnh báo tương thích, tổng giá và công suất ước tính; từ đó có thể nhờ AI tối ưu lại cấu hình, lưu và chia sẻ, xuất báo giá PDF hoặc thêm cả bộ vào giỏ.
+
+\subsection{Biểu đồ use case phân rã Mua hàng và thanh toán}
+
+\hinh{figures/uc-mua-hang.pdf}{\textwidth}{Biểu đồ use case phân rã Mua hàng và thanh toán}{fig:uc-mua-hang}
+
+Hình~\ref{fig:uc-mua-hang} gồm các chức năng của luồng mua hàng. Khách quản lý giỏ hàng (giỏ của khách vãng lai được gộp vào giỏ tài khoản khi đăng nhập), đặt hàng lẻ hoặc đặt lắp ráp nguyên bộ. Mỗi lần đặt hàng, hệ thống giữ hàng trong 15 phút. Khách thanh toán bằng mã VietQR; khi ngân hàng gửi webhook báo có, hệ thống tự xác nhận thanh toán. Khách có thể theo dõi đơn và hủy đơn khi đơn còn đang chờ thanh toán.
+
+\subsection{Biểu đồ use case phân rã Quản lý sản phẩm, kho và benchmark}
+
+\hinh{figures/uc-quan-ly-san-pham.pdf}{\textwidth}{Biểu đồ use case phân rã Quản lý sản phẩm, kho và benchmark}{fig:uc-san-pham}
+
+Hình~\ref{fig:uc-san-pham} mô tả nhóm chức năng quản lý hàng hóa. Nhân viên thêm, sửa, ẩn sản phẩm; thông số kỹ thuật được nhập qua biểu mẫu sinh tự động theo lược đồ thông số của danh mục. Nhân viên cũng có thể đặt hệ số ưu tiên thương mại cho sản phẩm, nhập kho, điều chỉnh tồn, xem lịch sử biến động kho và cập nhật điểm benchmark. Riêng việc sửa lược đồ thông số của danh mục chỉ quản trị viên được làm, vì thay đổi này ảnh hưởng tới mọi sản phẩm trong danh mục.
+
+\subsection{Biểu đồ use case phân rã Quản lý thuật toán gợi ý}
+
+\hinh{figures/uc-thuat-toan.pdf}{0.9\textwidth}{Biểu đồ use case phân rã Quản lý thuật toán gợi ý}{fig:uc-thuat-toan}
+
+Hình~\ref{fig:uc-thuat-toan} mô tả chức năng cho phép quản trị viên điều chỉnh thuật toán mà không cần sửa mã nguồn. Ma trận trọng số cho biết với từng mục đích (chơi game, đồ họa, AI, văn phòng), mỗi nhóm linh kiện quan trọng tới mức nào; khoảng phân bổ cho biết mỗi nhóm nên chiếm bao nhiêu phần ngân sách. Khi lưu, hệ thống kiểm tra tổng trọng số và tính hợp lệ của các khoảng, đồng thời làm mới bộ nhớ đệm gợi ý để kết quả mới có hiệu lực ngay. Quản trị viên có thể chạy thử gợi ý để thấy ảnh hưởng của thay đổi.
+
+\subsection{Biểu đồ use case phân rã Quản lý đơn hàng và thống kê}
+
+\hinh{figures/uc-don-hang.pdf}{\textwidth}{Biểu đồ use case phân rã Quản lý đơn hàng và thống kê}{fig:uc-don-hang}
+
+Hình~\ref{fig:uc-don-hang} gồm các chức năng xử lý đơn. Nhân viên xem và lọc đơn, chuyển trạng thái theo đúng vòng đời (đã thanh toán, đang xử lý, đang giao, hoàn thành), đối soát các giao dịch thanh toán và xem thống kê doanh thu. Hai thao tác có rủi ro về tiền là xác nhận thanh toán thủ công và hủy đơn đã thanh toán (hoàn tiền) chỉ dành cho quản trị viên.
+
+\subsection{Biểu đồ use case phân rã Quản lý tài khoản}
+
+\hinh{figures/uc-tai-khoan.pdf}{0.9\textwidth}{Biểu đồ use case phân rã Quản lý tài khoản}{fig:uc-tai-khoan}
+
+Hình~\ref{fig:uc-tai-khoan} mô tả các chức năng tài khoản. Khách vãng lai đăng ký và đăng nhập; khi đăng nhập, giỏ hàng tạm được gộp vào giỏ của tài khoản. Phiên đăng nhập được làm mới tự động bằng refresh token. Khách hàng đã đăng nhập có thể đăng xuất, đổi mật khẩu và xem lại đơn hàng của mình.
+
+\subsection{Quy trình nghiệp vụ Tư vấn cấu hình bằng chatbot}
+
+\hinh{figures/act-tu-van.pdf}{0.62\textwidth}{Quy trình nghiệp vụ tư vấn cấu hình bằng chatbot}{fig:act-tu-van}
+
+Hình~\ref{fig:act-tu-van} mô tả quy trình tư vấn, trong đó màu xanh dương là hành động của khách, màu xanh lá là của hệ thống và màu tím là của Gemini. Điểm quan trọng của quy trình là dù Gemini có khả dụng hay không, việc chọn linh kiện luôn đi qua cùng một bước: gọi công cụ \texttt{recommend\_builds}, để bộ máy tối ưu giải bài toán trên kho thật. Thẻ cấu hình được hiển thị ngay khi bộ máy trả kết quả, trước cả khi lời giải thích viết xong, nên khách không phải chờ phần văn bản. Khi Gemini không khả dụng, bộ hiểu ngôn ngữ theo luật thay Gemini tách ngân sách, mục đích và sở thích từ câu nói, nên khách vẫn nhận được cấu hình.
+
+\subsection{Quy trình nghiệp vụ Đặt hàng và thanh toán VietQR}
+
+\hinh{figures/act-dat-hang.pdf}{0.66\textwidth}{Quy trình nghiệp vụ đặt hàng và thanh toán VietQR}{fig:act-dat-hang}
+
+Hình~\ref{fig:act-dat-hang} mô tả quy trình đặt hàng, màu cam là hành động của ngân hàng. Khi khách bấm đặt hàng, hệ thống tính lại giá từ cơ sở dữ liệu thay vì tin giá trong giỏ, sau đó giữ hàng bằng một câu lệnh cập nhật có điều kiện: chỉ giữ được khi số hàng còn có thể bán đủ cho số lượng đặt. Nếu một món không đủ, toàn bộ đơn bị hủy để không có đơn ``nửa vời''. Đơn được tạo ở trạng thái chờ thanh toán với hạn 15 phút và một mã VietQR mang đúng số tiền, nội dung chuyển khoản là mã đơn. Khi ngân hàng gửi webhook báo có, hệ thống tìm mã đơn trong nội dung, kiểm tra số tiền, chuyển đơn sang đã thanh toán và trừ kho. Giao dịch không khớp với đơn nào vẫn được lưu lại để quản trị viên đối soát. Nếu quá 15 phút chưa nhận được tiền, đơn tự hủy và hàng được trả lại.
+
+\section{Đặc tả chức năng}
+
+\subsection{Đặc tả use case Tư vấn cấu hình bằng AI}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{2.6cm}|C{0.8cm}|L{2.1cm}|L{7.35cm}|}
+\hline
+\textbf{Mã use case} & \multicolumn{2}{l|}{UC03} & \textbf{Tên:} Tư vấn cấu hình bằng AI \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Khách vãng lai, khách hàng; hệ thống phụ: Google Gemini} \\ \hline
+\textbf{Mô tả} & \multicolumn{3}{L{10.25cm}|}{Khách mô tả nhu cầu bằng tiếng Việt và nhận 2--3 cấu hình tương thích, nằm trong ngân sách, kèm giải thích; có thể chỉnh tiếp bằng hội thoại.} \\ \hline
+\textbf{Kích hoạt} & \multicolumn{3}{L{10.25cm}|}{Khách mở trang Tư vấn AI hoặc khung chat nổi và gửi tin nhắn.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{L{10.25cm}|}{Không (không bắt buộc đăng nhập).} \\ \hline
+\multirow{9}{2.6cm}{\textbf{Luồng sự kiện chính}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 1 & Khách & Gõ nhu cầu, ví dụ ``chơi game tầm 25 triệu, thích màu trắng'' \\ \cline{2-4}
+ & 2 & Hệ thống & Kiểm tra giới hạn tần suất, lưu tin nhắn, gửi 20 tin gần nhất cho Gemini \\ \cline{2-4}
+ & 3 & Gemini & Phân tích yêu cầu, yêu cầu gọi công cụ \texttt{recommend\_builds} với ngân sách, mục đích, sở thích \\ \cline{2-4}
+ & 4 & Hệ thống & Chạy bộ máy tối ưu trên kho thật, lưu 2--3 cấu hình \\ \cline{2-4}
+ & 5 & Hệ thống & Gửi thẻ cấu hình (linh kiện, giá, điểm, cảnh báo) về trình duyệt \\ \cline{2-4}
+ & 6 & Gemini & Viết lời giải thích dựa trên kết quả công cụ, hệ thống stream từng đoạn \\ \cline{2-4}
+ & 7 & Hệ thống & Kiểm tra các số tiền trong câu trả lời so với số liệu công cụ, lưu kết quả \\ \cline{2-4}
+ & 8 & Khách & Chỉnh tiếp, thêm cả bộ vào giỏ hoặc mở trong Customizer \\ \hline
+\multirow{3}{2.6cm}{\textbf{Luồng thay thế}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 3a & Gemini & Thiếu ngân sách hoặc mục đích: hỏi lại khách, quay lại bước 1 \\ \cline{2-4}
+ & 3b & Hệ thống & Gemini lỗi, hết hạn mức hoặc quá 20 giây: dùng bộ hiểu ngôn ngữ theo luật, tiếp tục bước 4 \\ \hline
+\textbf{Hậu điều kiện} & \multicolumn{3}{L{10.25cm}|}{Hội thoại, các lời gọi công cụ và các cấu hình được lưu lại; cấu hình có đường dẫn chia sẻ.} \\ \hline
+\end{tabular}
+\caption{Đặc tả use case Tư vấn cấu hình bằng AI}
+\label{tab:uc03}
+\end{table}
+
+Bảng~\ref{tab:uc03} đặc tả use case tư vấn bằng AI. Có thể thấy ở bước 4 và bước 5, danh sách linh kiện và giá trên thẻ cấu hình được lấy từ kết quả của bộ máy tối ưu chứ không lấy từ lời của mô hình ngôn ngữ. Dữ liệu đầu vào của use case được mô tả trong bảng~\ref{tab:uc03-input}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{2.6cm}|L{5.2cm}|C{1.4cm}|L{3.9cm}|}
+\hline
+\textbf{Dữ liệu} & \textbf{Mô tả} & \textbf{Bắt buộc} & \textbf{Ví dụ} \\ \hline
+Nội dung tin nhắn & Văn bản tiếng Việt, 1 đến 1000 ký tự & Có & chơi game tầm 25 triệu \\ \hline
+Mã phiên chat & Phiên do hệ thống tạo ở tin đầu tiên; chỉ chủ phiên được gửi tiếp & Có & \texttt{de167449-...} \\ \hline
+\end{tabular}
+\caption{Dữ liệu đầu vào của use case Tư vấn cấu hình bằng AI}
+\label{tab:uc03-input}
+\end{table}
+
+\subsection{Đặc tả use case Lắp ráp PC tương tác}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{2.6cm}|C{0.8cm}|L{2.1cm}|L{7.35cm}|}
+\hline
+\textbf{Mã use case} & \multicolumn{2}{l|}{UC05} & \textbf{Tên:} Lắp ráp PC tương tác \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Khách vãng lai, khách hàng} \\ \hline
+\textbf{Mô tả} & \multicolumn{3}{L{10.25cm}|}{Khách tự chọn từng linh kiện cho 8 ô; hệ thống kiểm tra tương thích tức thì và chặn lưu khi còn lỗi cứng.} \\ \hline
+\textbf{Kích hoạt} & \multicolumn{3}{L{10.25cm}|}{Khách mở trang Tự build PC, hoặc bấm ``Mở trong Customizer'' từ một cấu hình gợi ý.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{L{10.25cm}|}{Không.} \\ \hline
+\multirow{7}{2.6cm}{\textbf{Luồng sự kiện chính}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 1 & Khách & Chọn mục đích sử dụng và ngân sách (không bắt buộc) \\ \cline{2-4}
+ & 2 & Khách & Bấm ``Chọn'' ở một ô, mở hộp chọn linh kiện của danh mục đó \\ \cline{2-4}
+ & 3 & Hệ thống & Thử đặt từng ứng viên vào ô, làm mờ ứng viên xung đột kèm mã luật \\ \cline{2-4}
+ & 4 & Khách & Chọn một linh kiện \\ \cline{2-4}
+ & 5 & Hệ thống & Chạy bộ luật trên trình duyệt, cập nhật lỗi từng ô, tổng giá, công suất ước tính \\ \cline{2-4}
+ & 6 & Khách & Lặp lại bước 2--5 cho đến khi đủ, rồi lưu hoặc thêm vào giỏ \\ \hline
+\multirow{2}{2.6cm}{\textbf{Luồng thay thế}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 6a & Hệ thống & Còn lỗi tương thích cứng: máy chủ từ chối lưu (mã 422) và trả danh sách luật vi phạm \\ \hline
+\textbf{Hậu điều kiện} & \multicolumn{3}{L{10.25cm}|}{Cấu hình hợp lệ được lưu kèm điểm, công suất và cảnh báo mềm; có đường dẫn chia sẻ.} \\ \hline
+\end{tabular}
+\caption{Đặc tả use case Lắp ráp PC tương tác}
+\label{tab:uc05}
+\end{table}
+
+Ở use case lắp ráp tương tác (bảng~\ref{tab:uc05}), việc kiểm tra ở bước 3 và 5 chạy trên trình duyệt nên phản hồi tức thì, không cần gọi mạng. Tuy nhiên, máy chủ vẫn kiểm tra lại toàn bộ khi lưu cấu hình, nên kết quả trên trình duyệt chỉ có vai trò phản hồi nhanh, còn máy chủ mới là nơi quyết định cuối cùng.
+
+\subsection{Đặc tả use case Đặt hàng và thanh toán VietQR}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{2.6cm}|C{0.8cm}|L{2.1cm}|L{7.35cm}|}
+\hline
+\textbf{Mã use case} & \multicolumn{2}{l|}{UC09, UC10} & \textbf{Tên:} Đặt hàng và thanh toán VietQR \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Khách vãng lai, khách hàng; hệ thống phụ: ngân hàng / SePay} \\ \hline
+\textbf{Mô tả} & \multicolumn{3}{L{10.25cm}|}{Khách đặt các món trong giỏ (lẻ hoặc cả bộ cấu hình) và thanh toán bằng chuyển khoản qua mã VietQR, hệ thống tự xác nhận.} \\ \hline
+\textbf{Kích hoạt} & \multicolumn{3}{L{10.25cm}|}{Khách bấm ``Đặt hàng'' hoặc ``Đặt lắp ráp'' trong giỏ hàng.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{L{10.25cm}|}{Giỏ hàng có ít nhất một sản phẩm.} \\ \hline
+\multirow{8}{2.6cm}{\textbf{Luồng sự kiện chính}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 1 & Khách & Nhập họ tên, số điện thoại, địa chỉ, ghi chú và xác nhận đặt hàng \\ \cline{2-4}
+ & 2 & Hệ thống & Tính lại giá từ CSDL, giữ hàng cho từng món, tạo đơn chờ thanh toán hạn 15 phút \\ \cline{2-4}
+ & 3 & Hệ thống & Hiển thị mã VietQR đúng số tiền, nội dung là mã đơn, kèm đồng hồ đếm ngược \\ \cline{2-4}
+ & 4 & Khách & Quét mã bằng ứng dụng ngân hàng và chuyển khoản \\ \cline{2-4}
+ & 5 & Ngân hàng & Gửi webhook báo có về hệ thống \\ \cline{2-4}
+ & 6 & Hệ thống & Khớp mã đơn và số tiền, chuyển đơn sang đã thanh toán, trừ kho, ghi nhật ký kho \\ \cline{2-4}
+ & 7 & Hệ thống & Trang thanh toán tự chuyển sang ``Đã thanh toán'' \\ \hline
+\multirow{4}{2.6cm}{\textbf{Luồng thay thế}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 2a & Hệ thống & Một món không đủ hàng: hủy toàn bộ giao dịch, báo mặt hàng đã hết \\ \cline{2-4}
+ & 6a & Hệ thống & Không khớp đơn nào: lưu giao dịch để đối soát; chuyển thiếu tiền: lưu trạng thái thiếu tiền \\ \cline{2-4}
+ & 7a & Hệ thống & Quá 15 phút chưa nhận tiền: tự hủy đơn và nhả hàng đang giữ \\ \hline
+\textbf{Hậu điều kiện} & \multicolumn{3}{L{10.25cm}|}{Đơn ở trạng thái đã thanh toán, tồn kho giảm đúng số lượng, có một dòng giao dịch thanh toán.} \\ \hline
+\end{tabular}
+\caption{Đặc tả use case Đặt hàng và thanh toán VietQR}
+\label{tab:uc09}
+\end{table}
+
+Dữ liệu khách nhập khi đặt hàng được kiểm tra như bảng~\ref{tab:uc09-input}; giá và số tiền phải trả không lấy từ trình duyệt mà luôn do máy chủ tính.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{2.6cm}|L{5.4cm}|C{1.4cm}|L{3.7cm}|}
+\hline
+\textbf{Dữ liệu} & \textbf{Mô tả} & \textbf{Bắt buộc} & \textbf{Ví dụ} \\ \hline
+Họ tên người nhận & 2 đến 100 ký tự & Có & Nguyễn Văn An \\ \hline
+Số điện thoại & 10 chữ số, bắt đầu bằng 0 & Có & 0912345678 \\ \hline
+Địa chỉ giao hàng & 10 đến 300 ký tự & Có & 12 Nguyễn Huệ, Quận 1 \\ \hline
+Ghi chú & Tối đa 500 ký tự & Không & Giao giờ hành chính \\ \hline
+Mã cấu hình & Có khi đặt lắp ráp cả bộ; đơn chỉ gồm các dòng của cấu hình đó và cộng phí lắp ráp & Không & \texttt{535af8f8-...} \\ \hline
+\end{tabular}
+\caption{Dữ liệu đầu vào của use case Đặt hàng}
+\label{tab:uc09-input}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý sản phẩm với thông số động}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{2.6cm}|C{0.8cm}|L{2.1cm}|L{7.35cm}|}
+\hline
+\textbf{Mã use case} & \multicolumn{2}{l|}{UC12} & \textbf{Tên:} Quản lý sản phẩm \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Nhân viên, quản trị viên} \\ \hline
+\textbf{Mô tả} & \multicolumn{3}{L{10.25cm}|}{Thêm, sửa, ẩn sản phẩm; thông số kỹ thuật nhập qua biểu mẫu sinh từ lược đồ của danh mục.} \\ \hline
+\textbf{Kích hoạt} & \multicolumn{3}{L{10.25cm}|}{Người dùng chọn ``Thêm sản phẩm'' hoặc mở một sản phẩm trong trang quản trị.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{L{10.25cm}|}{Đã đăng nhập với vai trò nhân viên hoặc quản trị viên.} \\ \hline
+\multirow{6}{2.6cm}{\textbf{Luồng sự kiện chính}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 1 & Người dùng & Chọn danh mục (khi thêm mới) \\ \cline{2-4}
+ & 2 & Hệ thống & Sinh biểu mẫu thông số từ lược đồ của danh mục (kiểu, đơn vị, giá trị cho phép) \\ \cline{2-4}
+ & 3 & Người dùng & Nhập tên, hãng, giá, tồn kho ban đầu, thông số, hệ số ưu tiên thương mại \\ \cline{2-4}
+ & 4 & Hệ thống & Kiểm tra thông số theo hai lớp: lược đồ trong CSDL và schema có kiểu mà bộ luật dùng \\ \cline{2-4}
+ & 5 & Hệ thống & Lưu sản phẩm, ghi nhật ký nhập kho, làm mới phiên bản danh mục \\ \hline
+\multirow{3}{2.6cm}{\textbf{Luồng thay thế}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 4a & Hệ thống & Thông số sai: trả lỗi theo từng trường, biểu mẫu hiện lỗi đúng ô \\ \cline{2-4}
+ & 5a & Hệ thống & Trùng mã SKU hoặc đường dẫn: báo trùng, không lưu \\ \hline
+\textbf{Hậu điều kiện} & \multicolumn{3}{L{10.25cm}|}{Sản phẩm xuất hiện ở cửa hàng, trong bộ lọc và trong bộ máy tối ưu; bộ nhớ đệm cũ hết hiệu lực.} \\ \hline
+\end{tabular}
+\caption{Đặc tả use case Quản lý sản phẩm}
+\label{tab:uc12}
+\end{table}
+
+\subsection{Đặc tả use case Quản lý thuật toán gợi ý}
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{2.6cm}|C{0.8cm}|L{2.1cm}|L{7.35cm}|}
+\hline
+\textbf{Mã use case} & \multicolumn{2}{l|}{UC14} & \textbf{Tên:} Quản lý thuật toán gợi ý \\ \hline
+\textbf{Tác nhân} & \multicolumn{3}{l|}{Quản trị viên (nhân viên chỉ được xem)} \\ \hline
+\textbf{Mô tả} & \multicolumn{3}{L{10.25cm}|}{Sửa ma trận trọng số 4 mục đích $\times$ 8 danh mục và khoảng phân bổ ngân sách mà không cần sửa mã nguồn.} \\ \hline
+\textbf{Kích hoạt} & \multicolumn{3}{L{10.25cm}|}{Quản trị viên mở trang ``Trọng số thuật toán''.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{L{10.25cm}|}{Đã đăng nhập với vai trò quản trị viên.} \\ \hline
+\multirow{6}{2.6cm}{\textbf{Luồng sự kiện chính}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 1 & Hệ thống & Hiển thị ma trận trọng số và tổng trọng số của từng mục đích \\ \cline{2-4}
+ & 2 & Quản trị viên & Sửa trọng số, mở rộng dòng để sửa khoảng phân bổ (min--max \%) \\ \cline{2-4}
+ & 3 & Hệ thống & Khóa nút Lưu nếu tổng trọng số khác 1,00 (sai số $\pm$0,001) \\ \cline{2-4}
+ & 4 & Quản trị viên & Bấm Lưu \\ \cline{2-4}
+ & 5 & Hệ thống & Kiểm tra lại ở máy chủ, lưu, ghi người sửa, làm mới bộ nhớ đệm gợi ý \\ \hline
+\multirow{2}{2.6cm}{\textbf{Luồng thay thế}} & \textbf{STT} & \textbf{Thực hiện} & \textbf{Hành động} \\ \cline{2-4}
+ & 5a & Hệ thống & Thiếu danh mục, tổng khác 1 hoặc min lớn hơn max: báo lỗi theo từng ô \\ \hline
+\textbf{Hậu điều kiện} & \multicolumn{3}{L{10.25cm}|}{Các lần gợi ý sau dùng trọng số mới.} \\ \hline
+\end{tabular}
+\caption{Đặc tả use case Quản lý thuật toán gợi ý}
+\label{tab:uc14}
+\end{table}
+
+\section{Yêu cầu phi chức năng}
+
+\subsection{Yêu cầu về hiệu năng}
+Bộ máy tối ưu phải giải xong dưới 300 ms ở phân vị 95 trên kho khoảng 250 sản phẩm, để công cụ gợi ý và trợ lý AI phản hồi gần như tức thì. Với trợ lý AI, từ lúc gửi tin nhắn đến lúc có ba thẻ cấu hình không quá 8 giây, kể cả thời gian gọi Gemini; mỗi lượt chat được giới hạn tối đa 4 vòng gọi công cụ và 20 giây chờ Gemini. Kết quả gợi ý và danh sách ứng viên được lưu đệm trong Redis để giảm tải cho cơ sở dữ liệu.
+
+\subsection{Yêu cầu về độ tin cậy và tính sẵn sàng}
+Hệ thống không được phụ thuộc cứng vào dịch vụ AI bên ngoài: khi Gemini hết hạn mức, mất mạng hoặc không được cấu hình, trợ lý chuyển sang chế độ dự phòng thay vì báo lỗi, còn mọi chức năng cốt lõi khác (gợi ý theo biểu mẫu, lắp ráp, mua hàng) vẫn hoạt động bình thường. Khi nhiều khách cùng đặt món hàng cuối cùng, chỉ một người được đặt thành công; webhook thanh toán gửi lặp lại nhiều lần cũng chỉ được ghi nhận một lần.
+
+\subsection{Yêu cầu về tính đúng đắn của dữ liệu}
+Trợ lý AI không được bịa linh kiện hoặc giá. Linh kiện và giá trên thẻ cấu hình phải được dựng từ dữ liệu của bộ máy tối ưu và cơ sở dữ liệu. Phần văn bản tự do do mô hình viết được ràng buộc bằng chỉ dẫn hệ thống và được giám sát bằng bộ kiểm tra giá. Mọi số tiền được lưu và tính bằng số nguyên theo đơn vị đồng để tránh sai số làm tròn.
+
+\subsection{Yêu cầu về bảo mật}
+Mật khẩu được băm bằng bcrypt; xác thực bằng JWT với access token 15 phút và refresh token lưu trong Redis để thu hồi được; cookie đặt httpOnly, SameSite và Secure ở môi trường thật. Mọi đầu vào được kiểm tra bằng Zod; API có giới hạn tần suất cho đăng nhập, đăng ký, gợi ý và chat. Webhook thanh toán phải có khóa bí mật hợp lệ.
+
+\subsection{Yêu cầu về tính dễ sử dụng}
+Toàn bộ giao diện bằng tiếng Việt, hiển thị tốt trên màn hình từ 360 px đến 1440 px, độ tương phản đạt chuẩn WCAG AA, có trạng thái đang tải, trạng thái rỗng và thông báo lỗi kèm hướng dẫn. Người dùng không cần biết thuật ngữ phần cứng vẫn nhận được cấu hình phù hợp.
+
+\subsection{Yêu cầu về triển khai và bảo trì}
+Hệ thống được đóng gói bằng Docker và Docker Compose, triển khai lên máy chủ đám mây với HTTPS tự động. Bộ máy tối ưu là hàm thuần nên được kiểm thử độc lập, với mục tiêu tối thiểu 90\% độ phủ nhánh. Mỗi yêu cầu được truy vết tới use case, mã nguồn, kiểm thử và chương báo cáo tương ứng để dễ bảo trì về sau.
+
+\section{Tổng kết}
+
+Chương này đã khảo sát bài toán tương thích linh kiện và các công cụ xây dựng cấu hình hiện có, từ đó xác định khoảng trống mà đồ án hướng tới: một hệ thống vừa kiểm tra tương thích đầy đủ, vừa tự đề xuất cấu hình tối ưu, vừa tư vấn được bằng tiếng Việt mà vẫn bảo đảm kết quả đúng. Các chức năng của hệ thống đã được mô tả bằng biểu đồ use case tổng quát, tám biểu đồ phân rã, hai quy trình nghiệp vụ và năm bảng đặc tả use case; các yêu cầu phi chức năng đặt ra những tiêu chí đo được về hiệu năng, độ tin cậy, tính đúng đắn, bảo mật và triển khai. Chương tiếp theo sẽ trình bày các công nghệ được lựa chọn để hiện thực những yêu cầu này.

@@ -1,0 +1,37 @@
+% Đồ án tốt nghiệp kỹ sư 2026.1 - Phan Hải Dương (20194533) - GVHD Trần Nhật Hóa
+% Biên dịch: tectonic main.tex  (XeLaTeX, tự tải gói)
+\documentclass[a4paper,oneside]{report}
+\input{preamble}
+
+\begin{document}
+\pagenumbering{alph}
+\input{frontmatter/cover}
+
+\pagestyle{plain}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\input{frontmatter/loi-cam-on}
+\input{frontmatter/tom-tat}
+
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+\listoffigures
+\cleardoublepage
+\listoftables
+\cleardoublepage
+\input{frontmatter/thuat-ngu}
+
+\cleardoublepage
+\pagestyle{fancy}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\input{chapters/ch1-gioi-thieu}
+\input{chapters/ch2-khao-sat}
+\input{chapters/ch3-cong-nghe}
+\input{chapters/ch4-thiet-ke}
+\input{chapters/ch5-giai-phap}
+\input{chapters/ch6-ket-luan}
+
+\input{backmatter/tai-lieu}
+\end{document}

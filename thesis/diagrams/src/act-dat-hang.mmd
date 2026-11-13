@@ -1,0 +1,26 @@
+flowchart TD
+  S((Bắt đầu)) --> A1[Thêm linh kiện hoặc cả cấu hình vào giỏ]
+  A1 --> A2[Nhập thông tin giao hàng, bấm Đặt hàng]
+  A2 --> B1[Tính lại giá từ CSDL]
+  B1 --> B2{Còn đủ hàng?<br/>stock − reserved ≥ q}
+  B2 -- Không --> B3[Hủy toàn bộ giao dịch,<br/>báo mặt hàng đã hết]
+  B3 --> E1((Kết thúc))
+  B2 -- Có --> B4[Giữ hàng, tạo đơn PENDING_PAYMENT<br/>hạn thanh toán 15 phút]
+  B4 --> B5[Sinh mã VietQR:<br/>đúng số tiền, nội dung là mã đơn]
+  B5 --> A3[Quét mã, chuyển khoản]
+  B5 --> T1{Quá 15 phút<br/>chưa nhận tiền?}
+  T1 -- Có --> T2[Hủy đơn, nhả hàng đang giữ]
+  T2 --> E2((Kết thúc))
+  A3 --> C1[Ngân hàng gửi webhook báo có]
+  C1 --> B6{Khớp mã đơn<br/>và đủ tiền?}
+  B6 -- Không khớp đơn --> B7[Lưu giao dịch NO_ORDER<br/>để quản trị viên đối soát]
+  B6 -- Có --> B8[Đơn PAID, trừ kho thật,<br/>ghi nhật ký kho]
+  B8 --> A4[Trang thanh toán tự chuyển<br/>sang Đã thanh toán]
+  A4 --> E3((Kết thúc))
+  B7 --> E4((Kết thúc))
+  classDef kh fill:#e8f1fb,stroke:#2a78d6,color:#0d0f12
+  classDef ht fill:#e7f6f2,stroke:#14a38b,color:#0d0f12
+  classDef nh fill:#fdf0e6,stroke:#c0713a,color:#0d0f12
+  class A1,A2,A3,A4 kh
+  class B1,B2,B3,B4,B5,B6,B7,B8,T1,T2 ht
+  class C1 nh

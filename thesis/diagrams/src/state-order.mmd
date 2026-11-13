@@ -1,0 +1,10 @@
+stateDiagram-v2
+  [*] --> PENDING_PAYMENT : tạo đơn, giữ hàng
+  PENDING_PAYMENT --> PAID : nhận tiền hoặc ADMIN xác nhận
+  PENDING_PAYMENT --> CANCELLED : khách hủy hoặc quá 15 phút
+  PAID --> PROCESSING : nhân viên xác nhận, lắp ráp
+  PAID --> CANCELLED : ADMIN hủy, hoàn tiền
+  PROCESSING --> SHIPPING : bàn giao vận chuyển
+  SHIPPING --> COMPLETED : giao thành công
+  COMPLETED --> [*]
+  CANCELLED --> [*]

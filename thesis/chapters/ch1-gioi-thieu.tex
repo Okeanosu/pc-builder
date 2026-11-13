@@ -1,0 +1,71 @@
+\chapter{GIỚI THIỆU ĐỀ TÀI}
+\label{chap:gioi-thieu}
+
+\section{Đặt vấn đề}
+
+Máy tính cá nhân (PC) lắp ráp vẫn là lựa chọn phổ biến của người chơi game, người làm đồ họa, dựng phim và gần đây là người học lập trình, chạy thử các mô hình trí tuệ nhân tạo. So với máy tính đồng bộ, PC lắp ráp cho phép người mua chọn đúng linh kiện mình cần và nâng cấp dần về sau. Tuy nhiên, chính sự tự do này lại tạo ra một rào cản lớn với người dùng phổ thông.
+
+Một bộ PC hoàn chỉnh gồm tám nhóm linh kiện: bộ vi xử lý (CPU), bo mạch chủ (mainboard), bộ nhớ (RAM), card đồ họa (GPU), ổ cứng, bộ nguồn (PSU), vỏ case và tản nhiệt. Các linh kiện này phải \emph{tương thích} với nhau theo hàng loạt chuẩn kỹ thuật: socket của CPU phải khớp với mainboard, RAM phải đúng chuẩn DDR4 hoặc DDR5 mà mainboard hỗ trợ, card đồ họa không được dài hơn khoảng trống trong vỏ case, bộ nguồn phải đủ công suất cho cả CPU lẫn card đồ họa. Chỉ cần sai một điểm, cả bộ máy có thể không lắp được, không khởi động được, hoặc tệ hơn là chạy chập chờn và gây hỏng phần cứng. Khi em đếm trên kho dữ liệu thử nghiệm của đồ án gồm 240 sản phẩm, chưa đến một phần ba số cặp CPU và mainboard khớp socket với nhau, và tổng số cách ghép tám linh kiện lên tới hơn 626 tỷ tổ hợp.
+
+Ngoài chuyện lắp được hay không, người mua còn gặp bài toán \emph{chia tiền}. Đa số người dùng chỉ biết mình muốn ``chơi game'' hay ``làm đồ họa'' và có khoảng bao nhiêu tiền. Khi tự chia ngân sách theo cảm tính, họ dễ rơi vào tình trạng mất cân đối: dồn quá nhiều tiền cho CPU trong khi card đồ họa yếu, hoặc ngược lại, dẫn đến hiện tượng nghẽn cổ chai làm lãng phí phần tiền đã bỏ ra.
+
+Trong khi đó, các website thương mại điện tử bán linh kiện hiện nay chủ yếu vẫn bán lẻ từng sản phẩm. Một số trang có thêm công cụ ``xây dựng cấu hình'', nhưng thường chỉ là danh sách để người dùng tự chọn từng món, phần kiểm tra tương thích còn sơ sài và gần như không có trang nào tự đề xuất cấu hình tối ưu theo ngân sách và mục đích sử dụng. Người mua vì vậy vẫn phải hỏi nhân viên tư vấn, lên diễn đàn, hoặc chấp nhận rủi ro tự chọn.
+
+Gần đây, các mô hình ngôn ngữ lớn (LLM) như Google Gemini có thể trò chuyện tự nhiên bằng tiếng Việt và hiểu được những yêu cầu như ``chơi Valorant, thỉnh thoảng edit video, tầm 25 triệu, thích màu trắng''. Đây là cơ hội để biến công cụ cấu hình PC thành một ``nhân viên tư vấn'' trực tuyến. Nhưng LLM cũng có điểm yếu lớn là có thể \emph{bịa} ra thông tin: đưa ra linh kiện không có trong kho, báo giá sai, hoặc ghép những linh kiện không tương thích. Với một cửa hàng bán hàng thật, một câu trả lời sai giá hay sai linh kiện là không chấp nhận được.
+
+Từ những vấn đề trên, em nhận thấy cần một hệ thống thương mại điện tử linh kiện máy tính vừa bán hàng đầy đủ, vừa có công cụ gợi ý cấu hình đảm bảo tương thích phần cứng và tối ưu hiệu năng theo ngân sách, đồng thời tận dụng được khả năng hiểu ngôn ngữ tự nhiên của AI mà không để AI tự quyết định linh kiện hay giá.
+
+\section{Mục tiêu và phạm vi đề tài}
+
+Mục tiêu của đồ án là xây dựng \textbf{PC Builder}, một hệ thống thương mại điện tử bán trực tiếp linh kiện máy tính (mô hình D2C) tích hợp công cụ gợi ý cấu hình PC phù hợp nhu cầu người dùng. Theo phiếu giao nhiệm vụ, hệ thống gồm năm hạng mục chính:
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Trợ lý AI tư vấn cấu hình (AI PC Advisor):} người dùng trò chuyện bằng tiếng Việt, trợ lý hiểu nhu cầu, hỏi lại khi thiếu thông tin, đề xuất 2--3 cấu hình kèm giải thích và cho phép chỉnh sửa tiếp bằng hội thoại.
+  \item \textbf{Bộ máy tối ưu (Optimization Engine):} mô hình hóa việc kiểm tra tương thích thành bài toán thỏa mãn ràng buộc (CSP) và việc chia ngân sách thành bài toán cái túi đa lựa chọn (MCKP), từ đó chọn tổ hợp linh kiện có hiệu năng cao nhất trong ngân sách.
+  \item \textbf{Công cụ lắp ráp tương tác (Interactive PC Customizer):} người dùng tự chọn từng linh kiện, hệ thống kiểm tra tương thích ngay lập tức và cảnh báo xung đột.
+  \item \textbf{Thương mại điện tử D2C:} duyệt danh mục, lọc theo thông số kỹ thuật, giỏ hàng, đặt hàng lẻ hoặc đặt lắp ráp nguyên bộ, thanh toán VietQR tự động xác nhận và xuất báo giá PDF.
+  \item \textbf{Trang quản trị (Admin Portal):} quản lý sản phẩm với biểu mẫu thông số động, tồn kho, bảng điểm benchmark, ma trận trọng số của thuật toán, đơn hàng và thống kê doanh thu.
+\end{enumerate}
+
+Bên cạnh đó, em đặt ra một số tiêu chí đo được để đánh giá đồ án: (i) chỉ với một câu hỏi, trợ lý trả về ba cấu hình tương thích hoàn toàn, nằm trong ngân sách, trong vòng 8 giây; (ii) bộ máy tối ưu giải xong dưới 300 ms ở phân vị 95 trên kho khoảng 250 sản phẩm; (iii) khi dịch vụ AI không dùng được (hết hạn mức, mất mạng), trợ lý vẫn hoạt động ở chế độ dự phòng thay vì báo lỗi.
+
+Để giữ khối lượng phù hợp với thời gian 17 tuần, đồ án \emph{không} bao gồm: sàn giao dịch nhiều người bán, vận chuyển thật (hệ thống chỉ quản lý trạng thái giao hàng), ứng dụng di động riêng, và việc huấn luyện lại (fine-tune) mô hình ngôn ngữ. Thanh toán được tích hợp theo chuẩn webhook của SePay, kèm chức năng giả lập để trình diễn mà không cần tài khoản ngân hàng thật.
+
+\section{Định hướng giải pháp}
+
+Hướng giải quyết của em dựa trên một nguyên tắc xuyên suốt: \textbf{mô hình ngôn ngữ chỉ điều phối, bộ máy tối ưu mới là nơi quyết định linh kiện}. Trợ lý AI có nhiệm vụ hiểu câu nói của khách và quyết định gọi công cụ nào; còn danh sách linh kiện, giá và kết luận tương thích luôn do Optimization Engine tính trên dữ liệu kho thật trả về. Nhờ vậy, mọi sản phẩm và con số khách nhìn thấy trên thẻ cấu hình đều có thật.
+
+Về mặt thuật toán, việc kiểm tra tương thích được mô hình hóa thành bài toán thỏa mãn ràng buộc: mỗi nhóm linh kiện là một biến, các sản phẩm trong kho là miền giá trị, và 15 luật tương thích (mã C01 đến C15) là các ràng buộc. Em dùng thuật toán AC-3 để loại sớm các giá trị không thể dùng, forward checking để cắt nhánh ngay khi gán một linh kiện, kết hợp nhánh cận (Branch and Bound) với cận trên lấy từ bài toán cái túi đa lựa chọn để tìm cấu hình có điểm hiệu năng cao nhất. Bộ luật tương thích được viết một lần trong một gói TypeScript thuần và dùng chung cho cả trình duyệt, máy chủ và bộ máy tối ưu.
+
+Về mặt hệ thống, PC Builder được phát triển trên nền tảng web với frontend và backend tách biệt, giao tiếp qua RESTful API:
+\begin{itemize}
+  \item \textbf{Frontend} dùng Next.js (App Router) với TypeScript, Tailwind CSS và Zustand, render phía máy chủ để tối ưu SEO cho các trang sản phẩm.
+  \item \textbf{Backend} dùng Node.js với Express 5 viết bằng TypeScript, xác thực bằng JWT và phân quyền theo vai trò (khách hàng, nhân viên, quản trị viên).
+  \item \textbf{Cơ sở dữ liệu} là PostgreSQL, thông số kỹ thuật linh kiện lưu ở kiểu JSONB kèm chỉ mục GIN; \textbf{Redis} dùng làm bộ nhớ đệm, giỏ hàng tạm, khóa chống đặt trùng và giới hạn tần suất.
+  \item \textbf{Trợ lý AI} gọi Google Gemini qua cơ chế function calling; khi Gemini không khả dụng, hệ thống chuyển sang bộ hiểu ngôn ngữ dựa trên luật do em tự xây dựng.
+  \item \textbf{Thanh toán} dùng mã VietQR động, xác nhận qua webhook; \textbf{báo giá} xuất ra PDF; toàn bộ hệ thống được đóng gói bằng Docker để triển khai lên máy chủ đám mây.
+\end{itemize}
+
+\section{Đóng góp của đồ án}
+
+Đóng góp chính của đồ án gồm:
+\begin{enumerate}[label=(\roman*)]
+  \item Mô hình hóa bài toán cấu hình PC thành bài toán CSP kết hợp MCKP và cài đặt một bộ giải hoàn chỉnh. Trên kho thử nghiệm 250 sản phẩm, bộ giải trả kết quả trong 11,5 ms ở phân vị 95, trong khi vét cạn cần khoảng 2,1 giờ.
+  \item Kiến trúc trợ lý AI ``LLM điều phối, Engine quyết định'' giúp loại bỏ khả năng AI bịa linh kiện hoặc giá trên thẻ cấu hình, kèm chế độ dự phòng hiểu tiếng Việt theo luật để hệ thống không phụ thuộc vào dịch vụ AI bên ngoài.
+  \item Một bộ 15 luật tương thích dùng chung cho trình duyệt, máy chủ và bộ máy tối ưu, nhờ đó công cụ lắp ráp phản hồi tức thì mà kết quả vẫn luôn trùng với kết quả máy chủ chấp nhận.
+  \item Cơ chế giữ hàng và chống bán vượt tồn kho khi nhiều khách đặt cùng lúc, cùng luồng thanh toán VietQR tự động đối soát.
+  \item Một hệ thống thương mại điện tử hoàn chỉnh có trang quản trị, kiểm thử tự động ở nhiều tầng, và một ``đồ thị truy vết'' nối từng yêu cầu tới mã nguồn, kiểm thử và chương báo cáo tương ứng.
+\end{enumerate}
+
+\section{Bố cục đồ án}
+
+Phần còn lại của báo cáo đồ án tốt nghiệp này được tổ chức như sau.
+
+Chương~\ref{chap:khao-sat} em sẽ khảo sát bài toán tương thích linh kiện và các website cấu hình PC hiện có, từ đó phân tích yêu cầu chức năng và phi chức năng của hệ thống, trình bày biểu đồ use case tổng quát, các biểu đồ use case phân rã, quy trình nghiệp vụ và đặc tả các use case quan trọng.
+
+Trong chương~\ref{chap:cong-nghe}, em sẽ giới thiệu các công nghệ được sử dụng trong đồ án, nêu lý do lựa chọn và vị trí của từng công nghệ trong hệ thống.
+
+Chương~\ref{chap:thiet-ke} đi sâu vào thiết kế và triển khai: kiến trúc tổng thể, thiết kế chi tiết gói, thiết kế giao diện, thiết kế lớp, thiết kế cơ sở dữ liệu, xây dựng ứng dụng, kiểm thử và triển khai.
+
+Chương~\ref{chap:giai-phap} trình bày những giải pháp và đóng góp mà em cho là nổi bật nhất của đồ án, mỗi giải pháp đi theo trình tự: đặt vấn đề, giải pháp và kết quả đạt được, kèm số liệu đo thực tế.
+
+Chương~\ref{chap:ket-luan} tổng kết những gì đồ án đã đạt được so với mục tiêu, nêu các hạn chế còn tồn tại và hướng phát triển trong tương lai.

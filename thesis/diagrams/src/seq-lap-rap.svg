@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="590" height="706" viewBox="0 0 590 706" font-family="'Times New Roman', Times, serif"><title>seq-lap-rap</title><rect width="100%" height="100%" fill="#fff"/>
+<line x1="70" y1="58" x2="70" y2="650" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="220" y1="58" x2="220" y2="650" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="370" y1="58" x2="370" y2="650" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="520" y1="58" x2="520" y2="650" stroke="#777" stroke-width="1" stroke-dasharray="4 4"/>
+<rect x="14" y="428.0" width="562" height="192.0" fill="none" stroke="#555" stroke-width="1"/>
+<path d="M14,428.0 h44 v14 l-6,6 h-38 z" fill="#f1f2f3" stroke="#555" stroke-width="1"/>
+<text x="34.0" y="442.0" text-anchor="middle" font-size="12.5" font-weight="bold">alt</text>
+<text x="66.0" y="442.0" text-anchor="start" font-size="13" font-style="italic">[còn lỗi cứng]</text>
+<line x1="14" y1="528.0" x2="576" y2="528.0" stroke="#555" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="20.0" y="542.0" text-anchor="start" font-size="13" font-style="italic">[hợp lệ]</text>
+<line x1="70.0" y1="100.0" x2="218.0" y2="100.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="208.0,95.0 218.0,100.0 208.0,105.0" fill="#111"/>
+<text x="145.0" y="78.0" text-anchor="middle" font-size="14.5" >chọn linh kiện</text>
+<text x="145.0" y="94.0" text-anchor="middle" font-size="14.5" >cho một ô</text>
+<circle cx="60.0" cy="100.0" r="7.5" fill="#111"/><text x="60.0" y="103.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">1</text>
+<line x1="220.0" y1="140.0" x2="368.0" y2="140.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="358.0,135.0 368.0,140.0 358.0,145.0" fill="#111"/>
+<text x="295.0" y="134.0" text-anchor="middle" font-size="14.5" >checkCompatibility(...)</text>
+<circle cx="210.0" cy="140.0" r="7.5" fill="#111"/><text x="210.0" y="143.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">2</text>
+<line x1="370.0" y1="196.0" x2="222.0" y2="196.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="232.0,191.0 222.0,196.0 232.0,201.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="295.0" y="174.0" text-anchor="middle" font-size="14.5" >lỗi, cảnh báo,</text>
+<text x="295.0" y="190.0" text-anchor="middle" font-size="14.5" >công suất</text>
+<circle cx="380.0" cy="196.0" r="7.5" fill="#111"/><text x="380.0" y="199.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">3</text>
+<line x1="220.0" y1="252.0" x2="72.0" y2="252.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="82.0,247.0 72.0,252.0 82.0,257.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="145.0" y="230.0" text-anchor="middle" font-size="14.5" >cập nhật từng ô,</text>
+<text x="145.0" y="246.0" text-anchor="middle" font-size="14.5" >tổng giá</text>
+<circle cx="230.0" cy="252.0" r="7.5" fill="#111"/><text x="230.0" y="255.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">4</text>
+<line x1="70.0" y1="292.0" x2="218.0" y2="292.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="208.0,287.0 218.0,292.0 208.0,297.0" fill="#111"/>
+<text x="145.0" y="286.0" text-anchor="middle" font-size="14.5" >lưu và chia sẻ</text>
+<circle cx="60.0" cy="292.0" r="7.5" fill="#111"/><text x="60.0" y="295.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">5</text>
+<line x1="220.0" y1="332.0" x2="518.0" y2="332.0" stroke="#111" stroke-width="1.2"/>
+<polygon points="508.0,327.0 518.0,332.0 508.0,337.0" fill="#111"/>
+<text x="370.0" y="326.0" text-anchor="middle" font-size="14.5" >POST /builds</text>
+<circle cx="210.0" cy="332.0" r="7.5" fill="#111"/><text x="210.0" y="335.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">6</text>
+<path d="M520.0,388.0 h34 v18 h-34" fill="none" stroke="#111" stroke-width="1.2"/>
+<polyline points="529.0,401.0 521.0,406.0 529.0,411.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="500.0" y="380.0" text-anchor="end" font-size="14.5" >nạp lại sản phẩm,</text>
+<text x="500.0" y="396.0" text-anchor="end" font-size="14.5" >chạy cùng bộ luật</text>
+<circle cx="510.0" cy="388.0" r="7.5" fill="#111"/><text x="510.0" y="391.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">7</text>
+<line x1="520.0" y1="458.0" x2="222.0" y2="458.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="232.0,453.0 222.0,458.0 232.0,463.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="370.0" y="452.0" text-anchor="middle" font-size="14.5" >422 INCOMPATIBLE</text>
+<circle cx="530.0" cy="458.0" r="7.5" fill="#111"/><text x="530.0" y="461.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">8</text>
+<line x1="220.0" y1="498.0" x2="72.0" y2="498.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="82.0,493.0 72.0,498.0 82.0,503.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="145.0" y="492.0" text-anchor="middle" font-size="14.5" >báo lỗi kèm mã luật</text>
+<circle cx="230.0" cy="498.0" r="7.5" fill="#111"/><text x="230.0" y="501.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">9</text>
+<line x1="520.0" y1="552.0" x2="222.0" y2="552.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="232.0,547.0 222.0,552.0 232.0,557.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="370.0" y="546.0" text-anchor="middle" font-size="14.5" >201, mã cấu hình</text>
+<circle cx="530.0" cy="552.0" r="7.5" fill="#111"/><text x="530.0" y="555.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">10</text>
+<line x1="220.0" y1="592.0" x2="72.0" y2="592.0" stroke="#111" stroke-width="1.2" stroke-dasharray="6 4"/>
+<polyline points="82.0,587.0 72.0,592.0 82.0,597.0" fill="none" stroke="#111" stroke-width="1.2"/>
+<text x="145.0" y="586.0" text-anchor="middle" font-size="14.5" >đường dẫn /builds/:id</text>
+<circle cx="230.0" cy="592.0" r="7.5" fill="#111"/><text x="230.0" y="595.6" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">11</text>
+<circle cx="70" cy="26" r="6" fill="#fff" stroke="#111" stroke-width="1.2"/><line x1="70" y1="32" x2="70" y2="44" stroke="#111" stroke-width="1.2"/><line x1="61" y1="36" x2="79" y2="36" stroke="#111" stroke-width="1.2"/><line x1="70" y1="44" x2="62" y2="53" stroke="#111" stroke-width="1.2"/><line x1="70" y1="44" x2="78" y2="53" stroke="#111" stroke-width="1.2"/>
+<text x="70.0" y="68.0" text-anchor="middle" font-size="14" font-weight="bold">Khách</text>
+<circle cx="70" cy="658" r="6" fill="#fff" stroke="#111" stroke-width="1.2"/><line x1="70" y1="664" x2="70" y2="676" stroke="#111" stroke-width="1.2"/><line x1="61" y1="668" x2="79" y2="668" stroke="#111" stroke-width="1.2"/><line x1="70" y1="676" x2="62" y2="685" stroke="#111" stroke-width="1.2"/><line x1="70" y1="676" x2="78" y2="685" stroke="#111" stroke-width="1.2"/>
+<text x="70.0" y="700.0" text-anchor="middle" font-size="14" font-weight="bold">Khách</text>
+<rect x="156.0" y="18" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="220.0" y="40.0" text-anchor="middle" font-size="14" font-weight="bold">Trang builder</text>
+<rect x="156.0" y="650" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="220.0" y="672.0" text-anchor="middle" font-size="14" font-weight="bold">Trang builder</text>
+<rect x="306.0" y="18" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="370.0" y="33.0" text-anchor="middle" font-size="14" font-weight="bold">engine</text>
+<text x="370.0" y="47.0" text-anchor="middle" font-size="14" font-weight="bold">(trình duyệt)</text>
+<rect x="306.0" y="650" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="370.0" y="665.0" text-anchor="middle" font-size="14" font-weight="bold">engine</text>
+<text x="370.0" y="679.0" text-anchor="middle" font-size="14" font-weight="bold">(trình duyệt)</text>
+<rect x="456.0" y="18" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="520.0" y="40.0" text-anchor="middle" font-size="14" font-weight="bold">API</text>
+<rect x="456.0" y="650" width="128.0" height="34" rx="3" fill="#eef1f5" stroke="#111" stroke-width="1.2"/>
+<text x="520.0" y="672.0" text-anchor="middle" font-size="14" font-weight="bold">API</text>
+</svg>

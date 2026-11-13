@@ -1,0 +1,140 @@
+\chapter{CÔNG NGHỆ SỬ DỤNG}
+\label{chap:cong-nghe}
+
+Trong chương này, em giới thiệu các công nghệ được sử dụng trong đồ án. Với mỗi công nghệ, em trình bày ngắn gọn nó là gì, vì sao em chọn nó thay vì các phương án khác, và nó đảm nhận phần nào trong hệ thống PC Builder. Các lựa chọn này bám sát danh sách công nghệ trong phiếu giao nhiệm vụ, và mỗi lựa chọn quan trọng đều được em ghi lại thành một bản ghi quyết định kiến trúc (ADR) kèm bối cảnh và phương án đã cân nhắc.
+
+\section{Tổng quan}
+
+Toàn bộ hệ thống được viết bằng \textbf{TypeScript} và tổ chức thành một kho mã duy nhất (monorepo) quản lý bằng pnpm~\cite{pnpm}. Kho mã gồm hai ứng dụng và hai gói dùng chung:
+\begin{itemize}
+  \item \texttt{apps/web}: ứng dụng web viết bằng Next.js, phục vụ cả cửa hàng và trang quản trị.
+  \item \texttt{apps/api}: máy chủ RESTful API viết bằng Node.js và Express.
+  \item \texttt{packages/engine}: bộ máy tối ưu (Optimization Engine) viết bằng TypeScript thuần, không đọc ghi cơ sở dữ liệu hay mạng.
+  \item \texttt{packages/shared}: các kiểu dữ liệu, schema kiểm tra đầu vào và hằng số dùng chung.
+\end{itemize}
+
+Em chọn cách tổ chức này vì một lý do chính: bộ luật tương thích phải được dùng ở cả trình duyệt (để phản hồi tức thì) lẫn máy chủ (để làm nguồn chân lý). Khi bộ máy tối ưu là một gói TypeScript thuần trong cùng kho mã, cả hai phía cùng nhập một đoạn mã duy nhất, nên không bao giờ xảy ra chuyện trình duyệt báo ``tương thích'' còn máy chủ lại từ chối. Dùng một ngôn ngữ cho toàn hệ thống cũng giúp kiểu dữ liệu được kiểm tra xuyên suốt từ cơ sở dữ liệu tới giao diện.
+
+\section{Frontend}
+
+\subsection{Next.js và React}
+
+Next.js~\cite{nextjs} là framework xây dựng trên React~\cite{react}, hỗ trợ render phía máy chủ (Server-Side Rendering, SSR), định tuyến theo thư mục (App Router) và React Server Components. Đồ án dùng Next.js phiên bản 16 với React 19.
+
+Với một cửa hàng trực tuyến, các trang danh mục và trang chi tiết sản phẩm cần được công cụ tìm kiếm đọc được và hiển thị nhanh ngay lần tải đầu. SSR đáp ứng đúng yêu cầu này: nội dung trang sản phẩm được dựng sẵn trên máy chủ, trình duyệt nhận về HTML hoàn chỉnh. Trong khi đó, các phần có tính tương tác cao như trợ lý AI, công cụ lắp ráp và giỏ hàng chạy phía trình duyệt. Next.js cho phép kết hợp hai cách này ngay trong cùng một trang. Ngoài ra, cơ chế lưu đệm của Next.js được em dùng để trang chủ hiển thị kết quả thật của bộ máy tối ưu cho bốn nhu cầu mẫu mà không phải giải lại mỗi lần có người truy cập.
+
+So với việc dùng React thuần (chỉ render phía trình duyệt) như nhiều dự án khác, Next.js tốt hơn về SEO và thời gian hiển thị lần đầu; so với các framework khác như Nuxt (Vue) hay SvelteKit, React có hệ sinh thái thư viện lớn nhất và đúng với yêu cầu trong phiếu giao nhiệm vụ.
+
+\subsection{Tailwind CSS}
+
+Tailwind CSS~\cite{tailwind} là framework CSS theo hướng tiện ích (utility-first): thay vì viết các lớp CSS riêng, lập trình viên ghép các lớp nhỏ có sẵn ngay trong mã giao diện. Đồ án dùng Tailwind CSS phiên bản 4, trong đó màu sắc, cỡ chữ và khoảng cách được khai báo một lần thành các biến thiết kế (design token). Nhờ vậy, toàn bộ giao diện dùng chung một hệ thiết kế, hỗ trợ cả giao diện sáng và tối, và mỗi nhóm linh kiện có một màu nhận diện riêng được dùng nhất quán ở mọi trang.
+
+\subsection{Zustand và TanStack Query}
+
+Trạng thái phía trình duyệt được chia làm hai loại. Trạng thái do người dùng tạo ra như cấu hình đang lắp, giỏ hàng tạm, hội thoại chat được quản lý bằng Zustand~\cite{zustand}, một thư viện quản lý trạng thái tập trung nhỏ gọn hơn nhiều so với Redux nhưng đủ cho nhu cầu của đồ án; cấu hình đang lắp được lưu vào bộ nhớ trình duyệt để khách tải lại trang không bị mất. Dữ liệu lấy từ máy chủ như danh sách sản phẩm, đơn hàng được quản lý bằng TanStack Query~\cite{tanstack}, thư viện lo việc gọi API, lưu đệm, tự làm mới và hiển thị trạng thái đang tải.
+
+\section{Backend}
+
+\subsection{Node.js và Express}
+
+Node.js~\cite{nodejs} là môi trường chạy JavaScript phía máy chủ theo mô hình bất đồng bộ, phù hợp với ứng dụng web có nhiều thao tác vào ra như truy vấn cơ sở dữ liệu, gọi dịch vụ AI hay đẩy luồng dữ liệu về trình duyệt. Trên nền Node.js, em dùng Express~\cite{express} phiên bản 5 để xây dựng RESTful API.
+
+Em cân nhắc giữa Express và NestJS. NestJS có cấu trúc chặt chẽ hơn nhưng nặng về khai báo; Express nhẹ, linh hoạt và cho phép em tự tổ chức mã theo từng mô-đun nghiệp vụ (xác thực, danh mục, gợi ý, tương thích, cấu hình, chat, giỏ hàng, đơn hàng, thanh toán, báo giá, quản trị). Express 5 còn tự chuyển lỗi của các hàm bất đồng bộ tới bộ xử lý lỗi, nên mã xử lý gọn hơn. Riêng trợ lý AI, câu trả lời được gửi về trình duyệt theo dạng Server-Sent Events (SSE): máy chủ giữ kết nối và đẩy từng sự kiện (đoạn văn bản, lời gọi công cụ, thẻ cấu hình), nhờ đó khách thấy chữ chạy dần và thẻ cấu hình hiện ra ngay khi có.
+
+\subsection{Zod}
+
+Zod~\cite{zod} là thư viện khai báo schema và kiểm tra dữ liệu cho TypeScript. Mọi dữ liệu đi vào API (thân yêu cầu, tham số truy vấn) đều được kiểm tra bằng Zod trước khi xử lý; dữ liệu sai bị từ chối với thông báo lỗi chỉ rõ từng trường. Các schema này nằm trong gói dùng chung nên trình duyệt và máy chủ kiểm tra theo cùng một quy tắc. Zod cũng được dùng để khai báo thông số kỹ thuật có kiểu của từng nhóm linh kiện, làm lớp kiểm tra thứ hai bên cạnh lược đồ thông số trong cơ sở dữ liệu.
+
+\subsection{Drizzle ORM}
+
+Drizzle ORM~\cite{drizzle} là thư viện ánh xạ đối tượng -- quan hệ (ORM) cho TypeScript, có điểm khác biệt là cú pháp rất gần với SQL. Em chọn Drizzle thay vì Prisma vì đồ án dùng nhiều tính năng đặc thù của PostgreSQL như kiểu JSONB, phép toán chứa \texttt{@>} và chỉ mục GIN. Với Drizzle, các câu lệnh này được viết tường minh và chỉ mục GIN được khai báo ngay trong schema; kiểu của từng cột được suy ra tự động nên lỗi sai kiểu bị phát hiện ngay khi biên dịch. Các thay đổi lược đồ được sinh thành tệp migration SQL bằng Drizzle Kit.
+
+\subsection{JWT và bcrypt}
+
+Xác thực dùng JSON Web Token (JWT)~\cite{jwt}: sau khi đăng nhập, người dùng nhận một access token sống 15 phút và một refresh token sống 7 ngày, cả hai đặt trong cookie httpOnly để mã JavaScript trên trang không đọc được. Refresh token được lưu trong Redis, nên khi đăng xuất hệ thống xóa khóa đó và token cũ mất hiệu lực ngay. Mỗi token mang vai trò của người dùng (khách hàng, nhân viên, quản trị viên), là cơ sở cho việc phân quyền theo vai trò (RBAC) ở từng API. Mật khẩu được băm bằng bcrypt trước khi lưu.
+
+\section{Cơ sở dữ liệu và bộ nhớ đệm}
+
+\subsection{PostgreSQL}
+
+PostgreSQL~\cite{postgresql} là hệ quản trị cơ sở dữ liệu quan hệ mã nguồn mở. Đồ án dùng PostgreSQL 16. Lý do chính để chọn PostgreSQL là kiểu dữ liệu \textbf{JSONB} và chỉ mục \textbf{GIN} (Generalized Inverted Index)~\cite{pg-jsonb}.
+
+Bài toán lưu thông số linh kiện có một đặc điểm khó: mỗi nhóm linh kiện có bộ thông số hoàn toàn khác nhau (CPU có socket và TDP, vỏ case có chiều dài card tối đa, nguồn có công suất), và cửa hàng có thể thêm thông số mới bất cứ lúc nào. Nếu tạo một bảng riêng cho mỗi nhóm thì mỗi lần thêm thông số phải sửa lược đồ; nếu dồn mọi thông số vào một bảng thì có hàng chục cột phần lớn để trống. JSONB giải quyết vấn đề này: thông số được lưu trong một cột dạng JSON nhị phân, vẫn truy vấn và đánh chỉ mục được. Chỉ mục GIN với lớp toán tử \texttt{jsonb\_path\_ops} cho phép lọc nhanh các sản phẩm thỏa điều kiện như ``socket là AM5'' bằng phép chứa. Trong khi đó, những dữ liệu cần toàn vẹn chặt chẽ như đơn hàng, tồn kho, thanh toán vẫn dùng cột thông thường với khóa ngoại và ràng buộc.
+
+So với MongoDB, PostgreSQL vừa lưu được dữ liệu linh hoạt như cơ sở dữ liệu tài liệu, vừa có giao dịch (transaction) và khóa ngoại cho phần thương mại. Đây là điều kiện bắt buộc để làm đúng chức năng giữ hàng và chống bán vượt tồn kho.
+
+\subsection{Redis}
+
+Redis~\cite{redis} là kho dữ liệu khóa -- giá trị lưu trên bộ nhớ, tốc độ rất cao. Trong đồ án, Redis 7 đảm nhận nhiều vai trò:
+\begin{itemize}
+  \item Lưu đệm danh sách sản phẩm ứng viên của bộ máy tối ưu và kết quả gợi ý. Khóa đệm chứa số phiên bản danh mục, nên khi quản trị viên sửa giá, tồn kho hay trọng số, phiên bản tăng lên và toàn bộ dữ liệu đệm cũ tự hết hiệu lực.
+  \item Lưu giỏ hàng của khách vãng lai theo mã khách trong cookie.
+  \item Lưu refresh token để thu hồi được khi đăng xuất.
+  \item Khóa ngắn hạn chống bấm đặt hàng hai lần và gộp giỏ chồng nhau.
+  \item Bộ đếm giới hạn tần suất cho đăng ký, gợi ý cấu hình và chat.
+\end{itemize}
+
+\section{Trí tuệ nhân tạo: Google Gemini}
+
+Gemini~\cite{gemini} là họ mô hình ngôn ngữ lớn của Google, cung cấp qua Google AI Studio với gói miễn phí phù hợp cho đồ án. Đồ án gọi Gemini qua thư viện chính thức \texttt{@google/genai}, tên mô hình được cấu hình bằng biến môi trường (mặc định \texttt{gemini-flash-latest}) để có thể đổi mô hình mà không sửa mã.
+
+Tính năng quan trọng nhất em sử dụng là \textbf{function calling}~\cite{gemini-fc}: cùng với câu hỏi, hệ thống gửi cho mô hình mô tả của năm công cụ (gợi ý cấu hình, tìm sản phẩm, xem chi tiết sản phẩm, kiểm tra tương thích, chỉnh cấu hình). Mô hình không tự trả lời về linh kiện mà trả về yêu cầu ``hãy gọi công cụ này với tham số này''; máy chủ chạy công cụ trên dữ liệu thật rồi gửi kết quả lại để mô hình viết câu trả lời. Cách làm này giúp em tận dụng khả năng hiểu tiếng Việt của mô hình mà vẫn giữ quyền quyết định linh kiện và giá ở bộ máy tối ưu. Gemini còn hỗ trợ trả kết quả dạng luồng (streaming), giúp chữ hiện dần trên màn hình.
+
+Em không chọn huấn luyện lại mô hình hay xây dựng hệ thống truy xuất tăng cường (RAG) với cơ sở dữ liệu vector, vì kho hàng chỉ vài trăm sản phẩm và đã có cấu trúc rõ ràng; gọi công cụ truy vấn trực tiếp cơ sở dữ liệu cho kết quả chính xác hơn và rẻ hơn.
+
+\section{Thanh toán và báo giá}
+
+\subsection{VietQR và SePay}
+
+VietQR~\cite{vietqr} là chuẩn mã QR chuyển khoản liên ngân hàng tại Việt Nam do NAPAS phát triển. Hệ thống sinh ảnh mã VietQR cho từng đơn qua dịch vụ \texttt{img.vietqr.io}, trong đó số tiền và nội dung chuyển khoản (chính là mã đơn) đã được điền sẵn, khách chỉ cần quét và xác nhận. Để biết tiền đã về, hệ thống nhận webhook theo chuẩn của SePay~\cite{sepay}, một dịch vụ theo dõi biến động số dư tài khoản ngân hàng và gửi thông báo tới máy chủ. Cách làm này miễn phí, không cần ký hợp đồng với cổng thanh toán, mà vẫn đáp ứng đúng yêu cầu ``VietQR động, tự động xác nhận'' của phiếu giao nhiệm vụ. Ở môi trường trình diễn, hệ thống có thêm nút giả lập thanh toán gửi đúng định dạng webhook đó.
+
+\subsection{PDFKit}
+
+Báo giá cấu hình được xuất ra tệp PDF ngay trên máy chủ bằng thư viện PDFKit~\cite{pdfkit}, kèm phông chữ DejaVu để hiển thị đầy đủ dấu tiếng Việt. Em không dùng cách in trang web ra PDF bằng trình duyệt chạy ngầm vì cách đó tốn tài nguyên máy chủ và khó kiểm soát bố cục.
+
+\section{Kiểm thử}
+
+\begin{itemize}
+  \item \textbf{Vitest}~\cite{vitest}: chạy kiểm thử đơn vị và kiểm thử tích hợp cho cả bộ máy tối ưu, API và giao diện. Kiểm thử tích hợp của API chạy với PostgreSQL và Redis thật.
+  \item \textbf{Playwright}~\cite{playwright}: kiểm thử đầu-cuối (E2E) bằng trình duyệt thật, mô phỏng các luồng như tư vấn rồi thanh toán, lắp ráp gặp xung đột, quản trị viên sửa trọng số; Playwright cũng được dùng để chụp ảnh giao diện cho báo cáo.
+  \item \textbf{autocannon}: đo hiệu năng API dưới tải đồng thời.
+  \item \textbf{Biome}: kiểm tra định dạng và quy tắc viết mã cho toàn bộ kho mã.
+\end{itemize}
+
+\section{Triển khai}
+
+\subsection{Docker và Docker Compose}
+
+Docker~\cite{docker} đóng gói ứng dụng cùng toàn bộ môi trường chạy thành container, nhờ đó hệ thống chạy giống nhau trên máy phát triển và máy chủ thật. Docker Compose khai báo cùng lúc nhiều container và mạng nội bộ giữa chúng. Ở môi trường phát triển, Compose chạy PostgreSQL và Redis; ở môi trường thật, Compose chạy năm dịch vụ: web, api, postgres, redis và Caddy. Cơ sở dữ liệu và Redis nằm trong mạng nội bộ của Docker, không mở cổng ra ngoài.
+
+\subsection{Caddy}
+
+Caddy~\cite{caddy} là máy chủ web có khả năng tự xin và gia hạn chứng chỉ HTTPS từ Let's Encrypt. Caddy đứng trước hệ thống làm reverse proxy: các yêu cầu tới \texttt{/api} được chuyển cho máy chủ API, còn lại chuyển cho ứng dụng web. Riêng đường dẫn API được cấu hình không đệm dữ liệu trả về, để các sự kiện SSE của trợ lý AI tới trình duyệt ngay lập tức.
+
+\section{Tổng kết}
+
+Bảng~\ref{tab:cong-nghe} tổng hợp các công nghệ chính và vai trò của chúng trong hệ thống.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{|L{3.2cm}|L{4.3cm}|L{6.4cm}|}
+\hline
+\textbf{Thành phần} & \textbf{Công nghệ} & \textbf{Vai trò} \\ \hline
+Ngôn ngữ, kho mã & TypeScript 5.9, pnpm workspace & Một ngôn ngữ, kiểu dữ liệu dùng chung cho mọi thành phần \\ \hline
+Giao diện & Next.js 16, React 19, Tailwind CSS 4 & Cửa hàng, trợ lý AI, công cụ lắp ráp, trang quản trị; SSR cho SEO \\ \hline
+Trạng thái phía trình duyệt & Zustand 5, TanStack Query 5 & Cấu hình đang lắp, giỏ tạm, hội thoại; dữ liệu từ máy chủ \\ \hline
+Máy chủ API & Node.js, Express 5, Zod 4 & RESTful API, SSE cho chat, kiểm tra đầu vào \\ \hline
+Truy cập dữ liệu & Drizzle ORM 0.45 & Truy vấn SQL có kiểu, JSONB, migration \\ \hline
+Cơ sở dữ liệu & PostgreSQL 16 & Dữ liệu chính; JSONB + GIN cho thông số động \\ \hline
+Bộ nhớ đệm & Redis 7 & Đệm gợi ý, giỏ khách, refresh token, khóa, giới hạn tần suất \\ \hline
+Trí tuệ nhân tạo & Google Gemini, \texttt{@google/genai} & Hiểu tiếng Việt, function calling, streaming \\ \hline
+Thanh toán & VietQR, webhook SePay & Mã QR động, tự xác nhận thanh toán \\ \hline
+Báo giá & PDFKit & Xuất báo giá PDF tiếng Việt \\ \hline
+Kiểm thử & Vitest 5, Playwright 1.64 & Đơn vị, tích hợp, đầu-cuối \\ \hline
+Triển khai & Docker Compose, Caddy 2 & Đóng gói, HTTPS tự động, reverse proxy \\ \hline
+\end{tabular}
+\caption{Tổng hợp công nghệ sử dụng}
+\label{tab:cong-nghe}
+\end{table}
+
+Các công nghệ trên đều là mã nguồn mở hoặc có gói miễn phí, phù hợp với quy mô đồ án, và bao phủ đầy đủ danh sách công nghệ trong phiếu giao nhiệm vụ. Chương tiếp theo sẽ trình bày cách các công nghệ này được kết hợp trong thiết kế và triển khai hệ thống.

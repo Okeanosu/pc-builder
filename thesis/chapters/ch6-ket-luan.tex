@@ -1,0 +1,46 @@
+\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+\label{chap:ket-luan}
+
+\section{Kết luận}
+
+Qua quá trình thực hiện đồ án, em đã xây dựng được hệ thống PC Builder, một website thương mại điện tử bán linh kiện máy tính tích hợp công cụ gợi ý cấu hình PC phù hợp nhu cầu người dùng. Bảng~\ref{tab:ket-qua} đối chiếu các sản phẩm kỳ vọng trong phiếu giao nhiệm vụ với kết quả đạt được.
+
+\begin{table}[H]
+\centering\footnotesize\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|L{4.4cm}|L{9.3cm}|}
+\hline
+\textbf{Sản phẩm kỳ vọng} & \textbf{Kết quả đạt được} \\ \hline
+Website thương mại điện tử D2C & Duyệt danh mục, lọc theo thông số động, giỏ hàng, đặt hàng lẻ và đặt lắp ráp nguyên bộ, thanh toán VietQR tự động xác nhận qua webhook, xuất báo giá PDF \\ \hline
+Gợi ý cấu hình PC thông minh & Bộ máy tối ưu CSP kết hợp MCKP trả 2--3 cấu hình có nhãn rõ ràng, giải xong trong 11,5 ms (p95) trên kho 250 sản phẩm; thêm trợ lý AI trò chuyện bằng tiếng Việt và chế độ dự phòng \\ \hline
+Lắp ráp PC tương tác & 15 luật tương thích chạy tức thì trên trình duyệt, xem trước từng ứng viên, máy chủ kiểm tra lại khi lưu \\ \hline
+Trang quản trị & Sản phẩm với biểu mẫu thông số động, lược đồ thông số, tồn kho, benchmark, ma trận trọng số, hệ số ưu tiên thương mại, đơn hàng, đối soát thanh toán, thống kê, nhật ký hội thoại \\ \hline
+Kiểm thử & 1.028 ca kiểm thử tự động đều đạt, độ phủ nhánh bộ máy tối ưu 98,85\%, 87/87 lượt kiểm thử đầu-cuối đạt, kiểm thử đồng thời và hiệu năng \\ \hline
+Triển khai bằng Docker & Đóng gói năm dịch vụ bằng Docker Compose, HTTPS tự động; đã chạy thử cấu hình production \\ \hline
+Triển khai thực tế, khảo sát người dùng & \canbosung{kết quả triển khai trên máy chủ đám mây thật và khảo sát người dùng (điểm SUS)} \\ \hline
+\end{tabular}
+\caption{Đối chiếu sản phẩm kỳ vọng với kết quả đạt được}
+\label{tab:ket-qua}
+\end{table}
+
+So với các công cụ xây dựng cấu hình đã khảo sát ở chương~\ref{chap:khao-sat}, điểm khác biệt của PC Builder là kết hợp được ba thứ trong một hệ thống: kiểm tra tương thích đầy đủ bằng một bộ luật dùng chung, tự đề xuất cấu hình tối ưu theo ngân sách bằng thuật toán chính xác, và tư vấn bằng tiếng Việt tự nhiên mà kết quả vẫn luôn tương thích, đúng giá, đúng tồn kho. Về mặt kỹ thuật, những đóng góp em tâm đắc nhất là: (i) mô hình hóa bài toán cấu hình thành CSP có hàm mục tiêu với cận trên từ MCKP, giúp giảm thời gian từ ước tính hàng giờ xuống vài mili giây mà vẫn được kiểm chứng là không mất lời giải tối ưu; (ii) kiến trúc trợ lý AI trong đó mô hình ngôn ngữ chỉ điều phối, nhờ đó loại bỏ ảo giác về linh kiện và giá bằng cấu trúc; (iii) cơ chế giữ hàng và thanh toán đúng khi có nhiều thao tác đồng thời.
+
+Qua đồ án, em đã có cơ hội vận dụng các kiến thức về trí tuệ nhân tạo (bài toán thỏa mãn ràng buộc, tìm kiếm có cắt tỉa), tối ưu tổ hợp, cơ sở dữ liệu, kiến trúc phần mềm và kiểm thử vào một bài toán thực tế. Em cũng học được rằng nhiều quyết định thiết kế ban đầu chỉ được kiểm chứng khi đo đạc: thứ tự biến MRV trong kế hoạch hóa ra chậm hơn nhiều so với thứ tự theo hàm mục tiêu, AC-3 không đem lại tăng tốc như kỳ vọng, và hàm chấm điểm đầu tiên làm tiền bị dồn sai chỗ. Việc ghi lại từng quyết định cùng số liệu giúp em hiểu rõ hệ thống của mình và trình bày lại một cách trung thực.
+
+Bên cạnh đó, hệ thống vẫn còn một số hạn chế:
+\begin{itemize}
+  \item Kho dữ liệu thử nghiệm mới có 240 sản phẩm, thông số và điểm benchmark được nhập tay nên có thể có sai sót; giá chưa cập nhật tự động theo thị trường.
+  \item Luật công suất nguồn dùng công suất cơ sở của CPU, chưa dùng công suất đỉnh; một số ràng buộc vật lý chưa được kiểm tra như khoảng hở giữa RAM và tản nhiệt khí lớn, độ dày card đồ họa, đầu cấp nguồn của card đời mới, hay phiên bản BIOS khi dùng CPU đời mới trên mainboard đời cũ.
+  \item Cấp hiệu năng dùng cho luật cân bằng CPU -- card đồ họa dựa trên điểm benchmark tổng hợp, chưa tách riêng hiệu năng chơi game; các hệ số như hệ số CUDA là hệ số kinh nghiệm chứ không phải số đo.
+  \item Phần lời giải thích do mô hình ngôn ngữ viết vẫn có thể chứa con số không khớp; bộ kiểm tra giá hiện chỉ ghi nhận để giám sát chứ chưa sửa câu trả lời. Chất lượng trợ lý ở chế độ Gemini thật cần được đánh giá thêm trên câu hỏi của người dùng thật.
+  \item Hệ thống chưa tích hợp vận chuyển thật; thanh toán dùng chuẩn webhook của SePay và chức năng giả lập, chưa tích hợp các cổng thanh toán khác.
+\end{itemize}
+
+\section{Hướng phát triển}
+
+\subsection{Hoàn thiện các tính năng hiện tại}
+
+Trước hết, em sẽ hoàn tất việc triển khai trên máy chủ đám mây, mời người dùng phổ thông và kỹ thuật viên dùng thử, rồi dùng kết quả khảo sát để hiệu chỉnh ma trận trọng số của thuật toán. Về bộ luật, em sẽ bổ sung thông số công suất đỉnh của CPU vào luật nguồn, thêm các luật về khoảng hở vật lý và đầu cấp nguồn, và hỗ trợ cấu hình nhiều ổ cứng. Về chấm điểm, em muốn dùng điểm hiệu năng chơi game riêng (ví dụ số khung hình trên giây ở một số trò chơi phổ biến) thay cho điểm benchmark tổng hợp. Với trợ lý AI, bộ kiểm tra giá có thể chuyển từ giám sát sang chủ động yêu cầu mô hình viết lại khi phát hiện số tiền không khớp, và bộ đánh giá cần thêm các câu hỏi thật của người dùng.
+
+\subsection{Phát triển các hướng đi mới}
+
+Về lâu dài, hệ thống có thể mở rộng theo một số hướng: tự động cập nhật giá và tồn kho từ nhà cung cấp; tư vấn nâng cấp cho máy tính khách đang có (khách nhập cấu hình hiện tại, hệ thống đề xuất nâng cấp linh kiện nào để hiệu quả nhất trong ngân sách); tích hợp đơn vị vận chuyển và thêm các cổng thanh toán khác; học từ hành vi mua hàng và phản hồi của khách để điều chỉnh trọng số tự động; và phát triển ứng dụng di động. Bộ máy tối ưu được viết thành một gói độc lập nên cũng có thể được dùng lại cho các bài toán chọn tổ hợp tương tự như cấu hình máy chủ, thiết bị mạng hay hệ thống âm thanh.

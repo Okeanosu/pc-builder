@@ -1,0 +1,29 @@
+flowchart TB
+  user(["Trình duyệt"])
+  subgraph FE["apps/web (Next.js 16)"]
+    web["Trang SSR,<br/>thành phần React"]
+    store["Zustand"]
+  end
+  subgraph BE["apps/api (Express 5)"]
+    mw["Middleware<br/>bảo mật, JWT"]
+    mod["Mô-đun<br/>nghiệp vụ"]
+  end
+  subgraph PK["packages"]
+    eng["engine<br/>15 luật, CSP, MCKP"]
+    sh["shared<br/>kiểu, Zod"]
+  end
+  pg[("PostgreSQL<br/>JSONB + GIN")]
+  rd[("Redis")]
+  gem[/"Gemini"/]
+  bank[/"SePay"/]
+  user -->|HTTPS| web
+  web --- store
+  web -->|REST, SSE| mw
+  bank -->|webhook| mw
+  mw --> mod
+  store -.->|kiểm tra tức thì| eng
+  mod --> eng
+  eng --> sh
+  mod --> pg
+  mod --> rd
+  mod -->|function calling| gem

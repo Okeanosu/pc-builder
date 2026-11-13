@@ -1,0 +1,24 @@
+flowchart TD
+  S((Bắt đầu)) --> A1[Gõ nhu cầu bằng tiếng Việt]
+  A1 --> B1{Trong giới hạn<br/>10 tin mỗi phút?}
+  B1 -- Không --> B0[Báo thử lại sau] --> E0((Kết thúc))
+  B1 -- Có --> B2{Gemini khả dụng?}
+  B2 -- Có --> G1[Gemini đọc 20 tin gần nhất,<br/>chọn công cụ cần gọi]
+  G1 --> G2{Đủ ngân sách<br/>và mục đích?}
+  G2 -- Chưa --> G3[Hỏi lại khách] --> A1
+  G2 -- Đủ --> B3[Gọi recommend_builds]
+  B2 -- Không: thiếu khóa, 429, quá 20 giây --> F1[Bộ hiểu ngôn ngữ theo luật<br/>tách ngân sách, mục đích, sở thích]
+  F1 --> B3
+  B3 --> B4[Engine giải CSP + MCKP<br/>trên kho thật, lưu 2–3 cấu hình]
+  B4 --> B5[Hiển thị ngay thẻ cấu hình<br/>dựng từ dữ liệu Engine]
+  B5 --> B6[Viết lời giải thích:<br/>Gemini stream hoặc câu mẫu dự phòng]
+  B6 --> A2{Khách muốn<br/>chỉnh tiếp?}
+  A2 -- Có --> A1
+  A2 -- Không --> A3[Thêm cả bộ vào giỏ<br/>hoặc mở trong Customizer]
+  A3 --> E1((Kết thúc))
+  classDef kh fill:#e8f1fb,stroke:#2a78d6,color:#0d0f12
+  classDef ht fill:#e7f6f2,stroke:#14a38b,color:#0d0f12
+  classDef ai fill:#f3effd,stroke:#8b7cf0,color:#0d0f12
+  class A1,A2,A3 kh
+  class B0,B1,B2,B3,B4,B5,B6,F1 ht
+  class G1,G2,G3 ai
