@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import {
   CATEGORY_KEYS,
   type CaseSpecs,
@@ -16,6 +17,8 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDeps } from '../../../test/helpers';
 import { benchmarks, categories, products, purposeWeights, users } from '../schema';
+import { CATALOG } from './data/catalog';
+import { PRODUCT_IMAGES } from './data/product-images';
 import { seedDatabase } from './index';
 import { SEED_USERS } from './users';
 
@@ -100,7 +103,7 @@ describe('catalog seed', () => {
     }
   });
 
-  it('has unique sku/slug, rounded prices, bounded stock, ~10% out of stock and empty images', async () => {
+  it('has unique sku/slug, rounded prices, bounded stock, ~10% out of stock and one photo each', async () => {
     const rows = await db.select().from(products);
     expect(new Set(rows.map((r) => r.sku)).size).toBe(rows.length);
     expect(new Set(rows.map((r) => r.slug)).size).toBe(rows.length);
@@ -112,9 +115,16 @@ describe('catalog seed', () => {
       }
       expect(r.stock).toBeGreaterThanOrEqual(0);
       expect(r.stock).toBeLessThanOrEqual(30);
-      expect(r.images).toEqual([]);
+      expect(r.images).toEqual([`/images/products/${r.slug}.webp`]);
     }
     expect(rows.filter((r) => r.stock === 0).length / rows.length).toBeGreaterThanOrEqual(0.1);
+  });
+
+  it('ships a photo file in the web app for every catalog product', () => {
+    const publicDir = new URL('../../../../web/public', import.meta.url).pathname;
+    const skus = CATEGORY_KEYS.flatMap((key) => CATALOG[key].map((p) => p.sku));
+    expect(Object.keys(PRODUCT_IMAGES).sort()).toEqual([...skus].sort());
+    for (const path of Object.values(PRODUCT_IMAGES)) expect(existsSync(publicDir + path), path).toBe(true);
   });
 
   it('has benchmarks for every cpu and gpu', () => {

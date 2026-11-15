@@ -1,4 +1,4 @@
-import { CATEGORY_KEYS, CATEGORY_LABELS } from '@pc/shared';
+import { CATEGORY_KEYS, CATEGORY_LABELS, type CategoryKey } from '@pc/shared';
 import { PackageOpen } from 'lucide-react';
 import Link from 'next/link';
 import { connection } from 'next/server';
@@ -102,6 +102,18 @@ function SectionHeading({ id, title, action }: { id: string; title: string; acti
   );
 }
 
+/** One catalog photo stands for each category tile. */
+const CATEGORY_PHOTOS: Record<CategoryKey, string> = {
+  cpu: '/images/products/amd-ryzen-7-9800x3d.webp',
+  mainboard: '/images/products/asus-rog-strix-x870e-e-gaming-wifi.webp',
+  ram: '/images/products/g-skill-trident-z5-neo-rgb-32gb-2x16gb-ddr5-6000mhz-cl30.webp',
+  gpu: '/images/products/asus-tuf-gaming-geforce-rtx-5080-oc-16gb.webp',
+  storage: '/images/products/samsung-990-pro-2tb-nvme-pcie-4-0.webp',
+  psu: '/images/products/corsair-rm850e-850w-80-gold-full-modular.webp',
+  case: '/images/products/nzxt-h5-flow.webp',
+  cooler: '/images/products/arctic-liquid-freezer-iii-pro-360mm.webp',
+};
+
 export function CategoryGrid() {
   return (
     <section aria-labelledby="home-categories" className="flex flex-col gap-5">
@@ -110,7 +122,13 @@ export function CategoryGrid() {
         {CATEGORY_KEYS.map((key) => (
           <li key={key}>
             <Link href={`/c/${key}`} className="focus-ring group flex flex-col gap-2 rounded-sm">
-              <ProductImage alt="" category={key} className="aspect-square group-hover:bg-surface-3" />
+              <ProductImage
+                src={CATEGORY_PHOTOS[key]}
+                alt=""
+                category={key}
+                sizes="(min-width: 1024px) 150px, 25vw"
+                className="aspect-square"
+              />
               <span className="text-sm text-fg decoration-1 underline-offset-[3px] group-hover:underline">
                 {CATEGORY_LABELS[key]}
               </span>

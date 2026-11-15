@@ -15,6 +15,7 @@ import { BRAND_NAMES } from './data/brands';
 import { CATALOG } from './data/catalog';
 import { CATEGORY_ROWS } from './data/categories';
 import { slugify } from './data/helpers';
+import { PRODUCT_IMAGES } from './data/product-images';
 import { buildUserRows, type SeedUserEnv } from './users';
 import { WEIGHT_ROWS } from './weights';
 
@@ -56,7 +57,7 @@ export async function seedDatabase(
       price: p.price,
       salePrice: p.salePrice ?? null,
       stock: p.stock,
-      images: [] as string[],
+      images: PRODUCT_IMAGES[p.sku] ? [PRODUCT_IMAGES[p.sku] as string] : [],
       specs: p.specs as unknown as Record<string, unknown>,
       description: p.description,
       commercialBoost: p.commercialBoost ?? 0,

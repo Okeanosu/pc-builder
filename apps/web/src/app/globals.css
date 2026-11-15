@@ -32,6 +32,9 @@
   --color-surface: #ffffff;
   --color-surface-2: #f1f2f3;
   --color-surface-3: #e6e8ea;
+  /* Tile behind product photos; photos multiply onto it, so it stays light in both themes. */
+  --color-photo: #f1f2f3;
+  --color-photo-hover: #e6e8ea;
   --color-border: #e3e5e8;
   --color-border-strong: #8a9097;
   --color-fg: #000000;
@@ -214,6 +217,9 @@
   --color-surface: #ffffff;
   --color-surface-2: #f1f2f3;
   --color-surface-3: #e6e8ea;
+  /* Tile behind product photos; photos multiply onto it, so it stays light in both themes. */
+  --color-photo: #f1f2f3;
+  --color-photo-hover: #e6e8ea;
   --color-border: #e3e5e8;
   --color-border-strong: #8a9097;
   --color-fg: #000000;
@@ -239,6 +245,8 @@
   --color-surface: #000000;
   --color-surface-2: #17181a;
   --color-surface-3: #232528;
+  --color-photo: #dcdfe2;
+  --color-photo-hover: #cfd3d7;
   --color-border: #2a2c2f;
   --color-border-strong: #6b7077;
   --color-fg: #ffffff;

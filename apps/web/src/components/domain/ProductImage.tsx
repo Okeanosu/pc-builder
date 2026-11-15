@@ -5,7 +5,7 @@ import { viaImageOptimizer } from '@/lib/images';
 import { CategoryIllustration } from './CategoryIllustration';
 
 interface ProductImageProps {
-  /** Product photo URL. Seed data has none, so the category drawing is the normal case. */
+  /** Product photo URL (seed photos are 4:3 on white). Without one the category drawing is shown. */
   src?: string | null;
   alt: string;
   category: CategoryKey;
@@ -29,6 +29,8 @@ export function ProductImage({
       className={cn(
         '@container relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-surface-2 transition-colors duration-150',
         className,
+        // Photos sit on a light tile in both themes so their white backdrop can multiply into it.
+        src && 'bg-photo group-hover:bg-photo-hover',
       )}
     >
       {src ? (
@@ -39,7 +41,7 @@ export function ProductImage({
           sizes={sizes}
           priority={priority}
           unoptimized={!viaImageOptimizer(src)}
-          className="object-contain p-[8%]"
+          className="object-contain p-[3%] mix-blend-multiply"
         />
       ) : (
         <div role="img" aria-label={alt || CATEGORY_LABELS[category]} className="absolute inset-0">
