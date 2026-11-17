@@ -44,7 +44,9 @@
   "sale_price": null,
   "stock": 8,
   "reserved": 0,
-  "images": [],
+  "images": [
+   "/images/products/amd-ryzen-7-7800x3d.webp"
+  ],
   "specs": {
    "tdpW": 120,
    "cores": 8,

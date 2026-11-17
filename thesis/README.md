@@ -41,3 +41,10 @@ Sau khi điền, tìm lại bằng `grep -rn canbosung chapters frontmatter` đ�
 Báo cáo dùng font Times New Roman và Menlo có sẵn trên macOS (Tectonic cảnh báo "build may not be reproducible" vì
 đọc font hệ thống, đây là bình thường). Trên Linux hoặc Windows không có các font này, đổi trong `preamble.tex`
 `\setmainfont{Times New Roman}` thành `\setmainfont{texgyretermes-regular.otf}` (TeX Gyre Termes, cùng dáng chữ Times).
+
+## Ảnh giao diện
+
+Ảnh trong `figures/ui/` chụp từ ứng dụng đang chạy (web :3000, API :4000, dữ liệu seed). Các trang có ảnh sản phẩm
+chụp lại bằng `NODE_PATH=$PWD/node_modules node docs/design/screenshots/capture.cjs <thư-mục>` (chạy ở gốc repo), rồi
+đổi sang JPEG rộng tối đa 1800 px. Ảnh sản phẩm nằm ở `apps/web/public/images/products/`, nguồn từng ảnh ở
+`docs/data/product-image-sources.csv`.

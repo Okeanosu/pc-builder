@@ -14,7 +14,7 @@ Website thương mại điện tử D2C & Duyệt danh mục, lọc theo thông 
 Gợi ý cấu hình PC thông minh & Bộ máy tối ưu CSP kết hợp MCKP trả 2--3 cấu hình có nhãn rõ ràng, giải xong trong 11,5 ms (p95) trên kho 250 sản phẩm; thêm trợ lý AI trò chuyện bằng tiếng Việt và chế độ dự phòng \\ \hline
 Lắp ráp PC tương tác & 15 luật tương thích chạy tức thì trên trình duyệt, xem trước từng ứng viên, máy chủ kiểm tra lại khi lưu \\ \hline
 Trang quản trị & Sản phẩm với biểu mẫu thông số động, lược đồ thông số, tồn kho, benchmark, ma trận trọng số, hệ số ưu tiên thương mại, đơn hàng, đối soát thanh toán, thống kê, nhật ký hội thoại \\ \hline
-Kiểm thử & 1.028 ca kiểm thử tự động đều đạt, độ phủ nhánh bộ máy tối ưu 98,85\%, 87/87 lượt kiểm thử đầu-cuối đạt, kiểm thử đồng thời và hiệu năng \\ \hline
+Kiểm thử & 1.029 ca kiểm thử tự động đều đạt, độ phủ nhánh bộ máy tối ưu 98,85\%, 87/87 lượt kiểm thử đầu-cuối đạt, kiểm thử đồng thời và hiệu năng \\ \hline
 Triển khai bằng Docker & Đóng gói năm dịch vụ bằng Docker Compose, HTTPS tự động; đã chạy thử cấu hình production \\ \hline
 Triển khai thực tế, khảo sát người dùng & \canbosung{kết quả triển khai trên máy chủ đám mây thật và khảo sát người dùng (điểm SUS)} \\ \hline
 \end{tabular}
@@ -28,7 +28,7 @@ Qua đồ án, em đã có cơ hội vận dụng các kiến thức về trí t
 
 Bên cạnh đó, hệ thống vẫn còn một số hạn chế:
 \begin{itemize}
-  \item Kho dữ liệu thử nghiệm mới có 240 sản phẩm, thông số và điểm benchmark được nhập tay nên có thể có sai sót; giá chưa cập nhật tự động theo thị trường.
+  \item Kho dữ liệu thử nghiệm mới có 240 sản phẩm, thông số và điểm benchmark được nhập tay nên có thể có sai sót; giá chưa cập nhật tự động theo thị trường. Ảnh sản phẩm lấy từ trang của nhà sản xuất và nhà bán lẻ nên chỉ dùng được cho mục đích minh họa; khi vận hành thật cần dùng ảnh được nhà cung cấp cho phép.
   \item Luật công suất nguồn dùng công suất cơ sở của CPU, chưa dùng công suất đỉnh; một số ràng buộc vật lý chưa được kiểm tra như khoảng hở giữa RAM và tản nhiệt khí lớn, độ dày card đồ họa, đầu cấp nguồn của card đời mới, hay phiên bản BIOS khi dùng CPU đời mới trên mainboard đời cũ.
   \item Cấp hiệu năng dùng cho luật cân bằng CPU -- card đồ họa dựa trên điểm benchmark tổng hợp, chưa tách riêng hiệu năng chơi game; các hệ số như hệ số CUDA là hệ số kinh nghiệm chứ không phải số đo.
   \item Phần lời giải thích do mô hình ngôn ngữ viết vẫn có thể chứa con số không khớp; bộ kiểm tra giá hiện chỉ ghi nhận để giám sát chứ chưa sửa câu trả lời. Chất lượng trợ lý ở chế độ Gemini thật cần được đánh giá thêm trên câu hỏi của người dùng thật.

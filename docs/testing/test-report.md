@@ -6,7 +6,7 @@
 
 | Hạng mục | Kết quả |
 | --- | --- |
-| Kiểm thử tự động (unit + integration) | **1.028 ca trên 82 tệp**, tất cả đạt (Engine 175, API 580, Web 246, Graph CLI 27), đếm lại ngày 2026-11-08 sau các đợt sửa cuối (API và Web); lúc QA đo là 897 ca trên 70 tệp |
+| Kiểm thử tự động (unit + integration) | **1.029 ca trên 82 tệp**, tất cả đạt (Engine 175, API 581, Web 246, Graph CLI 27), đếm lại ngày 2026-11-16 sau khi thêm ảnh sản phẩm (API thêm 1 ca); lúc QA đo là 897 ca trên 70 tệp |
 | Độ phủ nhánh `packages/engine` | 98,85% (mục tiêu ≥ 90%) |
 | E2E Playwright | 6 test (5 test chạy ở cả 1440 px và 390 px, smoke chạy 1 khung nhìn) + bước đăng nhập; 3 lần chạy độc lập, mỗi test lặp 3 lần/lần chạy (smoke và a11y có từ lần 2): 87 lượt thực thi, 0 lỗi, 0 lượt chập chờn |
 | Hiệu năng Engine (trích bench) | p95 11,5 ms trên catalog 250 sản phẩm (mục tiêu < 300 ms) |
@@ -48,7 +48,7 @@ Số lượng lấy từ chính các lần chạy (bảng kết quả của Vite
 | Chất lượng AI | `apps/api/eval` | — | 30 kịch bản | — | mục 6 |
 | UAT | Google Form (SUS) | — | — | — | chưa thực hiện trong task này |
 
-Tổng số ca tự động không kể E2E (đếm lại 2026-11-08): 175 + 580 + 246 + 27 = **1.028** ca trên 9 + 41 + 30 + 2 = **82** tệp, tất cả đạt; số liệu được đếm sau các đợt sửa cuối.
+Tổng số ca tự động không kể E2E (đếm lại 2026-11-16): 175 + 581 + 246 + 27 = **1.029** ca trên 9 + 41 + 30 + 2 = **82** tệp, tất cả đạt; số liệu được đếm sau các đợt sửa cuối.
 
 ## 3. Độ phủ mã
 

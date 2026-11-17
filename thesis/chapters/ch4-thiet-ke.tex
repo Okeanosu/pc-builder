@@ -269,7 +269,7 @@ Số gói trong kho mã & 2 ứng dụng, 2 gói dùng chung, 1 công cụ \\ \h
 Số tệp TypeScript (kể cả kiểm thử) & 434 \\ \hline
 Số dòng mã nguồn (không kể kiểm thử) & khoảng 38.800 \\ \hline
 Số dòng mã kiểm thử & khoảng 12.800 \\ \hline
-Số ca kiểm thử tự động (đơn vị và tích hợp) & 1.028 ca trên 82 tệp \\ \hline
+Số ca kiểm thử tự động (đơn vị và tích hợp) & 1.029 ca trên 82 tệp \\ \hline
 Số API & hơn 50 đường dẫn \\ \hline
 Số bảng cơ sở dữ liệu & 15 bảng, 3 migration \\ \hline
 Số luật tương thích & 15 (C01--C15) \\ \hline
@@ -286,7 +286,7 @@ Số commit & 189 \\ \hline
 
 \hinh{figures/ui/category-gpu-1440.jpg}{\textwidth}{Trang danh mục card đồ họa với bộ lọc thông số động}{fig:ui-category}
 
-Hình~\ref{fig:ui-category} là trang danh mục card đồ họa. Cột bên trái là các bộ lọc: tình trạng còn hàng, khoảng giá, thương hiệu và các thông số như chip đồ họa. Các bộ lọc thông số không được viết cứng trong mã mà được sinh từ lược đồ thông số của danh mục, những trường được đánh dấu ``dùng làm bộ lọc''; mỗi lựa chọn hiển thị số sản phẩm thỏa mãn. Khi khách chọn bộ lọc, truy vấn lọc theo thông số dùng phép chứa trên cột JSONB. Hình~\ref{fig:ui-product} là trang chi tiết sản phẩm với bảng thông số kỹ thuật và điểm benchmark.
+Hình~\ref{fig:ui-category} là trang danh mục card đồ họa. Cột bên trái là các bộ lọc: tình trạng còn hàng, khoảng giá, thương hiệu và các thông số như chip đồ họa. Các bộ lọc thông số không được viết cứng trong mã mà được sinh từ lược đồ thông số của danh mục, những trường được đánh dấu ``dùng làm bộ lọc''; mỗi lựa chọn hiển thị số sản phẩm thỏa mãn. Khi khách chọn bộ lọc, truy vấn lọc theo thông số dùng phép chứa trên cột JSONB. Hình~\ref{fig:ui-product} là trang chi tiết sản phẩm với bảng thông số kỹ thuật và điểm benchmark. Mỗi sản phẩm trong dữ liệu mẫu có một ảnh thật đúng mẫu đó; khoảng 40\% số ảnh lấy từ trang của nhà sản xuất, phần còn lại từ các trang bán lẻ lớn như Amazon, LDLC, Newegg. Em chuẩn hóa ảnh về khung 4:3 nền trắng, định dạng WebP, và ghi lại trang nguồn của từng ảnh. Ảnh thuộc bản quyền của nhà sản xuất hoặc nơi đăng, trong đồ án chỉ dùng để minh họa.
 
 \hinh{figures/ui/product-cpu-1440.jpg}{0.92\textwidth}{Trang chi tiết sản phẩm}{fig:ui-product}
 
@@ -343,10 +343,10 @@ Em áp dụng chiến lược kiểm thử nhiều tầng. Ở tầng dưới c�
 \hline
 \textbf{Tầng} & \textbf{Phạm vi} & \textbf{Tệp} & \textbf{Ca} & \textbf{Kết quả} \\ \hline
 Đơn vị & Bộ máy tối ưu & 9 & 175 & Đạt, độ phủ nhánh 98,85\% \\ \hline
-Đơn vị và tích hợp & API & 41 & 580 & Đạt \\ \hline
+Đơn vị và tích hợp & API & 41 & 581 & Đạt \\ \hline
 Đơn vị & Ứng dụng web & 30 & 246 & Đạt \\ \hline
 Đơn vị & Công cụ truy vết & 2 & 27 & Đạt \\ \hline
-\textbf{Tổng tự động} & & \textbf{82} & \textbf{1.028} & \textbf{Tất cả đạt} \\ \hline
+\textbf{Tổng tự động} & & \textbf{82} & \textbf{1.029} & \textbf{Tất cả đạt} \\ \hline
 Đầu-cuối (E2E) & 5 kịch bản, 2 khung nhìn & 5 & 6 & 87/87 lượt đạt \\ \hline
 \end{tabular}
 \caption{Tổng hợp kết quả kiểm thử tự động}

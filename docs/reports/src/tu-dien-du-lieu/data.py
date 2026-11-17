@@ -85,7 +85,7 @@ GROUPS = [
                     ("sale_price", "bigint?", "", "Giá khuyến mãi (VND); NULL nếu không giảm giá. Khi có, đây là giá bán thực."),
                     ("stock", "integer", "NOT NULL, mặc định 0", "Số lượng thực có trong kho. Chỉ giảm khi đơn được xác nhận thanh toán."),
                     ("reserved", "integer", "NOT NULL, mặc định 0", "Số lượng đang giữ cho các đơn chờ thanh toán. Số có thể bán = stock − reserved."),
-                    ("images", "jsonb", "NOT NULL, mặc định []", "Danh sách URL ảnh sản phẩm. Dữ liệu mẫu chưa có ảnh nên giao diện dùng bản vẽ theo danh mục."),
+                    ("images", "jsonb", "NOT NULL, mặc định []", "Danh sách URL ảnh sản phẩm, ảnh đầu tiên là ảnh đại diện. Dữ liệu mẫu có một ảnh cho mỗi sản phẩm (/images/products/<slug>.webp, do web phục vụ); khi danh sách rỗng, giao diện dùng bản vẽ theo danh mục."),
                     ("specs", "jsonb", "NOT NULL", "Thông số kỹ thuật theo spec_schema của danh mục (socket, chuẩn RAM, chiều dài card, công suất…). Engine đọc trường này để kiểm tra 15 luật tương thích."),
                     ("description", "text?", "", "Mô tả chi tiết hiển thị ở tab “Mô tả”."),
                     ("status", "product_status", "NOT NULL, mặc định ACTIVE", "ACTIVE đang bán; HIDDEN ẩn khỏi cửa hàng và engine không chọn nữa."),
