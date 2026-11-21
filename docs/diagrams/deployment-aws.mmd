@@ -1,0 +1,43 @@
+flowchart TB
+  user([Trình duyệt người dùng])
+  sepay[/SePay webhook/]
+  gemini[/Google Gemini API/]
+  dev([Sinh viên: laptop, SSO + MFA])
+  gh[GitHub Actions<br/>environment production, cần duyệt]
+
+  subgraph AWS[Tài khoản AWS riêng, region ap-southeast-1]
+    subgraph VPC[VPC 10.20.0.0/16, một subnet công khai]
+      subgraph EC2[EC2 t4g.small, Amazon Linux 2023<br/>SG: chỉ 80/443 vào, không SSH; IMDSv2 hop 1]
+        caddy[Caddy: HTTPS, header bảo mật]
+        web[web: Next.js, uid 1000, cap_drop ALL]
+        api[api: Express, uid 1000, cap_drop ALL]
+        pg[(postgres 16)]
+        redis[(redis 7)]
+        envf[/opt/pcbuilder/.env<br/>root 0600/]
+      end
+    end
+    ssm[(Parameter Store<br/>/pcbuilder/prod: SecureString)]
+    ecr[(ECR: pcbuilder/api, pcbuilder/web<br/>tag = commit SHA, bất biến)]
+    s3[(S3 backup: chỉ ghi, có version)]
+    doc[[SSM document pcbuilder-deploy<br/>chỉ nhận commit SHA]]
+    cw[CloudWatch alarm + Budget → email]
+  end
+
+  user -->|HTTPS 443| caddy
+  sepay -->|Authorization Apikey| caddy
+  caddy -->|/api/*| api
+  caddy --> web
+  web -.->|SSR| api
+  api --> pg
+  api --> redis
+  api --> gemini
+  ssm -->|render-env.sh khi deploy| envf
+  envf --> api
+  gh -->|OIDC, phiên 1 giờ| ecr
+  gh -->|ssm:SendCommand| doc
+  doc -->|deploy.sh| EC2
+  EC2 -->|kéo image| ecr
+  EC2 -->|pg_dump 2 lần/ngày| s3
+  EC2 --> cw
+  dev -->|Terraform, secrets.sh| ssm
+  dev -->|Session Manager thay SSH| EC2

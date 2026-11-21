@@ -1,0 +1,28 @@
+# Copy to terraform.tfvars (gitignored) and fill in. Nothing in this file is secret: secrets go to Parameter Store
+# through scripts/secrets.sh, never through Terraform.
+
+# Account ID of the dedicated personal AWS account (top-right menu of the console). Terraform refuses any other.
+aws_account_id = "123456789012"
+aws_profile    = "pcbuilder"
+region         = "ap-southeast-1"
+
+# Host name of the shop. Without a domain, use <ip-with-dashes>.sslip.io after the first apply, e.g. 13-250-1-2.sslip.io
+domain = "shop.example.com"
+
+alert_email        = "you@example.com"
+monthly_budget_usd = 25
+
+# github_repository = "yamadaOliva/pc-builder"
+# instance_type     = "t4g.small"
+
+# Shown to customers on the VietQR payment screen
+# app_settings = {
+#   POSTGRES_USER       = "pc"
+#   POSTGRES_DB         = "pcbuilder"
+#   ASSEMBLY_FEE        = "200000"
+#   ORDER_HOLD_MINUTES  = "15"
+#   GEMINI_MODEL        = "gemini-flash-latest"
+#   GEMINI_TIMEOUT_MS   = "20000"
+#   VIETQR_BANK_BIN     = "970422"
+#   VIETQR_ACCOUNT_NAME = "PC BUILDER STORE"
+# }

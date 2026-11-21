@@ -16,7 +16,7 @@ Sinh tự động bởi `pnpm graph` — không sửa tay.
 | Luật ràng buộc | 0 | 0 | 15 | 15 |
 | Màn hình | 0 | 0 | 20 | 20 |
 | Kiểm thử | 1 | 0 | 24 | 25 |
-| Quyết định thiết kế | 0 | 0 | 22 | 22 |
+| Quyết định thiết kế | 0 | 1 | 22 | 23 |
 | Chương báo cáo | 6 | 0 | 0 | 6 |
 
 ## Yêu cầu chưa có use case / tính năng (0)
@@ -43,11 +43,11 @@ Chưa có file test nào khớp các glob `tests:` của tính năng / node test
 
 - **NFR-11** — Khả năng sử dụng: đánh giá bằng khảo sát người dùng thật (UAT, điểm SUS)
 
-## Node chưa `done` nhưng code đã tồn tại (0)
+## Node chưa `done` nhưng code đã tồn tại (1)
 
 Rà soát: có thể đã hoàn thành — cập nhật `status`.
 
-_Không có._
+- **ADR-023** (in-progress) — Triển khai trên AWS bằng một EC2 Graviton và Docker Compose; khoá nằm ở Parameter Store, CI dùng OIDC, không có khoá dài hạn
 
 ## Số node theo chương
 
@@ -56,6 +56,6 @@ _Không có._
 | CH1 — Chương 1 - Giới thiệu | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 4 |
 | CH2 — Chương 2 - Khảo sát và phân tích yêu cầu | 29 | 16 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 45 |
 | CH3 — Chương 3 - Công nghệ sử dụng | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7 | 7 |
-| CH4 — Chương 4 - Thiết kế, triển khai và đánh giá | 0 | 0 | 23 | 21 | 17 | 15 | 8 | 15 | 20 | 25 | 21 | 165 |
+| CH4 — Chương 4 - Thiết kế, triển khai và đánh giá | 0 | 0 | 23 | 21 | 17 | 15 | 8 | 15 | 20 | 25 | 22 | 166 |
 | CH5 — Chương 5 - Giải pháp và đóng góp nổi bật | 0 | 0 | 11 | 0 | 0 | 0 | 8 | 1 | 2 | 2 | 14 | 38 |
-| CH6 — Chương 6 - Kết luận | 1 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 5 |
+| CH6 — Chương 6 - Kết luận | 1 | 0 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 2 | 6 |

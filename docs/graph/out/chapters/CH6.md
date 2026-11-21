@@ -12,7 +12,7 @@ Sinh tự động bởi `pnpm graph` — tư liệu thô để viết báo cáo,
 
 **Liên hệ phiếu giao nhiệm vụ:** Nội dung 6 (tuần 16-17): triển khai, phản hồi người dùng, hiệu chỉnh trọng số, hoàn thiện báo cáo.
 
-Tổng cộng **5** node thuộc chương này.
+Tổng cộng **6** node thuộc chương này.
 
 ## Yêu cầu
 
@@ -26,10 +26,10 @@ Thu thập phản hồi của người dùng và kỹ thuật viên lắp ráp b
 
 ## Tính năng
 
-### F-DEPLOY — Đóng gói Docker và triển khai lên VPS
+### F-DEPLOY — Đóng gói Docker và triển khai lên VPS / AWS EC2
 
 Trạng thái: **done**
-Liên kết — realizes: NFR-07 · dependsOn: M-INFRA
+Liên kết — realizes: NFR-07 · dependsOn: M-INFRA · decidedBy: ADR-023
 
 **Mục đích:** đưa hệ thống lên máy chủ thật để người dùng và kỹ thuật viên dùng thử (nội dung 6 của phiếu), bằng một lệnh và không cần cài Node hay Postgres trên máy chủ.
 
@@ -41,11 +41,13 @@ Liên kết — realizes: NFR-07 · dependsOn: M-INFRA
 - Cấu hình qua `infra/.env.prod` (mẫu `.env.prod.example`, bị gitignore). API production từ chối khởi động (fail-closed) nếu `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` hoặc `SEPAY_API_KEY` ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`, hoặc `VIETQR_ACCOUNT_NO` còn là `0000000000`. Seed ở production bắt buộc `SEED_ADMIN_PASSWORD` (≥ 12 ký tự) cho `admin@pcbuilder.vn` và chỉ tạo tài khoản demo nhân viên/khách khi `SEED_DEMO_USERS=1`; đổi mật khẩu qua trang Tài khoản (`POST /api/auth/password`). Bản dev chỉ chạy postgres và redis bằng `infra/docker-compose.yml`.
 - `docs/deploy.md` (tiếng Việt) hướng dẫn trên Ubuntu 22.04/24.04: yêu cầu VPS, secret, khởi chạy, nạp seed thủ công một lần (seed xóa dữ liệu cũ), xin khóa Gemini, cấu hình webhook SePay `https://<DOMAIN>/api/payments/webhook/sepay` với `Authorization: Apikey <khóa>`, sao lưu `pg_dump` bằng cron.
 
+**Bản AWS (ADR-023):** cùng stack chạy trên một EC2 Graviton `t4g.small` dựng bằng Terraform (`infra/aws/terraform`); image build arm64 trên GitHub Actions, đẩy vào ECR (tag là commit SHA), deploy qua tài liệu SSM chỉ nhận commit SHA. Không có khoá AWS dài hạn: CI dùng OIDC, người vận hành dùng SSO có MFA, máy chủ dùng instance role. Khoá ứng dụng nằm trong Parameter Store (SecureString) và được ghi thành `.env` 0600 lúc deploy. Không SSH (Session Manager), IMDSv2 hop 1, container `cap_drop: ALL`, backup S3 hai lần mỗi ngày có cảnh báo khi thiếu. Kế hoạch setup và bảng rủi ro khoá ở `docs/deploy-aws.md`.
+
 **Kiểm chứng đã làm (báo cáo task 12):** chạy toàn bộ stack production trên máy dev ở cổng 8081/8443: cả năm dịch vụ khỏe, `GET /api/health` qua Caddy trả `{"status":"ok","db":"up","redis":"up","ai":"fallback"}`, cookie đặt `Secure; SameSite=Lax`, trang chủ trả 200, đăng nhập tài khoản mẫu qua Caddy 200, các container chạy uid 1000.
 
 **Chưa kiểm chứng (nêu trong báo cáo):** cấp chứng chỉ Let's Encrypt thật (cần tên miền công khai), luồng SSE đi xuyên Caddy đầu-cuối, và webhook SePay thật; ba mục này thuộc phần kiểm thử QA và triển khai trên VPS.
 
-**Code:** `infra/docker-compose.prod.yml`, `infra/Caddyfile`, `infra/.env.prod.example`, `apps/api/Dockerfile`, `apps/web/Dockerfile`, `docs/deploy.md`
+**Code:** `infra/docker-compose.prod.yml`, `infra/Caddyfile`, `infra/.env.prod.example`, `apps/api/Dockerfile`, `apps/web/Dockerfile`, `docs/deploy.md`, `infra/aws/**`, `.github/workflows/deploy-aws.yml`, `docs/deploy-aws.md`
 
 **Test:** `e2e/smoke.spec.ts`
 
@@ -82,6 +84,54 @@ flowchart TB
     devpg[(postgres:16 :5433)]
     devredis[(redis:7 :6380)]
   end
+```
+
+**Sơ đồ:** `docs/diagrams/deployment-aws.mmd`
+
+```mermaid
+flowchart TB
+  user([Trình duyệt người dùng])
+  sepay[/SePay webhook/]
+  gemini[/Google Gemini API/]
+  dev([Sinh viên: laptop, SSO + MFA])
+  gh[GitHub Actions<br/>environment production, cần duyệt]
+
+  subgraph AWS[Tài khoản AWS riêng, region ap-southeast-1]
+    subgraph VPC[VPC 10.20.0.0/16, một subnet công khai]
+      subgraph EC2[EC2 t4g.small, Amazon Linux 2023<br/>SG: chỉ 80/443 vào, không SSH; IMDSv2 hop 1]
+        caddy[Caddy: HTTPS, header bảo mật]
+        web[web: Next.js, uid 1000, cap_drop ALL]
+        api[api: Express, uid 1000, cap_drop ALL]
+        pg[(postgres 16)]
+        redis[(redis 7)]
+        envf[/opt/pcbuilder/.env<br/>root 0600/]
+      end
+    end
+    ssm[(Parameter Store<br/>/pcbuilder/prod: SecureString)]
+    ecr[(ECR: pcbuilder/api, pcbuilder/web<br/>tag = commit SHA, bất biến)]
+    s3[(S3 backup: chỉ ghi, có version)]
+    doc[[SSM document pcbuilder-deploy<br/>chỉ nhận commit SHA]]
+    cw[CloudWatch alarm + Budget → email]
+  end
+
+  user -->|HTTPS 443| caddy
+  sepay -->|Authorization Apikey| caddy
+  caddy -->|/api/*| api
+  caddy --> web
+  web -.->|SSR| api
+  api --> pg
+  api --> redis
+  api --> gemini
+  ssm -->|render-env.sh khi deploy| envf
+  envf --> api
+  gh -->|OIDC, phiên 1 giờ| ecr
+  gh -->|ssm:SendCommand| doc
+  doc -->|deploy.sh| EC2
+  EC2 -->|kéo image| ecr
+  EC2 -->|pg_dump 2 lần/ngày| s3
+  EC2 --> cw
+  dev -->|Terraform, secrets.sh| ssm
+  dev -->|Session Manager thay SSH| EC2
 ```
 
 ### F-UAT-SURVEY — Khảo sát người dùng (UAT) và hiệu chỉnh trọng số theo phản hồi
@@ -126,3 +176,58 @@ Trạng thái: **done**
 **Hệ quả:** con số trung thực nhưng thấp hơn; bù lại có thể bảo vệ trước hội đồng. Điểm số chế độ Gemini thật chưa có vì thiếu khóa API: chạy `eval/smoke-gemini.ts` rồi `pnpm --filter @pc/api eval:ai` để có số liệu AI-mode và ghi vào báo cáo.
 
 **Code:** `apps/api/eval/run-eval.ts`, `apps/api/eval/golden-set.json`, `apps/api/eval/results.md`, `apps/api/eval/smoke-gemini.ts`
+
+### ADR-023 — Triển khai trên AWS bằng một EC2 Graviton và Docker Compose; khoá nằm ở Parameter Store, CI dùng OIDC, không có khoá dài hạn
+
+Trạng thái: **in-progress**
+
+**Bối cảnh:** phiếu giao nhiệm vụ yêu cầu đóng gói Docker và triển khai trên máy chủ đám mây (NFR-07). Stack Docker Compose của `docs/deploy.md` đã chạy được trên một VPS bất kỳ. Cần chọn nơi chạy thật với chi phí thấp nhất cho một đồ án, nhưng không đánh đổi an toàn của các khoá. Lộ khoá JWT cho phép giả token admin, lộ khoá SePay cho phép đánh dấu đơn đã thanh toán, lộ quyền AWS cho phép người khác tạo máy trên tài khoản của sinh viên. Máy phát triển còn có sẵn profile AWS của công ty (shell đặt `AWS_PROFILE=aircloset`), nên có nguy cơ thật là chạy nhầm vào tài khoản đó.
+
+**Quyết định:**
+
+- **Hạ tầng** (`infra/aws/terraform`): một máy EC2 `t4g.small` (2 vCPU ARM, 2 GiB, khoảng 15,5 USD/tháng ở Singapore) chạy nguyên stack Compose, trong một VPC một subnet công khai. Không dùng NAT, load balancer hay RDS vì mỗi thứ tốn hơn chính máy chủ.
+- **Đường deploy:** image api và web build arm64 trên GitHub Actions, đẩy vào ECR với tag là commit SHA, không ghi đè được. Máy chủ nhận lệnh deploy qua tài liệu SSM `pcbuilder-deploy`. Tài liệu này chỉ nhận một commit SHA; nó ghi lại các tệp stack rồi gọi `deploy.sh`.
+- **Không có khoá dài hạn ở đâu cả:**
+  - người vận hành đăng nhập bằng IAM Identity Center có MFA;
+  - GitHub đổi token OIDC lấy phiên 1 giờ, và chỉ job trong environment `production` của đúng repo mới được;
+  - máy chủ dùng instance role.
+- **Khoá ứng dụng:** nằm ở Parameter Store dạng SecureString. `scripts/secrets.sh` sinh khoá tại chỗ hoặc nhận nhập ẩn rồi gửi thẳng lên AWS, nên khoá không đi qua Terraform state, git, CI, user data hay tham số lệnh. Mỗi lần deploy, máy chủ dựng lại `.env` (root, 0600).
+- **Quyền tối thiểu:**
+  - role CI chỉ được đẩy image và chạy đúng tài liệu deploy trên đúng máy, không được `AWS-RunShellScript`;
+  - role máy chủ bị chặn đọc tham số ngoài `/pcbuilder/prod`, và chỉ được ghi backup, không đọc hay xoá được.
+- **Hàng rào chống nhầm tài khoản:** provider khai báo `allowed_account_ids`; script trên laptop bỏ qua `AWS_PROFILE` của shell và kiểm tra số tài khoản trước khi chạy.
+- **Cứng hoá máy chủ:**
+  - không SSH, chỉ Session Manager;
+  - chỉ mở 80/443;
+  - IMDSv2 với hop limit 1, để container không lấy được credential của máy;
+  - container chạy không phải root, `cap_drop: ALL`, `no-new-privileges`;
+  - CPU credit `standard`, để máy bị chiếm cũng không đẩy được hoá đơn lên.
+- **Dữ liệu và giám sát:**
+  - backup `pg_dump` lên S3 có version hai lần mỗi ngày, cảnh báo khi quá 24 giờ không có bản mới;
+  - snapshot ổ đĩa hằng ngày;
+  - tự phục hồi khi máy hỏng;
+  - budget gửi email.
+
+**Hệ quả:**
+
+- Chi phí khoảng 22–23 USD/tháng.
+- Một máy nên vẫn có thời gian chết khi khởi động lại; chấp nhận được với đồ án.
+- Đổi khoá chỉ cần hai lệnh (`secrets.sh rotate`, `ssm-deploy.sh current`). Riêng mật khẩu Postgres, `deploy.sh` tự đặt lại cho role qua stdin trước khi API khởi động.
+
+**Đã kiểm chứng trên máy phát triển (20/11/2026):**
+
+- `terraform validate` đạt; trivy không còn cảnh báo, 4 điểm chấp nhận có chủ ý được ghi lý do trong code; shellcheck và actionlint sạch.
+- Chạy `infra/aws/compose.yml` với image arm64 build tại chỗ:
+  - cả 5 service khoẻ;
+  - api và web chạy uid 1000, không có capability; Caddy chỉ giữ `NET_BIND_SERVICE`;
+  - header bảo mật có đủ, `Server` bị ẩn;
+  - seed nhận mật khẩu qua `-e NAME` và admin đăng nhập được;
+  - chat SSE qua Caddy trả `text/event-stream` không nén;
+  - đổi mật khẩu Postgres theo cách của `deploy.sh` vẫn giữ nguyên 240 sản phẩm.
+- `secrets.sh` thử với một lệnh `aws` giả: từ chối khi sai số tài khoản, bỏ qua `AWS_PROFILE=aircloset`, và không giá trị khoá nào xuất hiện trong tham số dòng lệnh.
+
+**Chưa kiểm chứng:** chạy `terraform apply` trên tài khoản AWS thật, chứng chỉ Let's Encrypt thật, và workflow GitHub chạy thật. Các bước này cần tài khoản AWS riêng của sinh viên; kế hoạch ở `docs/deploy-aws.md` mục 3.
+
+**Code:** `infra/aws/**`, `.github/workflows/deploy-aws.yml`, `docs/deploy-aws.md`
+
+**Sơ đồ:** `docs/diagrams/deployment-aws.mmd` (đã nêu ở trên trong chương này)

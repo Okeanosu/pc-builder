@@ -15,3 +15,11 @@ test-results/
 .playwright-mcp/
 infra/.env.prod
 infra/.env.prod.local
+
+# Terraform (infra/aws/terraform): local state, plans and the filled-in variables stay on the operator's machine
+infra/aws/terraform/.terraform/
+infra/aws/terraform/*.tfstate
+infra/aws/terraform/*.tfstate.*
+infra/aws/terraform/*.tfplan
+infra/aws/terraform/terraform.tfvars
+infra/aws/terraform/crash.log

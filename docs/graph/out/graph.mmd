@@ -222,6 +222,7 @@ flowchart LR
   ADR_020["ADR-020"]:::decision
   ADR_021["ADR-021"]:::decision
   ADR_022["ADR-022"]:::decision
+  ADR_023["ADR-023"]:::decision
   CH1["CH1"]:::chapter
   CH2["CH2"]:::chapter
   CH3["CH3"]:::chapter
@@ -421,6 +422,7 @@ flowchart LR
   F_CUSTOMIZER -->|shownIn| SCR_BUILDER
   F_DEPLOY -->|realizes| NFR_07
   F_DEPLOY -->|dependsOn| M_INFRA
+  F_DEPLOY -->|decidedBy| ADR_023
   F_ENGINE_CORE -->|realizes| FR_08
   F_ENGINE_CORE -->|realizes| FR_09
   F_ENGINE_CORE -->|realizes| NFR_01

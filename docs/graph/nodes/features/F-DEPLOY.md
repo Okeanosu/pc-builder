@@ -1,15 +1,16 @@
 ---
 id: F-DEPLOY
 type: feature
-title: "Đóng gói Docker và triển khai lên VPS"
+title: "Đóng gói Docker và triển khai lên VPS / AWS EC2"
 status: done
 chapters: ["CH4", "CH6"]
 links:
   realizes: ["NFR-07"]
   dependsOn: ["M-INFRA"]
-code: ["infra/docker-compose.prod.yml", "infra/Caddyfile", "infra/.env.prod.example", "apps/api/Dockerfile", "apps/web/Dockerfile", "docs/deploy.md"]
+  decidedBy: ["ADR-023"]
+code: ["infra/docker-compose.prod.yml", "infra/Caddyfile", "infra/.env.prod.example", "apps/api/Dockerfile", "apps/web/Dockerfile", "docs/deploy.md", "infra/aws/**", ".github/workflows/deploy-aws.yml", "docs/deploy-aws.md"]
 tests: ["e2e/smoke.spec.ts"]
-diagrams: ["docs/diagrams/deployment.mmd"]
+diagrams: ["docs/diagrams/deployment.mmd", "docs/diagrams/deployment-aws.mmd"]
 ---
 
 **Mục đích:** đưa hệ thống lên máy chủ thật để người dùng và kỹ thuật viên dùng thử (nội dung 6 của phiếu), bằng một lệnh và không cần cài Node hay Postgres trên máy chủ.
@@ -21,6 +22,8 @@ diagrams: ["docs/diagrams/deployment.mmd"]
 - **postgres:16** và **redis:7** (bật AOF) chỉ nằm trong mạng nội bộ, không mở cổng ra ngoài; dữ liệu ở volume `pgdata`, `redisdata`.
 - Cấu hình qua `infra/.env.prod` (mẫu `.env.prod.example`, bị gitignore). API production từ chối khởi động (fail-closed) nếu `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` hoặc `SEPAY_API_KEY` ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`, hoặc `VIETQR_ACCOUNT_NO` còn là `0000000000`. Seed ở production bắt buộc `SEED_ADMIN_PASSWORD` (≥ 12 ký tự) cho `admin@pcbuilder.vn` và chỉ tạo tài khoản demo nhân viên/khách khi `SEED_DEMO_USERS=1`; đổi mật khẩu qua trang Tài khoản (`POST /api/auth/password`). Bản dev chỉ chạy postgres và redis bằng `infra/docker-compose.yml`.
 - `docs/deploy.md` (tiếng Việt) hướng dẫn trên Ubuntu 22.04/24.04: yêu cầu VPS, secret, khởi chạy, nạp seed thủ công một lần (seed xóa dữ liệu cũ), xin khóa Gemini, cấu hình webhook SePay `https://<DOMAIN>/api/payments/webhook/sepay` với `Authorization: Apikey <khóa>`, sao lưu `pg_dump` bằng cron.
+
+**Bản AWS (ADR-023):** cùng stack chạy trên một EC2 Graviton `t4g.small` dựng bằng Terraform (`infra/aws/terraform`); image build arm64 trên GitHub Actions, đẩy vào ECR (tag là commit SHA), deploy qua tài liệu SSM chỉ nhận commit SHA. Không có khoá AWS dài hạn: CI dùng OIDC, người vận hành dùng SSO có MFA, máy chủ dùng instance role. Khoá ứng dụng nằm trong Parameter Store (SecureString) và được ghi thành `.env` 0600 lúc deploy. Không SSH (Session Manager), IMDSv2 hop 1, container `cap_drop: ALL`, backup S3 hai lần mỗi ngày có cảnh báo khi thiếu. Kế hoạch setup và bảng rủi ro khoá ở `docs/deploy-aws.md`.
 
 **Kiểm chứng đã làm (báo cáo task 12):** chạy toàn bộ stack production trên máy dev ở cổng 8081/8443: cả năm dịch vụ khỏe, `GET /api/health` qua Caddy trả `{"status":"ok","db":"up","redis":"up","ai":"fallback"}`, cookie đặt `Secure; SameSite=Lax`, trang chủ trả 200, đăng nhập tài khoản mẫu qua Caddy 200, các container chạy uid 1000.
 
