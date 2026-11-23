@@ -5,39 +5,39 @@ flowchart TB
   dev([Sinh viên: laptop, SSO + MFA])
   gh[GitHub Actions<br/>environment production, cần duyệt]
 
-  subgraph AWS[Tài khoản AWS riêng, region ap-southeast-1]
-    subgraph VPC[VPC 10.20.0.0/16, một subnet công khai]
-      subgraph EC2[EC2 t4g.small, Amazon Linux 2023<br/>SG: chỉ 80/443 vào, không SSH; IMDSv2 hop 1]
-        caddy[Caddy: HTTPS, header bảo mật]
-        web[web: Next.js, uid 1000, cap_drop ALL]
-        api[api: Express, uid 1000, cap_drop ALL]
-        pg[(postgres 16)]
-        redis[(redis 7)]
-        envf[/opt/pcbuilder/.env<br/>root 0600/]
+  subgraph AWS[Tài khoản AWS cá nhân, region ap-southeast-1]
+    cf[CloudFront<br/>HTTPS, HTTP/2-3, cache file tĩnh, header bảo mật]
+    subgraph VPC[VPC 10.20.0.0/16, 2 vùng sẵn sàng]
+      subgraph PRIV[Subnet riêng: không có đường ra Internet]
+        alb[ALB nội bộ<br/>/api/* → api, còn lại → web]
+        rds[(RDS PostgreSQL 16<br/>mã hoá, TLS, backup 7 ngày)]
+        valkey[(ElastiCache Valkey<br/>mã hoá, TLS)]
+      end
+      subgraph PUB[Subnet công khai: chỉ đi ra]
+        subgraph TASK[Task ECS Fargate ARM64, chỉ nhận từ ALB]
+          web[web: Next.js :3000<br/>uid 1000, bỏ mọi capability]
+          api[api: Express :4000<br/>uid 1000, bỏ mọi capability]
+        end
       end
     end
     ssm[(Parameter Store<br/>/pcbuilder/prod: SecureString)]
     ecr[(ECR: pcbuilder/api, pcbuilder/web<br/>tag = commit SHA, bất biến)]
-    s3[(S3 backup: chỉ ghi, có version)]
-    doc[[SSM document pcbuilder-deploy<br/>chỉ nhận commit SHA]]
-    cw[CloudWatch alarm + Budget → email]
+    cw[CloudWatch Logs, alarm, Budget → email]
   end
 
-  user -->|HTTPS 443| caddy
-  sepay -->|Authorization Apikey| caddy
-  caddy -->|/api/*| api
-  caddy --> web
-  web -.->|SSR| api
-  api --> pg
-  api --> redis
+  user -->|HTTPS| cf
+  sepay -->|Authorization Apikey| cf
+  cf -->|VPC origin| alb
+  alb --> web
+  alb --> api
+  web -.->|SSR qua 127.0.0.1| api
+  api -->|TLS, PGPASSWORD| rds
+  api -->|rediss://| valkey
   api --> gemini
-  ssm -->|render-env.sh khi deploy| envf
-  envf --> api
-  gh -->|OIDC, phiên 1 giờ| ecr
-  gh -->|ssm:SendCommand| doc
-  doc -->|deploy.sh| EC2
-  EC2 -->|kéo image| ecr
-  EC2 -->|pg_dump 2 lần/ngày| s3
-  EC2 --> cw
-  dev -->|Terraform, secrets.sh| ssm
-  dev -->|Session Manager thay SSH| EC2
+  ssm -->|ECS nạp khi task khởi động| api
+  ecr -->|kéo image| TASK
+  TASK --> cw
+  gh -->|OIDC, phiên 1 giờ: đẩy image| ecr
+  gh -->|đăng ký task definition, cập nhật service| TASK
+  dev -->|Terraform, secrets.sh, seed.sh| ssm
+  dev -->|ECS Exec thay SSH| TASK

@@ -47,7 +47,7 @@ Chưa có file test nào khớp các glob `tests:` của tính năng / node test
 
 Rà soát: có thể đã hoàn thành — cập nhật `status`.
 
-- **ADR-023** (in-progress) — Triển khai trên AWS bằng một EC2 Graviton và Docker Compose; khoá nằm ở Parameter Store, CI dùng OIDC, không có khoá dài hạn
+- **ADR-023** (in-progress) — Triển khai trên AWS bằng ECS Fargate (web + API), RDS, ElastiCache sau CloudFront; khoá ở Parameter Store, CI dùng OIDC
 
 ## Số node theo chương
 

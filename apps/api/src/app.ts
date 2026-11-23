@@ -12,7 +12,7 @@ import { createApiRouter } from './routes';
 export function createApp(deps: AppDeps): express.Express {
   const app = express();
   const isProd = deps.env.NODE_ENV === 'production';
-  app.set('trust proxy', 1);
+  app.set('trust proxy', deps.env.TRUST_PROXY_HOPS);
   app.disable('x-powered-by');
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cors({ origin: deps.env.WEB_ORIGIN.split(','), credentials: true, exposedHeaders: ['X-Cache'] }));

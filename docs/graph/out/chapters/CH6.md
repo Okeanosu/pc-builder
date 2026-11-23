@@ -26,7 +26,7 @@ Thu thập phản hồi của người dùng và kỹ thuật viên lắp ráp b
 
 ## Tính năng
 
-### F-DEPLOY — Đóng gói Docker và triển khai lên VPS / AWS EC2
+### F-DEPLOY — Đóng gói Docker và triển khai lên VPS / AWS ECS
 
 Trạng thái: **done**
 Liên kết — realizes: NFR-07 · dependsOn: M-INFRA · decidedBy: ADR-023
@@ -41,7 +41,7 @@ Liên kết — realizes: NFR-07 · dependsOn: M-INFRA · decidedBy: ADR-023
 - Cấu hình qua `infra/.env.prod` (mẫu `.env.prod.example`, bị gitignore). API production từ chối khởi động (fail-closed) nếu `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` hoặc `SEPAY_API_KEY` ngắn hơn 32 ký tự hoặc bắt đầu bằng `dev-`/`change-me`, hoặc `VIETQR_ACCOUNT_NO` còn là `0000000000`. Seed ở production bắt buộc `SEED_ADMIN_PASSWORD` (≥ 12 ký tự) cho `admin@pcbuilder.vn` và chỉ tạo tài khoản demo nhân viên/khách khi `SEED_DEMO_USERS=1`; đổi mật khẩu qua trang Tài khoản (`POST /api/auth/password`). Bản dev chỉ chạy postgres và redis bằng `infra/docker-compose.yml`.
 - `docs/deploy.md` (tiếng Việt) hướng dẫn trên Ubuntu 22.04/24.04: yêu cầu VPS, secret, khởi chạy, nạp seed thủ công một lần (seed xóa dữ liệu cũ), xin khóa Gemini, cấu hình webhook SePay `https://<DOMAIN>/api/payments/webhook/sepay` với `Authorization: Apikey <khóa>`, sao lưu `pg_dump` bằng cron.
 
-**Bản AWS (ADR-023):** cùng stack chạy trên một EC2 Graviton `t4g.small` dựng bằng Terraform (`infra/aws/terraform`); image build arm64 trên GitHub Actions, đẩy vào ECR (tag là commit SHA), deploy qua tài liệu SSM chỉ nhận commit SHA. Không có khoá AWS dài hạn: CI dùng OIDC, người vận hành dùng SSO có MFA, máy chủ dùng instance role. Khoá ứng dụng nằm trong Parameter Store (SecureString) và được ghi thành `.env` 0600 lúc deploy. Không SSH (Session Manager), IMDSv2 hop 1, container `cap_drop: ALL`, backup S3 hai lần mỗi ngày có cảnh báo khi thiếu. Kế hoạch setup và bảng rủi ro khoá ở `docs/deploy-aws.md`.
+**Bản AWS (ADR-023):** web và API là hai container trong một task ECS Fargate ARM64, nằm sau một ALB nội bộ. Đường vào duy nhất là CloudFront qua VPC origin, nên web và API dùng chung một tên miền và cookie giữ nguyên. Dữ liệu ở RDS PostgreSQL 16 và ElastiCache Valkey (subnet riêng, mã hoá, TLS). Hạ tầng dựng bằng Terraform (`infra/aws/terraform`). Image build arm64 trên GitHub Actions, đẩy vào ECR (tag là commit SHA), deploy bằng `scripts/ecs-deploy.sh` (rolling, có circuit breaker). Không có khoá AWS dài hạn: CI dùng OIDC, người vận hành dùng SSO có MFA. Khoá ứng dụng nằm trong Parameter Store và được ECS nạp vào lúc task khởi động. API đọc `TRUST_PROXY_HOPS=2` để giới hạn tần suất theo IP thật của khách. Kế hoạch setup, cách thêm tài khoản AWS cá nhân bên cạnh tài khoản công ty, và bảng rủi ro khoá ở `docs/deploy-aws.md`.
 
 **Kiểm chứng đã làm (báo cáo task 12):** chạy toàn bộ stack production trên máy dev ở cổng 8081/8443: cả năm dịch vụ khỏe, `GET /api/health` qua Caddy trả `{"status":"ok","db":"up","redis":"up","ai":"fallback"}`, cookie đặt `Secure; SameSite=Lax`, trang chủ trả 200, đăng nhập tài khoản mẫu qua Caddy 200, các container chạy uid 1000.
 
@@ -96,42 +96,42 @@ flowchart TB
   dev([Sinh viên: laptop, SSO + MFA])
   gh[GitHub Actions<br/>environment production, cần duyệt]
 
-  subgraph AWS[Tài khoản AWS riêng, region ap-southeast-1]
-    subgraph VPC[VPC 10.20.0.0/16, một subnet công khai]
-      subgraph EC2[EC2 t4g.small, Amazon Linux 2023<br/>SG: chỉ 80/443 vào, không SSH; IMDSv2 hop 1]
-        caddy[Caddy: HTTPS, header bảo mật]
-        web[web: Next.js, uid 1000, cap_drop ALL]
-        api[api: Express, uid 1000, cap_drop ALL]
-        pg[(postgres 16)]
-        redis[(redis 7)]
-        envf[/opt/pcbuilder/.env<br/>root 0600/]
+  subgraph AWS[Tài khoản AWS cá nhân, region ap-southeast-1]
+    cf[CloudFront<br/>HTTPS, HTTP/2-3, cache file tĩnh, header bảo mật]
+    subgraph VPC[VPC 10.20.0.0/16, 2 vùng sẵn sàng]
+      subgraph PRIV[Subnet riêng: không có đường ra Internet]
+        alb[ALB nội bộ<br/>/api/* → api, còn lại → web]
+        rds[(RDS PostgreSQL 16<br/>mã hoá, TLS, backup 7 ngày)]
+        valkey[(ElastiCache Valkey<br/>mã hoá, TLS)]
+      end
+      subgraph PUB[Subnet công khai: chỉ đi ra]
+        subgraph TASK[Task ECS Fargate ARM64, chỉ nhận từ ALB]
+          web[web: Next.js :3000<br/>uid 1000, bỏ mọi capability]
+          api[api: Express :4000<br/>uid 1000, bỏ mọi capability]
+        end
       end
     end
     ssm[(Parameter Store<br/>/pcbuilder/prod: SecureString)]
     ecr[(ECR: pcbuilder/api, pcbuilder/web<br/>tag = commit SHA, bất biến)]
-    s3[(S3 backup: chỉ ghi, có version)]
-    doc[[SSM document pcbuilder-deploy<br/>chỉ nhận commit SHA]]
-    cw[CloudWatch alarm + Budget → email]
+    cw[CloudWatch Logs, alarm, Budget → email]
   end
 
-  user -->|HTTPS 443| caddy
-  sepay -->|Authorization Apikey| caddy
-  caddy -->|/api/*| api
-  caddy --> web
-  web -.->|SSR| api
-  api --> pg
-  api --> redis
+  user -->|HTTPS| cf
+  sepay -->|Authorization Apikey| cf
+  cf -->|VPC origin| alb
+  alb --> web
+  alb --> api
+  web -.->|SSR qua 127.0.0.1| api
+  api -->|TLS, PGPASSWORD| rds
+  api -->|rediss://| valkey
   api --> gemini
-  ssm -->|render-env.sh khi deploy| envf
-  envf --> api
-  gh -->|OIDC, phiên 1 giờ| ecr
-  gh -->|ssm:SendCommand| doc
-  doc -->|deploy.sh| EC2
-  EC2 -->|kéo image| ecr
-  EC2 -->|pg_dump 2 lần/ngày| s3
-  EC2 --> cw
-  dev -->|Terraform, secrets.sh| ssm
-  dev -->|Session Manager thay SSH| EC2
+  ssm -->|ECS nạp khi task khởi động| api
+  ecr -->|kéo image| TASK
+  TASK --> cw
+  gh -->|OIDC, phiên 1 giờ: đẩy image| ecr
+  gh -->|đăng ký task definition, cập nhật service| TASK
+  dev -->|Terraform, secrets.sh, seed.sh| ssm
+  dev -->|ECS Exec thay SSH| TASK
 ```
 
 ### F-UAT-SURVEY — Khảo sát người dùng (UAT) và hiệu chỉnh trọng số theo phản hồi
@@ -177,57 +177,71 @@ Trạng thái: **done**
 
 **Code:** `apps/api/eval/run-eval.ts`, `apps/api/eval/golden-set.json`, `apps/api/eval/results.md`, `apps/api/eval/smoke-gemini.ts`
 
-### ADR-023 — Triển khai trên AWS bằng một EC2 Graviton và Docker Compose; khoá nằm ở Parameter Store, CI dùng OIDC, không có khoá dài hạn
+### ADR-023 — Triển khai trên AWS bằng ECS Fargate (web + API), RDS, ElastiCache sau CloudFront; khoá ở Parameter Store, CI dùng OIDC
 
 Trạng thái: **in-progress**
 
-**Bối cảnh:** phiếu giao nhiệm vụ yêu cầu đóng gói Docker và triển khai trên máy chủ đám mây (NFR-07). Stack Docker Compose của `docs/deploy.md` đã chạy được trên một VPS bất kỳ. Cần chọn nơi chạy thật với chi phí thấp nhất cho một đồ án, nhưng không đánh đổi an toàn của các khoá. Lộ khoá JWT cho phép giả token admin, lộ khoá SePay cho phép đánh dấu đơn đã thanh toán, lộ quyền AWS cho phép người khác tạo máy trên tài khoản của sinh viên. Máy phát triển còn có sẵn profile AWS của công ty (shell đặt `AWS_PROFILE=aircloset`), nên có nguy cơ thật là chạy nhầm vào tài khoản đó.
+**Bối cảnh:** phiếu giao nhiệm vụ yêu cầu triển khai trên máy chủ đám mây (NFR-07). Tài khoản AWS sẵn có trên máy phát triển là của công ty (profile `aircloset`, shell đặt sẵn `AWS_PROFILE=aircloset`) nên không được dùng; cần một tài khoản cá nhân riêng. Sinh viên muốn cả frontend và backend nằm trên AWS, chạy bằng ECS để đỡ phải tự vận hành máy chủ. Các khoá phải an toàn: lộ khoá JWT cho phép giả token admin, lộ khoá SePay cho phép đánh dấu đơn đã thanh toán, lộ quyền AWS cho phép người khác tạo tài nguyên tính tiền.
+
+Đã cân nhắc hai phương án:
+- **Một EC2 chạy Docker Compose** (commit `18795c2`, khoảng 22 USD/tháng): rẻ, nhưng phải tự vá hệ điều hành và tự lo backup.
+- **Frontend trên Vercel, backend trên ECS:** web và API khác tên miền, nên cookie `SameSite=Lax` không còn được gửi kèm; muốn dùng thì phải sửa cơ chế đăng nhập.
 
 **Quyết định:**
 
-- **Hạ tầng** (`infra/aws/terraform`): một máy EC2 `t4g.small` (2 vCPU ARM, 2 GiB, khoảng 15,5 USD/tháng ở Singapore) chạy nguyên stack Compose, trong một VPC một subnet công khai. Không dùng NAT, load balancer hay RDS vì mỗi thứ tốn hơn chính máy chủ.
-- **Đường deploy:** image api và web build arm64 trên GitHub Actions, đẩy vào ECR với tag là commit SHA, không ghi đè được. Máy chủ nhận lệnh deploy qua tài liệu SSM `pcbuilder-deploy`. Tài liệu này chỉ nhận một commit SHA; nó ghi lại các tệp stack rồi gọi `deploy.sh`.
-- **Không có khoá dài hạn ở đâu cả:**
-  - người vận hành đăng nhập bằng IAM Identity Center có MFA;
-  - GitHub đổi token OIDC lấy phiên 1 giờ, và chỉ job trong environment `production` của đúng repo mới được;
-  - máy chủ dùng instance role.
-- **Khoá ứng dụng:** nằm ở Parameter Store dạng SecureString. `scripts/secrets.sh` sinh khoá tại chỗ hoặc nhận nhập ẩn rồi gửi thẳng lên AWS, nên khoá không đi qua Terraform state, git, CI, user data hay tham số lệnh. Mỗi lần deploy, máy chủ dựng lại `.env` (root, 0600).
-- **Quyền tối thiểu:**
-  - role CI chỉ được đẩy image và chạy đúng tài liệu deploy trên đúng máy, không được `AWS-RunShellScript`;
-  - role máy chủ bị chặn đọc tham số ngoài `/pcbuilder/prod`, và chỉ được ghi backup, không đọc hay xoá được.
-- **Hàng rào chống nhầm tài khoản:** provider khai báo `allowed_account_ids`; script trên laptop bỏ qua `AWS_PROFILE` của shell và kiểm tra số tài khoản trước khi chạy.
-- **Cứng hoá máy chủ:**
-  - không SSH, chỉ Session Manager;
-  - chỉ mở 80/443;
-  - IMDSv2 với hop limit 1, để container không lấy được credential của máy;
-  - container chạy không phải root, `cap_drop: ALL`, `no-new-privileges`;
-  - CPU credit `standard`, để máy bị chiếm cũng không đẩy được hoá đơn lên.
-- **Dữ liệu và giám sát:**
-  - backup `pg_dump` lên S3 có version hai lần mỗi ngày, cảnh báo khi quá 24 giờ không có bản mới;
-  - snapshot ổ đĩa hằng ngày;
-  - tự phục hồi khi máy hỏng;
-  - budget gửi email.
+- **Một tên miền, một điểm vào:** CloudFront chuyển request tới một ALB **nội bộ** qua VPC origin. ALB chia `/api/*` cho container api, phần còn lại cho container web. Web và API vẫn cùng tên miền nên cookie hoạt động như cũ. Không có load balancer hay máy chủ nào có IP công khai nhận request.
+- **Ứng dụng:** web và api là hai container trong **một task Fargate ARM64**. Server-side rendering gọi API qua `127.0.0.1`, đỡ thêm một IP công khai.
+  - Task nằm ở subnet công khai chỉ để đi ra (ECR, Gemini). Nhờ vậy không cần NAT gateway, vốn khoảng 45 USD/tháng.
+  - Security group của task chỉ nhận kết nối từ ALB.
+- **Dữ liệu:** RDS PostgreSQL 16 (`db.t4g.micro`) và ElastiCache Valkey (`cache.t4g.micro`), cả hai ở subnet không có đường ra, mã hoá khi lưu và khi truyền.
+  - Ứng dụng kết nối bằng `sslmode=require` và `rediss://`.
+  - Mật khẩu DB nạp vào biến `PGPASSWORD` (postgres.js tự đọc), nên `DATABASE_URL` không chứa bí mật.
+- **Không có khoá dài hạn:**
+  - người vận hành dùng SSO có MFA;
+  - GitHub dùng OIDC, chỉ job trong environment `production` của đúng repo mới được;
+  - role CI chỉ đẩy được image vào 2 repo ECR, cập nhật đúng một service, và chỉ chuyển được 2 role của task.
+- **Khoá ứng dụng:** nằm ở Parameter Store (SecureString), ECS nạp vào lúc task khởi động. Task definition chỉ chứa ARN của tham số.
+  - `scripts/secrets.sh` sinh khoá tại chỗ hoặc nhận nhập ẩn, gửi qua tệp tạm.
+  - Riêng mật khẩu DB, script đổi trên RDS trước rồi mới ghi vào Parameter Store. Mật khẩu khởi tạo trong `terraform.tfstate` vì thế không còn dùng được.
+  - Mật khẩu admin dùng cho seed chỉ tồn tại trong Parameter Store đúng lúc task seed chạy.
+- **Hàng rào chống nhầm tài khoản:** Terraform khai báo `allowed_account_ids`; script bỏ qua `AWS_PROFILE` của shell và kiểm tra số tài khoản; direnv tự đổi profile theo thư mục.
+- **Thay đổi trong ứng dụng:**
+  - `TRUST_PROXY_HOPS`: phía sau CloudFront và ALB có 2 proxy, để giới hạn tần suất tính theo IP thật của khách.
+  - `GEMINI_API_KEY=disabled` được hiểu là không có khoá, vì SecureString không được rỗng.
+- **Vận hành:**
+  - deploy theo kiểu rolling, có circuit breaker tự quay về bản trước;
+  - rollback bằng một lệnh, dùng commit SHA;
+  - ECS Exec thay cho SSH;
+  - RDS sao lưu 7 ngày, khôi phục được về thời điểm bất kỳ;
+  - cảnh báo khi không còn container khoẻ, khi DB sắp đầy, và khi vượt ngân sách.
 
 **Hệ quả:**
 
-- Chi phí khoảng 22–23 USD/tháng.
-- Một máy nên vẫn có thời gian chết khi khởi động lại; chấp nhận được với đồ án.
-- Đổi khoá chỉ cần hai lệnh (`secrets.sh rotate`, `ssm-deploy.sh current`). Riêng mật khẩu Postgres, `deploy.sh` tự đặt lại cho role qua stdin trước khi API khởi động.
+- Chi phí khoảng 77–82 USD/tháng, gồm Fargate 18, ALB khoảng 20, RDS 21, Valkey 14, IPv4 3,7 (giá Singapore ngày 20/11/2026). Gấp khoảng 3,5 lần phương án EC2, nhưng không phải tự vận hành máy chủ.
+- Credit 200 USD của tài khoản mới đủ dùng tới buổi bảo vệ.
+- Một task nên khi deploy có hai task chạy song song trong thời gian ngắn. Migration vẫn chỉ do task mới chạy.
 
 **Đã kiểm chứng trên máy phát triển (20/11/2026):**
 
-- `terraform validate` đạt; trivy không còn cảnh báo, 4 điểm chấp nhận có chủ ý được ghi lý do trong code; shellcheck và actionlint sạch.
-- Chạy `infra/aws/compose.yml` với image arm64 build tại chỗ:
-  - cả 5 service khoẻ;
-  - api và web chạy uid 1000, không có capability; Caddy chỉ giữ `NET_BIND_SERVICE`;
-  - header bảo mật có đủ, `Server` bị ẩn;
-  - seed nhận mật khẩu qua `-e NAME` và admin đăng nhập được;
-  - chat SSE qua Caddy trả `text/event-stream` không nén;
-  - đổi mật khẩu Postgres theo cách của `deploy.sh` vẫn giữ nguyên 240 sản phẩm.
-- `secrets.sh` thử với một lệnh `aws` giả: từ chối khi sai số tài khoản, bỏ qua `AWS_PROFILE=aircloset`, và không giá trị khoá nào xuất hiện trong tham số dòng lệnh.
+- `terraform validate` đạt; trivy không còn cảnh báo, các điểm chấp nhận có chủ ý được ghi lý do trong code; shellcheck và actionlint sạch; 584/584 test API đạt.
+- Mô phỏng task bằng Docker:
+  - api và web dùng chung mạng như một task Fargate, cả hai uid 1000 và không có capability;
+  - API kết nối PostgreSQL chỉ nhận SSL qua TLS 1.3 bằng `PGPASSWORD`;
+  - `GEMINI_API_KEY=disabled` cho chế độ fallback;
+  - seed bằng container chạy một lần thì admin đăng nhập được;
+  - web render phía server gọi API qua `127.0.0.1`;
+  - chat SSE kết thúc bằng `done`;
+  - với 2 proxy, giới hạn đăng nhập chặn đúng một khách sau 5 lần, và giả mạo phần đầu `X-Forwarded-For` không có tác dụng.
+- Script thử với một lệnh `aws` giả:
+  - từ chối khi sai tài khoản, bỏ qua `AWS_PROFILE=aircloset`;
+  - đổi mật khẩu RDS trước rồi mới ghi Parameter Store, hai giá trị khớp nhau;
+  - không giá trị khoá nào lọt vào tham số dòng lệnh;
+  - `ecs-deploy.sh` thay đúng tag image của cả hai container.
 
-**Chưa kiểm chứng:** chạy `terraform apply` trên tài khoản AWS thật, chứng chỉ Let's Encrypt thật, và workflow GitHub chạy thật. Các bước này cần tài khoản AWS riêng của sinh viên; kế hoạch ở `docs/deploy-aws.md` mục 3.
+**Chưa kiểm chứng:** `terraform apply` trên tài khoản AWS thật, CloudFront VPC origin, TLS của ElastiCache với ioredis, và workflow GitHub chạy thật. Kế hoạch ở `docs/deploy-aws.md`.
 
-**Code:** `infra/aws/**`, `.github/workflows/deploy-aws.yml`, `docs/deploy-aws.md`
+**Code:** `infra/aws/**`, `.github/workflows/deploy-aws.yml`, `docs/deploy-aws.md`, `apps/api/src/config/env.ts`, `apps/api/src/app.ts`
+
+**Test:** `apps/api/src/config/env.test.ts`, `apps/api/src/app.test.ts`
 
 **Sơ đồ:** `docs/diagrams/deployment-aws.mmd` (đã nêu ở trên trong chương này)

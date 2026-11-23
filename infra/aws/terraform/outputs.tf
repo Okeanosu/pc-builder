@@ -1,11 +1,11 @@
-output "public_ip" {
-  description = "Elastic IP of the server. Point the domain's A record here."
-  value       = aws_eip.app.public_ip
+output "site_url" {
+  description = "Public address of the shop."
+  value       = "https://${local.site_domain}"
 }
 
-output "instance_id" {
-  description = "EC2 instance ID (GitHub variable AWS_INSTANCE_ID; target of aws ssm start-session)."
-  value       = aws_instance.app.id
+output "cloudfront_domain" {
+  description = "CloudFront host name. With a custom domain, point a CNAME (or ALIAS) record at it."
+  value       = aws_cloudfront_distribution.site.domain_name
 }
 
 output "github_variables" {
@@ -13,18 +13,17 @@ output "github_variables" {
   value = {
     AWS_REGION          = var.region
     AWS_DEPLOY_ROLE_ARN = aws_iam_role.github_deploy.arn
-    AWS_INSTANCE_ID     = aws_instance.app.id
     ECR_REGISTRY        = local.registry
-    DOMAIN              = var.domain
+    DOMAIN              = local.site_domain
   }
 }
 
 output "parameter_path" {
-  description = "Parameter Store path that holds the settings and secrets."
+  description = "Parameter Store path that holds the secrets."
   value       = local.param_path
 }
 
-output "backup_bucket" {
-  description = "S3 bucket with the database dumps."
-  value       = aws_s3_bucket.backups.bucket
+output "database" {
+  description = "RDS instance identifier (backups: RDS console > Automated backups)."
+  value       = aws_db_instance.main.identifier
 }

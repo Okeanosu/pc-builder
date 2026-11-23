@@ -11,52 +11,37 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.alert_email
 }
 
-# Hardware or host failure: AWS moves the instance to healthy hardware (same IP, same disk) and emails.
-resource "aws_cloudwatch_metric_alarm" "system_check" {
-  alarm_name          = "${local.name}-system-check-failed"
-  alarm_description   = "AWS host problem; the instance is being recovered automatically."
-  namespace           = "AWS/EC2"
-  metric_name         = "StatusCheckFailed_System"
-  dimensions          = { InstanceId = aws_instance.app.id }
+# No healthy web or api container behind the load balancer for 5 minutes: the site is down. ECS replaces failed
+# tasks by itself; this tells you when that is not enough. Expected to fire until the first deploy.
+resource "aws_cloudwatch_metric_alarm" "no_healthy_target" {
+  for_each = aws_lb_target_group.app
+
+  alarm_name          = "${local.name}-${each.key}-down"
+  alarm_description   = "No healthy ${each.key} container behind the load balancer."
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "HealthyHostCount"
+  dimensions          = { TargetGroup = each.value.arn_suffix, LoadBalancer = aws_lb.main.arn_suffix }
   statistic           = "Maximum"
   period              = 60
-  evaluation_periods  = 2
-  threshold           = 1
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  alarm_actions       = ["arn:aws:automate:${var.region}:ec2:recover", aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
-}
-
-# The OS stopped answering (out of memory, kernel hang): reboot it and email.
-resource "aws_cloudwatch_metric_alarm" "instance_check" {
-  alarm_name          = "${local.name}-instance-check-failed"
-  alarm_description   = "The server OS is unresponsive; it is being rebooted."
-  namespace           = "AWS/EC2"
-  metric_name         = "StatusCheckFailed_Instance"
-  dimensions          = { InstanceId = aws_instance.app.id }
-  statistic           = "Maximum"
-  period              = 60
-  evaluation_periods  = 3
-  threshold           = 1
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  alarm_actions       = ["arn:aws:automate:${var.region}:ec2:reboot", aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
-}
-
-# backup.sh reports each successful dump. No report in 24 hours (failed dump, stopped timer, dead server) is an
-# alarm, so a broken backup cannot go unnoticed. It is expected to fire until the first deploy.
-resource "aws_cloudwatch_metric_alarm" "backup_missing" {
-  alarm_name          = "${local.name}-backup-missing"
-  alarm_description   = "No successful database dump to S3 in the last 24 hours."
-  namespace           = local.metric_namespace
-  metric_name         = "BackupSucceeded"
-  statistic           = "Sum"
-  period              = 3600
-  evaluation_periods  = 24
-  datapoints_to_alarm = 24
+  evaluation_periods  = 5
   threshold           = 1
   comparison_operator = "LessThanThreshold"
   treat_missing_data  = "breaching"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_storage" {
+  alarm_name          = "${local.name}-db-storage-low"
+  alarm_description   = "Less than 2 GB free on the database (storage autoscaling may already be growing it)."
+  namespace           = "AWS/RDS"
+  metric_name         = "FreeStorageSpace"
+  dimensions          = { DBInstanceIdentifier = aws_db_instance.main.identifier }
+  statistic           = "Minimum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 2 * 1024 * 1024 * 1024
+  comparison_operator = "LessThanThreshold"
   alarm_actions       = [aws_sns_topic.alerts.arn]
   ok_actions          = [aws_sns_topic.alerts.arn]
 }

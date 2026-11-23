@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "github_trust" {
 
 resource "aws_iam_role" "github_deploy" {
   name                 = "${local.name}-github-deploy"
-  description          = "GitHub Actions: push images to ECR and run the deploy document on the server"
+  description          = "GitHub Actions: push images to ECR and roll the ECS service to them"
   assume_role_policy   = data.aws_iam_policy_document.github_trust.json
   max_session_duration = 3600
 }
@@ -78,21 +78,29 @@ data "aws_iam_policy_document" "github_deploy" {
     resources = [for repo in aws_ecr_repository.app : repo.arn]
   }
 
-  # Only the deploy document, only on this server. The generic AWS-RunShellScript document is not allowed, so a
-  # leaked workflow cannot run arbitrary commands as root; the document only accepts a commit SHA.
+  # Registering task definitions has no resource-level permission in IAM; what a revision can do is bounded by the
+  # two roles it may pass (below) and by the one service it may be deployed to.
   statement {
-    sid     = "RunDeployDocument"
-    actions = ["ssm:SendCommand"]
-    resources = [
-      aws_ssm_document.deploy.arn,
-      "arn:aws:ec2:${var.region}:${local.account_id}:instance/${aws_instance.app.id}",
-    ]
+    sid       = "TaskDefinitions"
+    actions   = ["ecs:DescribeTaskDefinition", "ecs:RegisterTaskDefinition"]
+    resources = ["*"]
   }
 
   statement {
-    sid       = "ReadDeployResult"
-    actions   = ["ssm:GetCommandInvocation", "ssm:ListCommandInvocations"]
-    resources = ["*"]
+    sid       = "DeployService"
+    actions   = ["ecs:UpdateService", "ecs:DescribeServices"]
+    resources = [aws_ecs_service.app.id]
+  }
+
+  statement {
+    sid       = "PassTaskRoles"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.execution.arn, aws_iam_role.task.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
   }
 }
 

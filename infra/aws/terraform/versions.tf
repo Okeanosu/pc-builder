@@ -6,10 +6,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
-  # State stays on the operator's machine (gitignored). It holds resource IDs only: secret values are written to
-  # Parameter Store by scripts/secrets.sh and never pass through Terraform.
+  # State stays on the operator's machine (gitignored). Secret values are written to Parameter Store by
+  # scripts/secrets.sh and never pass through Terraform (see rds.tf for the one bootstrap password).
 }
 
 provider "aws" {

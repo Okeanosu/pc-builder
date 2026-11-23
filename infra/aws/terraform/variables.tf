@@ -1,5 +1,5 @@
 variable "aws_account_id" {
-  description = "12-digit ID of the dedicated AWS account for this project. Terraform refuses to touch any other account."
+  description = "12-digit ID of the dedicated personal AWS account. Terraform refuses to touch any other account."
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "aws_account_id" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile (IAM Identity Center / SSO) used to run Terraform."
+  description = "AWS CLI profile (IAM Identity Center / SSO) of the personal account."
   type        = string
   default     = "pcbuilder"
 }
@@ -20,35 +20,55 @@ variable "region" {
   default     = "ap-southeast-1"
 }
 
-variable "domain" {
-  description = "Public host name of the shop, e.g. shop.example.com. Its A record must point at the Elastic IP."
+variable "custom_domain" {
+  description = "Optional own host name (e.g. shop.example.com). Empty = use the CloudFront domain (d123.cloudfront.net)."
   type        = string
+  default     = ""
+}
+
+variable "custom_domain_certificate_arn" {
+  description = "ACM certificate for custom_domain, issued in us-east-1 (CloudFront only reads certificates from there)."
+  type        = string
+  default     = ""
 
   validation {
-    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$", var.domain))
-    error_message = "domain must be a lowercase host name such as shop.example.com (no scheme, no port)."
+    condition     = var.custom_domain_certificate_arn == "" || can(regex("^arn:aws:acm:us-east-1:", var.custom_domain_certificate_arn))
+    error_message = "The certificate must be in us-east-1."
   }
 }
 
-variable "instance_type" {
-  description = "Graviton (arm64) instance type. t4g.small (2 vCPU, 2 GiB) is the smallest that runs the whole stack."
-  type        = string
-  default     = "t4g.small"
-
-  validation {
-    condition     = can(regex("^[a-z]+[0-9]+g[a-z]*\\.", var.instance_type))
-    error_message = "Images are built for arm64, so instance_type must be a Graviton type (t4g, m7g, c7g, ...)."
-  }
+variable "task_cpu" {
+  description = "Fargate CPU units for the task running web + api (512 = 0.5 vCPU). Raise to 1024 if pages feel slow."
+  type        = number
+  default     = 512
 }
 
-variable "root_volume_gb" {
-  description = "Size of the encrypted gp3 root volume (OS, Docker images, database, logs)."
+variable "task_memory" {
+  description = "Fargate memory (MiB) for the task running web + api."
+  type        = number
+  default     = 1024
+}
+
+variable "db_instance_class" {
+  description = "RDS PostgreSQL instance class."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_storage_gb" {
+  description = "RDS storage (gp3)."
   type        = number
   default     = 20
 }
 
-variable "termination_protection" {
-  description = "Block accidental termination of the server. Set to false (and apply) before terraform destroy."
+variable "cache_node_type" {
+  description = "ElastiCache Valkey node type."
+  type        = string
+  default     = "cache.t4g.micro"
+}
+
+variable "deletion_protection" {
+  description = "Block deleting the database and load balancer. Set to false (and apply) before terraform destroy."
   type        = bool
   default     = true
 }
@@ -72,35 +92,21 @@ variable "create_github_oidc_provider" {
 }
 
 variable "alert_email" {
-  description = "Email that receives alarms (server down, backup missing) and budget warnings."
+  description = "Email that receives alarms (site down, database disk) and budget warnings."
   type        = string
 }
 
 variable "monthly_budget_usd" {
   description = "Monthly cost budget. Email at 80% of actual spend and when the forecast passes 100%."
   type        = number
-  default     = 25
+  default     = 100
 }
 
-variable "backup_retention_days" {
-  description = "Days to keep database dumps in S3."
-  type        = number
-  default     = 30
-}
-
-variable "snapshot_retention_count" {
-  description = "Number of daily EBS snapshots of the server disk to keep."
-  type        = number
-  default     = 7
-}
-
-# Non-secret application settings. They are stored as plain String parameters next to the secrets.
+# Non-secret API settings, passed to the container as plain environment variables.
 variable "app_settings" {
-  description = "Non-secret API settings written to Parameter Store (see apps/api/src/config/env.ts)."
+  description = "Non-secret API settings (see apps/api/src/config/env.ts)."
   type        = map(string)
   default = {
-    POSTGRES_USER       = "pc"
-    POSTGRES_DB         = "pcbuilder"
     ASSEMBLY_FEE        = "200000"
     ORDER_HOLD_MINUTES  = "15"
     GEMINI_MODEL        = "gemini-flash-latest"
@@ -109,12 +115,12 @@ variable "app_settings" {
     VIETQR_ACCOUNT_NAME = "PC BUILDER STORE"
   }
 
-  # Secrets set here would end up in plain text in terraform.tfstate.
+  # Secrets set here would end up in plain text in terraform.tfstate and in the task definition.
   validation {
     condition = alltrue([
       for key in keys(var.app_settings) : can(regex("^[A-Z][A-Z0-9_]*$", key)) && !contains([
-        "POSTGRES_PASSWORD", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "SEPAY_API_KEY", "GEMINI_API_KEY",
-        "VIETQR_ACCOUNT_NO", "DOMAIN",
+        "POSTGRES_PASSWORD", "PGPASSWORD", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "SEPAY_API_KEY",
+        "GEMINI_API_KEY", "VIETQR_ACCOUNT_NO", "DATABASE_URL", "REDIS_URL", "SEED_ADMIN_PASSWORD",
       ], key)
     ])
     error_message = "app_settings must not contain secrets (use scripts/secrets.sh) and keys must be UPPER_SNAKE_CASE."

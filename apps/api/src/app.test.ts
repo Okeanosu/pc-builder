@@ -19,3 +19,10 @@ describe('GET /api/health', () => {
     expect(res.body.error.code).toBe('ROUTE_NOT_FOUND');
   });
 });
+
+describe('proxy trust', () => {
+  it('trusts as many proxy hops as TRUST_PROXY_HOPS, so rate limits key on the visitor IP', () => {
+    const app = createApp({ ...t.deps, env: { ...t.deps.env, TRUST_PROXY_HOPS: 2 } });
+    expect(app.get('trust proxy')).toBe(2);
+  });
+});

@@ -23,3 +23,6 @@ infra/aws/terraform/*.tfstate.*
 infra/aws/terraform/*.tfplan
 infra/aws/terraform/terraform.tfvars
 infra/aws/terraform/crash.log
+# direnv: per-directory AWS_PROFILE for the personal account (docs/deploy-aws.md, section 0)
+.envrc
+__pycache__/

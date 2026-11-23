@@ -48,3 +48,16 @@ describe('loadEnv fails closed in production', () => {
     expect(loadEnv({ NODE_ENV: 'test' }).JWT_REFRESH_SECRET).toBe('dev-refresh-secret');
   });
 });
+
+describe('deployment settings', () => {
+  it('trusts one proxy hop by default and reads TRUST_PROXY_HOPS (CloudFront + ALB = 2)', () => {
+    expect(loadEnv({ NODE_ENV: 'test' }).TRUST_PROXY_HOPS).toBe(1);
+    expect(loadEnv({ NODE_ENV: 'test', TRUST_PROXY_HOPS: '2' }).TRUST_PROXY_HOPS).toBe(2);
+    expect(() => loadEnv({ NODE_ENV: 'test', TRUST_PROXY_HOPS: '-1' })).toThrow();
+  });
+
+  it('treats GEMINI_API_KEY=disabled as no key, so the chatbot runs rule-based', () => {
+    expect(loadEnv({ NODE_ENV: 'test', GEMINI_API_KEY: 'disabled' }).GEMINI_API_KEY).toBe('');
+    expect(loadEnv({ NODE_ENV: 'test', GEMINI_API_KEY: 'AIza-key' }).GEMINI_API_KEY).toBe('AIza-key');
+  });
+});

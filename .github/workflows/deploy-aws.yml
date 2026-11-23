@@ -1,4 +1,4 @@
-# Builds the api and web images for arm64, pushes them to ECR and deploys them on the AWS server.
+# Builds the api and web images for arm64, pushes them to ECR and rolls the ECS service to them.
 # No AWS keys are stored in GitHub: the job gets one-hour credentials through OIDC, and only when it runs in the
 # protected "production" environment (see docs/deploy-aws.md). Third-party actions are pinned to commit SHAs.
 name: Deploy (AWS)
@@ -56,7 +56,6 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
       DOMAIN: ${{ vars.DOMAIN }}
-      INSTANCE_ID: ${{ vars.AWS_INSTANCE_ID }}
       REQUESTED_TAG: ${{ inputs.image_tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -130,10 +129,10 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-      - name: Deploy on the server
+      - name: Roll the ECS service
         env:
           TAG: ${{ steps.tag.outputs.value }}
-        run: infra/aws/scripts/ssm-deploy.sh "$INSTANCE_ID" "$TAG"
+        run: infra/aws/scripts/ecs-deploy.sh "$TAG"
 
       - name: Check the public site
         run: |

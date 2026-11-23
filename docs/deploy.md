@@ -2,7 +2,7 @@
 
 Toàn bộ hệ thống (web, api, postgres, redis, caddy) được đóng gói bằng Docker và chạy bằng một file Docker Compose duy nhất: `infra/docker-compose.prod.yml`.
 
-> Triển khai lên **AWS** (một EC2 dựng bằng Terraform, CI/CD qua GitHub Actions, khoá trong Parameter Store): xem [`docs/deploy-aws.md`](deploy-aws.md). Tài liệu này dành cho một VPS bất kỳ.
+> Triển khai lên **AWS** (ECS Fargate, RDS, ElastiCache, CloudFront, dựng bằng Terraform, CI/CD qua GitHub Actions, khoá trong Parameter Store): xem [`docs/deploy-aws.md`](deploy-aws.md). Tài liệu này dành cho một VPS bất kỳ.
 
 ```
 Internet ──► Caddy (80/443, HTTPS tự động)

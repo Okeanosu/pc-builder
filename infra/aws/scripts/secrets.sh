@@ -13,7 +13,7 @@ Usage: infra/aws/scripts/secrets.sh <command> [NAME]
   copy NAME     copy a value to the clipboard (SEPAY_API_KEY for the SePay dashboard)
   list          names, types and dates; never values
 Profile, region and account come from terraform.tfvars (a shell AWS_PROFILE is ignored); other accounts are refused.
-Apply a change on the server with: infra/aws/scripts/ssm-deploy.sh <instance-id> current
+Running tasks keep the old values until: infra/aws/scripts/ecs-deploy.sh current
 EOF
 }
 
@@ -44,8 +44,18 @@ put() {
   local name=$1 value=$2 dir status=0
   dir=$(mktemp -d)
   printf '%s' "$value" >"$dir/value"
-  aws ssm put-parameter --name "$PARAM_PATH/$name" --type SecureString --value "file://$dir/value" --overwrite \
-    >/dev/null || status=$?
+  # The database password lives in RDS too. Change it there first, so Parameter Store never holds a password the
+  # database would reject.
+  if [[ $name == POSTGRES_PASSWORD ]]; then
+    echo "  setting the RDS master password (about a minute)..."
+    aws rds modify-db-instance --db-instance-identifier pcbuilder --master-user-password "file://$dir/value" \
+      --apply-immediately >/dev/null && aws rds wait db-instance-available --db-instance-identifier pcbuilder ||
+      status=$?
+  fi
+  if ((status == 0)); then
+    aws ssm put-parameter --name "$PARAM_PATH/$name" --type SecureString --value "file://$dir/value" --overwrite \
+      >/dev/null || status=$?
+  fi
   rm -rf "$dir"
   return "$status"
 }
@@ -56,15 +66,15 @@ validate() {
     VIETQR_ACCOUNT_NO)
       [[ $value =~ ^[0-9]{6,19}$ ]] || { echo "$name must be 6-19 digits." >&2; return 1; } ;;
     POSTGRES_PASSWORD)
-      # It is embedded unescaped in DATABASE_URL.
-      [[ $value =~ ^[A-Za-z0-9._~-]{24,}$ ]] || {
-        echo "$name must be 24+ characters of A-Z a-z 0-9 . _ ~ -" >&2
+      # RDS refuses / " @ and spaces in a master password.
+      [[ $value =~ ^[A-Za-z0-9._~-]{24,128}$ ]] || {
+        echo "$name must be 24-128 characters of A-Z a-z 0-9 . _ ~ -" >&2
         return 1
       } ;;
     JWT_ACCESS_SECRET | JWT_REFRESH_SECRET | SEPAY_API_KEY)
       ((${#value} >= 32)) || { echo "$name must be at least 32 characters (the API refuses shorter)." >&2; return 1; } ;;
   esac
-  [[ $value != *"'"* && $value != *$'\n'* ]] || { echo "$name cannot contain a quote or a newline." >&2; return 1; }
+  [[ $value != *$'\n'* ]] || { echo "$name cannot contain a newline." >&2; return 1; }
 }
 
 ask() {
@@ -76,7 +86,9 @@ ask() {
     echo
   fi
   if [[ -z $value && $name == GEMINI_API_KEY ]]; then
-    echo "  $name: skipped (chatbot runs rule-based until it is set)"
+    # ECS needs the parameter to exist and a SecureString cannot be empty; the API reads "disabled" as no key.
+    put "$name" disabled
+    echo "  $name: disabled (chatbot runs rule-based until it is set)"
     return 0
   fi
   validate "$name" "$value"
@@ -114,7 +126,7 @@ case $command in
     in_list "$name" "${GENERATED[@]}" || { echo "rotate works on: ${GENERATED[*]}" >&2; exit 2; }
     check_account
     put "$name" "$(openssl rand -hex 32)"
-    echo "  $name: rotated. Apply it with ssm-deploy.sh <instance-id> current"
+    echo "  $name: rotated. Apply it with: infra/aws/scripts/ecs-deploy.sh current"
     ;;
   copy)
     in_list "$name" "${GENERATED[@]}" "${TYPED[@]}" || { usage >&2; exit 2; }

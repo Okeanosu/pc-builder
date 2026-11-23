@@ -6,11 +6,17 @@ const envSchema = z.object({
   DATABASE_URL: z.string().default('postgres://pc:pc@localhost:5433/pcbuilder'),
   REDIS_URL: z.string().default('redis://localhost:6380/0'),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
+  /** Reverse proxies in front of the API: 1 behind Caddy, 2 behind CloudFront + ALB (rate limits key on req.ip). */
+  TRUST_PROXY_HOPS: z.coerce.number().int().nonnegative().default(1),
   JWT_ACCESS_SECRET: z.string().min(8).default('dev-access-secret'),
   JWT_REFRESH_SECRET: z.string().min(8).default('dev-refresh-secret'),
   ASSEMBLY_FEE: z.coerce.number().int().nonnegative().default(200_000),
   ORDER_HOLD_MINUTES: z.coerce.number().int().positive().default(15),
-  GEMINI_API_KEY: z.string().default(''),
+  /** "disabled" (a SecureString cannot be empty) means no key: the chatbot runs rule-based. */
+  GEMINI_API_KEY: z
+    .string()
+    .default('')
+    .transform((key) => (key === 'disabled' ? '' : key)),
   GEMINI_MODEL: z.string().default('gemini-flash-latest'),
   GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
   VIETQR_BANK_BIN: z.string().default('970422'),
