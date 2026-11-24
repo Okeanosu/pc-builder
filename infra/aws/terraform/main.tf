@@ -11,7 +11,7 @@ locals {
   # Secrets injected into the api container from Parameter Store (SecureString, written by scripts/secrets.sh).
   # PGPASSWORD is read by postgres.js, so DATABASE_URL itself carries no password.
   api_secrets = {
-    PGPASSWORD         = "POSTGRES_PASSWORD"
+    PGPASSWORD         = "POSTGRES_PASSWORD" # gitleaks:allow (a parameter name, not a value)
     JWT_ACCESS_SECRET  = "JWT_ACCESS_SECRET"
     JWT_REFRESH_SECRET = "JWT_REFRESH_SECRET"
     SEPAY_API_KEY      = "SEPAY_API_KEY"

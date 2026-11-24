@@ -1,0 +1,3 @@
+# Reviewed gitleaks findings that are not secrets (one fingerprint per line: commit:file:rule:line).
+# infra/aws/terraform/main.tf maps the env var PGPASSWORD to the Parameter Store name "POSTGRES_PASSWORD"; no value.
+f135a0e131477bc52c65cc43189cfcf7bbaec3a1:infra/aws/terraform/main.tf:hashicorp-tf-password:14
