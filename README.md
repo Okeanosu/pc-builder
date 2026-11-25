@@ -13,7 +13,7 @@ pnpm install
 cp .env.example .env          # điền GEMINI_API_KEY (https://aistudio.google.com/apikey) nếu có
 pnpm infra:up                 # Postgres :5433, Redis :6380
 pnpm db:migrate && pnpm db:seed
-pnpm dev                      # web http://localhost:3000, api http://localhost:4000/api
+pnpm dev                      # web http://localhost:3000, api http://localhost:4000/api (health: /api/health)
 ```
 
 ## Tài liệu

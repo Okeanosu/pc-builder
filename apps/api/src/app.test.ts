@@ -6,6 +6,14 @@ import { createApp } from './app';
 const t = createTestDeps();
 afterAll(() => t.close());
 
+describe('GET /api', () => {
+  it('returns API information and points to the health endpoint', async () => {
+    const res = await request(createApp(t.deps)).get('/api');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ name: 'PC Builder API', health: '/api/health' });
+  });
+});
+
 describe('GET /api/health', () => {
   it('reports db and redis up and fallback AI mode without a key', async () => {
     const res = await request(createApp(t.deps)).get('/api/health');

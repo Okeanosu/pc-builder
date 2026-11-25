@@ -1,10 +1,14 @@
 packages:
-  - "apps/*"
-  - "packages/*"
-  - "tools/*"
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
-  - "@biomejs/biome"
+  - apps/*
+  - packages/*
+  - tools/*
+
 ignoredBuiltDependencies:
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@google/genai'
+  - esbuild
+  - protobufjs
+  - sharp

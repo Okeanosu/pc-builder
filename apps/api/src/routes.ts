@@ -18,6 +18,9 @@ import { createRecommendationRouter } from './modules/recommendation';
  */
 export function createApiRouter(deps: AppDeps): Router {
   const api = Router();
+  api.get('/', (_req, res) => {
+    res.json({ name: 'PC Builder API', health: '/api/health' });
+  });
   api.get('/health', async (_req, res) => {
     const [db, redis] = await Promise.all([
       deps.db.execute('select 1').then(
