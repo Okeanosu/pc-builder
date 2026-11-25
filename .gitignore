@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+.env
+.env.local
+.DS_Store
+.turbo/
+playwright-report/
+test-results/
+.vercel
+.superpowers/
+.claude/worktrees/
+.playwright-mcp/
+infra/.env.prod
+infra/.env.prod.local

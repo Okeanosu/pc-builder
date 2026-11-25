@@ -1,0 +1,755 @@
+flowchart LR
+  classDef requirement fill:#fde8e8,stroke:#e5484d
+  classDef usecase fill:#fff0dc,stroke:#f08a24
+  classDef feature fill:#fff7cc,stroke:#c99a00
+  classDef module fill:#e1f4e4,stroke:#3e9b4f
+  classDef api fill:#d9f5f1,stroke:#12a594
+  classDef entity fill:#dcecff,stroke:#0090ff
+  classDef algorithm fill:#ece8fb,stroke:#6e56cf
+  classDef rule fill:#fbe3f1,stroke:#d6409f
+  classDef screen fill:#eef2d2,stroke:#7c8b2a
+  classDef test fill:#e6eaee,stroke:#5b6b7a
+  classDef decision fill:#f1e4d6,stroke:#8b5a2b
+  classDef chapter fill:#d8f3fa,stroke:#00a2c7
+  FR_01["FR-01"]:::requirement
+  FR_02["FR-02"]:::requirement
+  FR_03["FR-03"]:::requirement
+  FR_04["FR-04"]:::requirement
+  FR_05["FR-05"]:::requirement
+  FR_06["FR-06"]:::requirement
+  FR_07["FR-07"]:::requirement
+  FR_08["FR-08"]:::requirement
+  FR_09["FR-09"]:::requirement
+  FR_10["FR-10"]:::requirement
+  FR_11["FR-11"]:::requirement
+  FR_12["FR-12"]:::requirement
+  FR_13["FR-13"]:::requirement
+  FR_14["FR-14"]:::requirement
+  FR_15["FR-15"]:::requirement
+  FR_16["FR-16"]:::requirement
+  FR_17["FR-17"]:::requirement
+  FR_18["FR-18"]:::requirement
+  NFR_01["NFR-01"]:::requirement
+  NFR_02["NFR-02"]:::requirement
+  NFR_03["NFR-03"]:::requirement
+  NFR_04["NFR-04"]:::requirement
+  NFR_05["NFR-05"]:::requirement
+  NFR_06["NFR-06"]:::requirement
+  NFR_07["NFR-07"]:::requirement
+  NFR_08["NFR-08"]:::requirement
+  NFR_09["NFR-09"]:::requirement
+  NFR_10["NFR-10"]:::requirement
+  NFR_11["NFR-11"]:::requirement
+  UC_01["UC-01"]:::usecase
+  UC_02["UC-02"]:::usecase
+  UC_03["UC-03"]:::usecase
+  UC_04["UC-04"]:::usecase
+  UC_05["UC-05"]:::usecase
+  UC_06["UC-06"]:::usecase
+  UC_07["UC-07"]:::usecase
+  UC_08["UC-08"]:::usecase
+  UC_09["UC-09"]:::usecase
+  UC_10["UC-10"]:::usecase
+  UC_11["UC-11"]:::usecase
+  UC_12["UC-12"]:::usecase
+  UC_13["UC-13"]:::usecase
+  UC_14["UC-14"]:::usecase
+  UC_15["UC-15"]:::usecase
+  UC_16["UC-16"]:::usecase
+  F_ADMIN_INVENTORY["F-ADMIN-INVENTORY"]:::feature
+  F_ADMIN_ORDERS["F-ADMIN-ORDERS"]:::feature
+  F_ADMIN_PRODUCTS["F-ADMIN-PRODUCTS"]:::feature
+  F_ADMIN_STATS["F-ADMIN-STATS"]:::feature
+  F_ADMIN_WEIGHTS["F-ADMIN-WEIGHTS"]:::feature
+  F_AI_ADVISOR["F-AI-ADVISOR"]:::feature
+  F_AUTH["F-AUTH"]:::feature
+  F_BUILD_SHARE["F-BUILD-SHARE"]:::feature
+  F_CART["F-CART"]:::feature
+  F_CATALOG["F-CATALOG"]:::feature
+  F_COMPAT_CHECK["F-COMPAT-CHECK"]:::feature
+  F_CUSTOMIZER["F-CUSTOMIZER"]:::feature
+  F_DEPLOY["F-DEPLOY"]:::feature
+  F_ENGINE_CORE["F-ENGINE-CORE"]:::feature
+  F_FALLBACK_NLU["F-FALLBACK-NLU"]:::feature
+  F_INVENTORY_LOCK["F-INVENTORY-LOCK"]:::feature
+  F_ORDER["F-ORDER"]:::feature
+  F_PAYMENT_VIETQR["F-PAYMENT-VIETQR"]:::feature
+  F_QUOTE_PDF["F-QUOTE-PDF"]:::feature
+  F_RECOMMEND["F-RECOMMEND"]:::feature
+  F_SPEC_GRAPH["F-SPEC-GRAPH"]:::feature
+  F_UAT_SURVEY["F-UAT-SURVEY"]:::feature
+  F_UI_DESIGN_SYSTEM["F-UI-DESIGN-SYSTEM"]:::feature
+  M_ADMIN["M-ADMIN"]:::module
+  M_API_CORE["M-API-CORE"]:::module
+  M_AUTH["M-AUTH"]:::module
+  M_BUILDS["M-BUILDS"]:::module
+  M_CART["M-CART"]:::module
+  M_CATALOG["M-CATALOG"]:::module
+  M_CHAT["M-CHAT"]:::module
+  M_CHAT_LLM["M-CHAT-LLM"]:::module
+  M_COMPATIBILITY["M-COMPATIBILITY"]:::module
+  M_DB["M-DB"]:::module
+  M_ENGINE["M-ENGINE"]:::module
+  M_GRAPH_CLI["M-GRAPH-CLI"]:::module
+  M_INFRA["M-INFRA"]:::module
+  M_ORDERS["M-ORDERS"]:::module
+  M_PAYMENTS["M-PAYMENTS"]:::module
+  M_QUOTES["M-QUOTES"]:::module
+  M_RECOMMENDATION["M-RECOMMENDATION"]:::module
+  M_SEED["M-SEED"]:::module
+  M_SHARED["M-SHARED"]:::module
+  M_WEB["M-WEB"]:::module
+  M_WEB_STATE["M-WEB-STATE"]:::module
+  API_ADMIN_CHATS["API-ADMIN-CHATS"]:::api
+  API_ADMIN_INVENTORY["API-ADMIN-INVENTORY"]:::api
+  API_ADMIN_ORDERS["API-ADMIN-ORDERS"]:::api
+  API_ADMIN_PRODUCTS["API-ADMIN-PRODUCTS"]:::api
+  API_ADMIN_STATS["API-ADMIN-STATS"]:::api
+  API_ADMIN_WEIGHTS["API-ADMIN-WEIGHTS"]:::api
+  API_AUTH["API-AUTH"]:::api
+  API_BUILDS["API-BUILDS"]:::api
+  API_CART["API-CART"]:::api
+  API_CATALOG["API-CATALOG"]:::api
+  API_CHAT["API-CHAT"]:::api
+  API_COMPAT["API-COMPAT"]:::api
+  API_HEALTH["API-HEALTH"]:::api
+  API_ORDERS["API-ORDERS"]:::api
+  API_PAYMENTS["API-PAYMENTS"]:::api
+  API_QUOTES["API-QUOTES"]:::api
+  API_RECO["API-RECO"]:::api
+  E_BENCHMARK["E-BENCHMARK"]:::entity
+  E_BRAND["E-BRAND"]:::entity
+  E_BUILD["E-BUILD"]:::entity
+  E_CART["E-CART"]:::entity
+  E_CART_ITEM["E-CART-ITEM"]:::entity
+  E_CATEGORY["E-CATEGORY"]:::entity
+  E_CHAT_MESSAGE["E-CHAT-MESSAGE"]:::entity
+  E_CHAT_SESSION["E-CHAT-SESSION"]:::entity
+  E_INVENTORY_MOVEMENT["E-INVENTORY-MOVEMENT"]:::entity
+  E_ORDER["E-ORDER"]:::entity
+  E_ORDER_ITEM["E-ORDER-ITEM"]:::entity
+  E_PAYMENT["E-PAYMENT"]:::entity
+  E_PRODUCT["E-PRODUCT"]:::entity
+  E_PURPOSE_WEIGHT["E-PURPOSE-WEIGHT"]:::entity
+  E_USER["E-USER"]:::entity
+  ALG_AC3["ALG-AC3"]:::algorithm
+  ALG_BNB["ALG-BNB"]:::algorithm
+  ALG_CSP["ALG-CSP"]:::algorithm
+  ALG_FC["ALG-FC"]:::algorithm
+  ALG_MCKP["ALG-MCKP"]:::algorithm
+  ALG_NLU_FALLBACK["ALG-NLU-FALLBACK"]:::algorithm
+  ALG_SCORING["ALG-SCORING"]:::algorithm
+  ALG_TOPK["ALG-TOPK"]:::algorithm
+  R_C01["R-C01"]:::rule
+  R_C02["R-C02"]:::rule
+  R_C03["R-C03"]:::rule
+  R_C04["R-C04"]:::rule
+  R_C05["R-C05"]:::rule
+  R_C06["R-C06"]:::rule
+  R_C07["R-C07"]:::rule
+  R_C08["R-C08"]:::rule
+  R_C09["R-C09"]:::rule
+  R_C10["R-C10"]:::rule
+  R_C11["R-C11"]:::rule
+  R_C12["R-C12"]:::rule
+  R_C13["R-C13"]:::rule
+  R_C14["R-C14"]:::rule
+  R_C15["R-C15"]:::rule
+  SCR_ACCOUNT["SCR-ACCOUNT"]:::screen
+  SCR_ACCOUNT_PASSWORD["SCR-ACCOUNT-PASSWORD"]:::screen
+  SCR_ADMIN_CHATLOGS["SCR-ADMIN-CHATLOGS"]:::screen
+  SCR_ADMIN_DASH["SCR-ADMIN-DASH"]:::screen
+  SCR_ADMIN_INVENTORY["SCR-ADMIN-INVENTORY"]:::screen
+  SCR_ADMIN_ORDERS["SCR-ADMIN-ORDERS"]:::screen
+  SCR_ADMIN_PAYMENTS["SCR-ADMIN-PAYMENTS"]:::screen
+  SCR_ADMIN_PRODUCTS["SCR-ADMIN-PRODUCTS"]:::screen
+  SCR_ADMIN_WEIGHTS["SCR-ADMIN-WEIGHTS"]:::screen
+  SCR_ADVISOR["SCR-ADVISOR"]:::screen
+  SCR_ADVISOR_FORM["SCR-ADVISOR-FORM"]:::screen
+  SCR_AUTH["SCR-AUTH"]:::screen
+  SCR_BUILD_SHARE["SCR-BUILD-SHARE"]:::screen
+  SCR_BUILDER["SCR-BUILDER"]:::screen
+  SCR_CART["SCR-CART"]:::screen
+  SCR_CATEGORY["SCR-CATEGORY"]:::screen
+  SCR_CHECKOUT["SCR-CHECKOUT"]:::screen
+  SCR_HOME["SCR-HOME"]:::screen
+  SCR_PAY["SCR-PAY"]:::screen
+  SCR_PRODUCT["SCR-PRODUCT"]:::screen
+  T_AI_GOLDEN["T-AI-GOLDEN"]:::test
+  T_API_HEALTH["T-API-HEALTH"]:::test
+  T_API_NLU["T-API-NLU"]:::test
+  T_API_ORDER_STATE["T-API-ORDER-STATE"]:::test
+  T_API_SPECSCHEMA["T-API-SPECSCHEMA"]:::test
+  T_API_VIETQR["T-API-VIETQR"]:::test
+  T_DEPLOY_SMOKE["T-DEPLOY-SMOKE"]:::test
+  T_E2E_A11Y["T-E2E-A11Y"]:::test
+  T_E2E_ADMIN_WEIGHTS["T-E2E-ADMIN-WEIGHTS"]:::test
+  T_E2E_CHAT_CHECKOUT["T-E2E-CHAT-CHECKOUT"]:::test
+  T_E2E_CUSTOMIZER["T-E2E-CUSTOMIZER"]:::test
+  T_ENGINE_BENCH["T-ENGINE-BENCH"]:::test
+  T_ENGINE_RULES["T-ENGINE-RULES"]:::test
+  T_ENGINE_SCORING["T-ENGINE-SCORING"]:::test
+  T_ENGINE_SOLVER["T-ENGINE-SOLVER"]:::test
+  T_GRAPH_CLI["T-GRAPH-CLI"]:::test
+  T_INT_ADMIN["T-INT-ADMIN"]:::test
+  T_INT_AUTH["T-INT-AUTH"]:::test
+  T_INT_CATALOG["T-INT-CATALOG"]:::test
+  T_INT_CHAT["T-INT-CHAT"]:::test
+  T_INT_ORDER_PAYMENT["T-INT-ORDER-PAYMENT"]:::test
+  T_INT_OVERSELL["T-INT-OVERSELL"]:::test
+  T_INT_RECO["T-INT-RECO"]:::test
+  T_PERF_ENGINE["T-PERF-ENGINE"]:::test
+  T_UAT_SUS["T-UAT-SUS"]:::test
+  ADR_001["ADR-001"]:::decision
+  ADR_002["ADR-002"]:::decision
+  ADR_003["ADR-003"]:::decision
+  ADR_004["ADR-004"]:::decision
+  ADR_005["ADR-005"]:::decision
+  ADR_006["ADR-006"]:::decision
+  ADR_007["ADR-007"]:::decision
+  ADR_008["ADR-008"]:::decision
+  ADR_009["ADR-009"]:::decision
+  ADR_010["ADR-010"]:::decision
+  ADR_011["ADR-011"]:::decision
+  ADR_012["ADR-012"]:::decision
+  ADR_013["ADR-013"]:::decision
+  ADR_014["ADR-014"]:::decision
+  ADR_015["ADR-015"]:::decision
+  ADR_016["ADR-016"]:::decision
+  ADR_017["ADR-017"]:::decision
+  ADR_018["ADR-018"]:::decision
+  ADR_019["ADR-019"]:::decision
+  ADR_020["ADR-020"]:::decision
+  ADR_021["ADR-021"]:::decision
+  ADR_022["ADR-022"]:::decision
+  CH1["CH1"]:::chapter
+  CH2["CH2"]:::chapter
+  CH3["CH3"]:::chapter
+  CH4["CH4"]:::chapter
+  CH5["CH5"]:::chapter
+  CH6["CH6"]:::chapter
+  ALG_AC3 -->|refines| F_ENGINE_CORE
+  ALG_AC3 -->|dependsOn| ALG_CSP
+  ALG_BNB -->|refines| F_ENGINE_CORE
+  ALG_BNB -->|dependsOn| ALG_CSP
+  ALG_BNB -->|dependsOn| ALG_MCKP
+  ALG_BNB -->|dependsOn| ALG_SCORING
+  ALG_CSP -->|refines| F_ENGINE_CORE
+  ALG_CSP -->|dependsOn| ALG_AC3
+  ALG_CSP -->|dependsOn| ALG_FC
+  ALG_CSP -->|dependsOn| ALG_BNB
+  ALG_CSP -->|decidedBy| ADR_004
+  ALG_CSP -->|decidedBy| ADR_014
+  ALG_CSP -->|decidedBy| ADR_020
+  ALG_FC -->|refines| F_ENGINE_CORE
+  ALG_FC -->|dependsOn| ALG_CSP
+  ALG_MCKP -->|refines| F_ENGINE_CORE
+  ALG_MCKP -->|dependsOn| ALG_SCORING
+  ALG_MCKP -->|dependsOn| ALG_BNB
+  ALG_NLU_FALLBACK -->|refines| F_FALLBACK_NLU
+  ALG_NLU_FALLBACK -->|decidedBy| ADR_018
+  ALG_NLU_FALLBACK -->|decidedBy| ADR_019
+  ALG_SCORING -->|refines| F_ENGINE_CORE
+  ALG_SCORING -->|dependsOn| E_BENCHMARK
+  ALG_SCORING -->|decidedBy| ADR_012
+  ALG_SCORING -->|decidedBy| ADR_013
+  ALG_TOPK -->|refines| F_ENGINE_CORE
+  ALG_TOPK -->|dependsOn| ALG_BNB
+  ALG_TOPK -->|decidedBy| ADR_020
+  API_ADMIN_CHATS -->|realizes| F_AI_ADVISOR
+  API_ADMIN_CHATS -->|dependsOn| M_ADMIN
+  API_ADMIN_CHATS -->|dependsOn| E_CHAT_SESSION
+  API_ADMIN_CHATS -->|dependsOn| E_CHAT_MESSAGE
+  API_ADMIN_INVENTORY -->|realizes| F_ADMIN_INVENTORY
+  API_ADMIN_INVENTORY -->|dependsOn| M_ADMIN
+  API_ADMIN_ORDERS -->|realizes| F_ADMIN_ORDERS
+  API_ADMIN_ORDERS -->|dependsOn| M_ADMIN
+  API_ADMIN_PRODUCTS -->|realizes| F_ADMIN_PRODUCTS
+  API_ADMIN_PRODUCTS -->|dependsOn| M_ADMIN
+  API_ADMIN_STATS -->|realizes| F_ADMIN_STATS
+  API_ADMIN_STATS -->|dependsOn| M_ADMIN
+  API_ADMIN_WEIGHTS -->|realizes| F_ADMIN_WEIGHTS
+  API_ADMIN_WEIGHTS -->|dependsOn| M_ADMIN
+  API_AUTH -->|realizes| F_AUTH
+  API_AUTH -->|dependsOn| M_AUTH
+  API_BUILDS -->|realizes| F_BUILD_SHARE
+  API_BUILDS -->|dependsOn| M_BUILDS
+  API_CART -->|realizes| F_CART
+  API_CART -->|dependsOn| M_CART
+  API_CATALOG -->|realizes| F_CATALOG
+  API_CATALOG -->|dependsOn| M_CATALOG
+  API_CHAT -->|realizes| F_AI_ADVISOR
+  API_CHAT -->|dependsOn| M_CHAT
+  API_COMPAT -->|realizes| F_COMPAT_CHECK
+  API_COMPAT -->|dependsOn| M_COMPATIBILITY
+  API_HEALTH -->|realizes| F_DEPLOY
+  API_HEALTH -->|dependsOn| M_API_CORE
+  API_ORDERS -->|realizes| F_ORDER
+  API_ORDERS -->|dependsOn| M_ORDERS
+  API_PAYMENTS -->|realizes| F_PAYMENT_VIETQR
+  API_PAYMENTS -->|dependsOn| M_PAYMENTS
+  API_QUOTES -->|realizes| F_QUOTE_PDF
+  API_QUOTES -->|dependsOn| M_QUOTES
+  API_RECO -->|realizes| F_RECOMMEND
+  API_RECO -->|dependsOn| M_RECOMMENDATION
+  E_BENCHMARK -->|refines| M_DB
+  E_BRAND -->|refines| M_DB
+  E_BUILD -->|refines| M_DB
+  E_CART_ITEM -->|refines| M_DB
+  E_CART_ITEM -->|decidedBy| ADR_017
+  E_CART -->|refines| M_DB
+  E_CATEGORY -->|refines| M_DB
+  E_CHAT_MESSAGE -->|refines| M_DB
+  E_CHAT_SESSION -->|refines| M_DB
+  E_INVENTORY_MOVEMENT -->|refines| M_DB
+  E_ORDER_ITEM -->|refines| M_DB
+  E_ORDER -->|refines| M_DB
+  E_ORDER -->|decidedBy| ADR_017
+  E_PAYMENT -->|refines| M_DB
+  E_PAYMENT -->|decidedBy| ADR_017
+  E_PRODUCT -->|refines| M_DB
+  E_PURPOSE_WEIGHT -->|refines| M_DB
+  E_USER -->|refines| M_DB
+  F_ADMIN_INVENTORY -->|realizes| FR_13
+  F_ADMIN_INVENTORY -->|realizes| UC_13
+  F_ADMIN_INVENTORY -->|dependsOn| M_ADMIN
+  F_ADMIN_INVENTORY -->|dependsOn| E_INVENTORY_MOVEMENT
+  F_ADMIN_INVENTORY -->|dependsOn| E_BENCHMARK
+  F_ADMIN_INVENTORY -->|dependsOn| F_AUTH
+  F_ADMIN_INVENTORY -->|shownIn| SCR_ADMIN_INVENTORY
+  F_ADMIN_ORDERS -->|realizes| FR_15
+  F_ADMIN_ORDERS -->|realizes| UC_15
+  F_ADMIN_ORDERS -->|dependsOn| M_ADMIN
+  F_ADMIN_ORDERS -->|dependsOn| F_ORDER
+  F_ADMIN_ORDERS -->|dependsOn| F_AUTH
+  F_ADMIN_ORDERS -->|decidedBy| ADR_021
+  F_ADMIN_ORDERS -->|shownIn| SCR_ADMIN_ORDERS
+  F_ADMIN_ORDERS -->|shownIn| SCR_ADMIN_PAYMENTS
+  F_ADMIN_PRODUCTS -->|realizes| FR_12
+  F_ADMIN_PRODUCTS -->|realizes| UC_12
+  F_ADMIN_PRODUCTS -->|dependsOn| M_ADMIN
+  F_ADMIN_PRODUCTS -->|dependsOn| E_PRODUCT
+  F_ADMIN_PRODUCTS -->|dependsOn| E_CATEGORY
+  F_ADMIN_PRODUCTS -->|dependsOn| E_BRAND
+  F_ADMIN_PRODUCTS -->|dependsOn| F_AUTH
+  F_ADMIN_PRODUCTS -->|decidedBy| ADR_002
+  F_ADMIN_PRODUCTS -->|shownIn| SCR_ADMIN_PRODUCTS
+  F_ADMIN_STATS -->|realizes| FR_16
+  F_ADMIN_STATS -->|realizes| UC_16
+  F_ADMIN_STATS -->|dependsOn| M_ADMIN
+  F_ADMIN_STATS -->|dependsOn| E_ORDER
+  F_ADMIN_STATS -->|dependsOn| E_PAYMENT
+  F_ADMIN_STATS -->|dependsOn| F_AUTH
+  F_ADMIN_STATS -->|shownIn| SCR_ADMIN_DASH
+  F_ADMIN_WEIGHTS -->|realizes| FR_14
+  F_ADMIN_WEIGHTS -->|realizes| UC_14
+  F_ADMIN_WEIGHTS -->|dependsOn| M_ADMIN
+  F_ADMIN_WEIGHTS -->|dependsOn| E_PURPOSE_WEIGHT
+  F_ADMIN_WEIGHTS -->|dependsOn| ALG_MCKP
+  F_ADMIN_WEIGHTS -->|dependsOn| ALG_SCORING
+  F_ADMIN_WEIGHTS -->|dependsOn| F_AUTH
+  F_ADMIN_WEIGHTS -->|shownIn| SCR_ADMIN_WEIGHTS
+  F_AI_ADVISOR -->|realizes| FR_07
+  F_AI_ADVISOR -->|realizes| UC_03
+  F_AI_ADVISOR -->|realizes| NFR_02
+  F_AI_ADVISOR -->|realizes| NFR_05
+  F_AI_ADVISOR -->|dependsOn| M_CHAT
+  F_AI_ADVISOR -->|dependsOn| M_CHAT_LLM
+  F_AI_ADVISOR -->|dependsOn| F_ENGINE_CORE
+  F_AI_ADVISOR -->|dependsOn| F_FALLBACK_NLU
+  F_AI_ADVISOR -->|dependsOn| F_RECOMMEND
+  F_AI_ADVISOR -->|dependsOn| E_CHAT_SESSION
+  F_AI_ADVISOR -->|dependsOn| E_CHAT_MESSAGE
+  F_AI_ADVISOR -->|decidedBy| ADR_003
+  F_AI_ADVISOR -->|decidedBy| ADR_004
+  F_AI_ADVISOR -->|decidedBy| ADR_005
+  F_AI_ADVISOR -->|decidedBy| ADR_018
+  F_AI_ADVISOR -->|decidedBy| ADR_019
+  F_AI_ADVISOR -->|shownIn| SCR_ADVISOR
+  F_AI_ADVISOR -->|shownIn| SCR_HOME
+  F_AI_ADVISOR -->|shownIn| SCR_ADMIN_CHATLOGS
+  F_AUTH -->|realizes| FR_03
+  F_AUTH -->|realizes| UC_02
+  F_AUTH -->|realizes| NFR_03
+  F_AUTH -->|dependsOn| M_AUTH
+  F_AUTH -->|dependsOn| M_API_CORE
+  F_AUTH -->|dependsOn| E_USER
+  F_AUTH -->|decidedBy| ADR_006
+  F_AUTH -->|decidedBy| ADR_016
+  F_AUTH -->|shownIn| SCR_AUTH
+  F_AUTH -->|shownIn| SCR_ACCOUNT
+  F_AUTH -->|shownIn| SCR_ACCOUNT_PASSWORD
+  F_BUILD_SHARE -->|realizes| FR_10
+  F_BUILD_SHARE -->|realizes| UC_06
+  F_BUILD_SHARE -->|dependsOn| M_BUILDS
+  F_BUILD_SHARE -->|dependsOn| E_BUILD
+  F_BUILD_SHARE -->|dependsOn| F_COMPAT_CHECK
+  F_BUILD_SHARE -->|shownIn| SCR_BUILD_SHARE
+  F_CART -->|realizes| FR_04
+  F_CART -->|realizes| UC_08
+  F_CART -->|dependsOn| M_CART
+  F_CART -->|dependsOn| E_CART
+  F_CART -->|dependsOn| E_CART_ITEM
+  F_CART -->|dependsOn| F_BUILD_SHARE
+  F_CART -->|decidedBy| ADR_017
+  F_CART -->|shownIn| SCR_CART
+  F_CATALOG -->|realizes| FR_01
+  F_CATALOG -->|realizes| FR_02
+  F_CATALOG -->|realizes| UC_01
+  F_CATALOG -->|dependsOn| M_CATALOG
+  F_CATALOG -->|dependsOn| E_PRODUCT
+  F_CATALOG -->|dependsOn| E_CATEGORY
+  F_CATALOG -->|dependsOn| E_BENCHMARK
+  F_CATALOG -->|decidedBy| ADR_002
+  F_CATALOG -->|decidedBy| ADR_015
+  F_CATALOG -->|shownIn| SCR_CATEGORY
+  F_CATALOG -->|shownIn| SCR_PRODUCT
+  F_COMPAT_CHECK -->|realizes| FR_09
+  F_COMPAT_CHECK -->|realizes| UC_05
+  F_COMPAT_CHECK -->|dependsOn| M_COMPATIBILITY
+  F_COMPAT_CHECK -->|dependsOn| M_ENGINE
+  F_COMPAT_CHECK -->|dependsOn| ALG_CSP
+  F_COMPAT_CHECK -->|decidedBy| ADR_001
+  F_COMPAT_CHECK -->|decidedBy| ADR_014
+  F_CUSTOMIZER -->|realizes| FR_09
+  F_CUSTOMIZER -->|realizes| UC_05
+  F_CUSTOMIZER -->|dependsOn| F_COMPAT_CHECK
+  F_CUSTOMIZER -->|dependsOn| M_WEB_STATE
+  F_CUSTOMIZER -->|dependsOn| M_ENGINE
+  F_CUSTOMIZER -->|dependsOn| F_CATALOG
+  F_CUSTOMIZER -->|decidedBy| ADR_001
+  F_CUSTOMIZER -->|shownIn| SCR_BUILDER
+  F_DEPLOY -->|realizes| NFR_07
+  F_DEPLOY -->|dependsOn| M_INFRA
+  F_ENGINE_CORE -->|realizes| FR_08
+  F_ENGINE_CORE -->|realizes| FR_09
+  F_ENGINE_CORE -->|realizes| NFR_01
+  F_ENGINE_CORE -->|realizes| NFR_08
+  F_ENGINE_CORE -->|dependsOn| M_ENGINE
+  F_ENGINE_CORE -->|dependsOn| ALG_CSP
+  F_ENGINE_CORE -->|dependsOn| ALG_AC3
+  F_ENGINE_CORE -->|dependsOn| ALG_FC
+  F_ENGINE_CORE -->|dependsOn| ALG_BNB
+  F_ENGINE_CORE -->|dependsOn| ALG_MCKP
+  F_ENGINE_CORE -->|dependsOn| ALG_SCORING
+  F_ENGINE_CORE -->|dependsOn| ALG_TOPK
+  F_ENGINE_CORE -->|dependsOn| F_COMPAT_CHECK
+  F_ENGINE_CORE -->|decidedBy| ADR_001
+  F_ENGINE_CORE -->|decidedBy| ADR_004
+  F_ENGINE_CORE -->|decidedBy| ADR_012
+  F_ENGINE_CORE -->|decidedBy| ADR_013
+  F_ENGINE_CORE -->|decidedBy| ADR_014
+  F_ENGINE_CORE -->|decidedBy| ADR_020
+  F_FALLBACK_NLU -->|realizes| FR_17
+  F_FALLBACK_NLU -->|realizes| NFR_04
+  F_FALLBACK_NLU -->|dependsOn| M_CHAT
+  F_FALLBACK_NLU -->|dependsOn| ALG_NLU_FALLBACK
+  F_FALLBACK_NLU -->|dependsOn| F_ENGINE_CORE
+  F_FALLBACK_NLU -->|decidedBy| ADR_005
+  F_FALLBACK_NLU -->|decidedBy| ADR_018
+  F_INVENTORY_LOCK -->|realizes| FR_18
+  F_INVENTORY_LOCK -->|realizes| UC_09
+  F_INVENTORY_LOCK -->|dependsOn| M_ORDERS
+  F_INVENTORY_LOCK -->|dependsOn| E_PRODUCT
+  F_INVENTORY_LOCK -->|dependsOn| E_INVENTORY_MOVEMENT
+  F_INVENTORY_LOCK -->|decidedBy| ADR_007
+  F_INVENTORY_LOCK -->|decidedBy| ADR_017
+  F_ORDER -->|realizes| FR_05
+  F_ORDER -->|realizes| UC_09
+  F_ORDER -->|realizes| UC_11
+  F_ORDER -->|dependsOn| M_ORDERS
+  F_ORDER -->|dependsOn| E_ORDER
+  F_ORDER -->|dependsOn| E_ORDER_ITEM
+  F_ORDER -->|dependsOn| F_INVENTORY_LOCK
+  F_ORDER -->|dependsOn| F_CART
+  F_ORDER -->|decidedBy| ADR_017
+  F_ORDER -->|decidedBy| ADR_021
+  F_ORDER -->|shownIn| SCR_CHECKOUT
+  F_ORDER -->|shownIn| SCR_ACCOUNT
+  F_PAYMENT_VIETQR -->|realizes| FR_06
+  F_PAYMENT_VIETQR -->|realizes| UC_10
+  F_PAYMENT_VIETQR -->|dependsOn| M_PAYMENTS
+  F_PAYMENT_VIETQR -->|dependsOn| E_PAYMENT
+  F_PAYMENT_VIETQR -->|dependsOn| F_ORDER
+  F_PAYMENT_VIETQR -->|dependsOn| F_INVENTORY_LOCK
+  F_PAYMENT_VIETQR -->|decidedBy| ADR_008
+  F_PAYMENT_VIETQR -->|decidedBy| ADR_021
+  F_PAYMENT_VIETQR -->|shownIn| SCR_PAY
+  F_PAYMENT_VIETQR -->|shownIn| SCR_ADMIN_PAYMENTS
+  F_QUOTE_PDF -->|realizes| FR_11
+  F_QUOTE_PDF -->|realizes| UC_07
+  F_QUOTE_PDF -->|dependsOn| M_QUOTES
+  F_QUOTE_PDF -->|dependsOn| E_BUILD
+  F_QUOTE_PDF -->|decidedBy| ADR_009
+  F_RECOMMEND -->|realizes| FR_08
+  F_RECOMMEND -->|realizes| UC_04
+  F_RECOMMEND -->|realizes| NFR_01
+  F_RECOMMEND -->|dependsOn| M_RECOMMENDATION
+  F_RECOMMEND -->|dependsOn| F_ENGINE_CORE
+  F_RECOMMEND -->|dependsOn| E_PURPOSE_WEIGHT
+  F_RECOMMEND -->|dependsOn| E_BUILD
+  F_RECOMMEND -->|decidedBy| ADR_004
+  F_RECOMMEND -->|decidedBy| ADR_013
+  F_RECOMMEND -->|decidedBy| ADR_015
+  F_RECOMMEND -->|decidedBy| ADR_020
+  F_RECOMMEND -->|shownIn| SCR_HOME
+  F_RECOMMEND -->|shownIn| SCR_ADVISOR
+  F_RECOMMEND -->|shownIn| SCR_ADVISOR_FORM
+  F_SPEC_GRAPH -->|realizes| NFR_09
+  F_SPEC_GRAPH -->|dependsOn| M_GRAPH_CLI
+  F_SPEC_GRAPH -->|decidedBy| ADR_010
+  F_SPEC_GRAPH -->|decidedBy| ADR_011
+  F_UAT_SURVEY -->|realizes| NFR_11
+  F_UAT_SURVEY -->|dependsOn| F_DEPLOY
+  F_UAT_SURVEY -->|dependsOn| F_ADMIN_WEIGHTS
+  F_UI_DESIGN_SYSTEM -->|realizes| NFR_06
+  F_UI_DESIGN_SYSTEM -->|dependsOn| M_WEB
+  M_ADMIN -->|dependsOn| M_AUTH
+  M_ADMIN -->|dependsOn| M_CATALOG
+  M_ADMIN -->|dependsOn| M_ORDERS
+  M_ADMIN -->|dependsOn| E_PURPOSE_WEIGHT
+  M_ADMIN -->|dependsOn| E_INVENTORY_MOVEMENT
+  M_ADMIN -->|decidedBy| ADR_002
+  M_ADMIN -->|decidedBy| ADR_021
+  M_API_CORE -->|realizes| NFR_03
+  M_API_CORE -->|dependsOn| M_DB
+  M_API_CORE -->|dependsOn| M_SHARED
+  M_API_CORE -->|decidedBy| ADR_002
+  M_API_CORE -->|decidedBy| ADR_006
+  M_AUTH -->|dependsOn| M_API_CORE
+  M_AUTH -->|dependsOn| E_USER
+  M_AUTH -->|decidedBy| ADR_002
+  M_AUTH -->|decidedBy| ADR_016
+  M_BUILDS -->|dependsOn| M_COMPATIBILITY
+  M_BUILDS -->|dependsOn| E_BUILD
+  M_BUILDS -->|decidedBy| ADR_002
+  M_CART -->|dependsOn| E_CART
+  M_CART -->|dependsOn| E_CART_ITEM
+  M_CART -->|dependsOn| M_BUILDS
+  M_CART -->|decidedBy| ADR_002
+  M_CART -->|decidedBy| ADR_017
+  M_CATALOG -->|dependsOn| M_API_CORE
+  M_CATALOG -->|dependsOn| E_PRODUCT
+  M_CATALOG -->|dependsOn| E_CATEGORY
+  M_CATALOG -->|dependsOn| E_BRAND
+  M_CATALOG -->|dependsOn| E_BENCHMARK
+  M_CATALOG -->|decidedBy| ADR_002
+  M_CATALOG -->|decidedBy| ADR_015
+  M_CHAT_LLM -->|dependsOn| M_API_CORE
+  M_CHAT_LLM -->|decidedBy| ADR_003
+  M_CHAT_LLM -->|decidedBy| ADR_005
+  M_CHAT -->|dependsOn| M_CHAT_LLM
+  M_CHAT -->|dependsOn| M_RECOMMENDATION
+  M_CHAT -->|dependsOn| M_COMPATIBILITY
+  M_CHAT -->|dependsOn| M_CATALOG
+  M_CHAT -->|dependsOn| M_BUILDS
+  M_CHAT -->|dependsOn| E_CHAT_SESSION
+  M_CHAT -->|dependsOn| E_CHAT_MESSAGE
+  M_CHAT -->|decidedBy| ADR_002
+  M_CHAT -->|decidedBy| ADR_018
+  M_COMPATIBILITY -->|dependsOn| M_ENGINE
+  M_COMPATIBILITY -->|dependsOn| M_CATALOG
+  M_COMPATIBILITY -->|decidedBy| ADR_002
+  M_DB -->|dependsOn| M_SHARED
+  M_DB -->|decidedBy| ADR_002
+  M_DB -->|decidedBy| ADR_017
+  M_ENGINE -->|dependsOn| M_SHARED
+  M_ENGINE -->|dependsOn| ALG_CSP
+  M_ENGINE -->|dependsOn| ALG_MCKP
+  M_ENGINE -->|dependsOn| ALG_SCORING
+  M_ENGINE -->|decidedBy| ADR_001
+  M_ENGINE -->|decidedBy| ADR_004
+  M_ENGINE -->|decidedBy| ADR_012
+  M_ENGINE -->|decidedBy| ADR_013
+  M_ENGINE -->|decidedBy| ADR_014
+  M_ENGINE -->|decidedBy| ADR_020
+  M_GRAPH_CLI -->|decidedBy| ADR_010
+  M_GRAPH_CLI -->|decidedBy| ADR_011
+  M_INFRA -->|decidedBy| ADR_001
+  M_ORDERS -->|dependsOn| E_ORDER
+  M_ORDERS -->|dependsOn| E_ORDER_ITEM
+  M_ORDERS -->|dependsOn| E_PRODUCT
+  M_ORDERS -->|dependsOn| E_INVENTORY_MOVEMENT
+  M_ORDERS -->|dependsOn| M_CART
+  M_ORDERS -->|decidedBy| ADR_002
+  M_ORDERS -->|decidedBy| ADR_017
+  M_ORDERS -->|decidedBy| ADR_021
+  M_PAYMENTS -->|dependsOn| E_PAYMENT
+  M_PAYMENTS -->|dependsOn| M_ORDERS
+  M_PAYMENTS -->|decidedBy| ADR_002
+  M_PAYMENTS -->|decidedBy| ADR_021
+  M_QUOTES -->|dependsOn| M_BUILDS
+  M_QUOTES -->|dependsOn| M_CART
+  M_QUOTES -->|decidedBy| ADR_002
+  M_RECOMMENDATION -->|dependsOn| M_ENGINE
+  M_RECOMMENDATION -->|dependsOn| M_CATALOG
+  M_RECOMMENDATION -->|dependsOn| E_PURPOSE_WEIGHT
+  M_RECOMMENDATION -->|dependsOn| E_BUILD
+  M_RECOMMENDATION -->|decidedBy| ADR_002
+  M_RECOMMENDATION -->|decidedBy| ADR_015
+  M_SEED -->|dependsOn| M_DB
+  M_SHARED -->|realizes| NFR_10
+  M_SHARED -->|decidedBy| ADR_001
+  M_WEB_STATE -->|dependsOn| M_SHARED
+  M_WEB_STATE -->|dependsOn| M_ENGINE
+  M_WEB_STATE -->|decidedBy| ADR_016
+  M_WEB -->|dependsOn| M_SHARED
+  M_WEB -->|dependsOn| M_ENGINE
+  M_WEB -->|dependsOn| M_WEB_STATE
+  M_WEB -->|decidedBy| ADR_001
+  R_C01 -->|refines| F_COMPAT_CHECK
+  R_C01 -->|dependsOn| ALG_CSP
+  R_C02 -->|refines| F_COMPAT_CHECK
+  R_C02 -->|dependsOn| ALG_CSP
+  R_C03 -->|refines| F_COMPAT_CHECK
+  R_C03 -->|dependsOn| ALG_CSP
+  R_C04 -->|refines| F_COMPAT_CHECK
+  R_C04 -->|dependsOn| ALG_CSP
+  R_C05 -->|refines| F_COMPAT_CHECK
+  R_C05 -->|dependsOn| ALG_CSP
+  R_C06 -->|refines| F_COMPAT_CHECK
+  R_C06 -->|dependsOn| ALG_CSP
+  R_C07 -->|refines| F_COMPAT_CHECK
+  R_C07 -->|dependsOn| ALG_CSP
+  R_C08 -->|refines| F_COMPAT_CHECK
+  R_C08 -->|dependsOn| ALG_CSP
+  R_C09 -->|refines| F_COMPAT_CHECK
+  R_C09 -->|dependsOn| ALG_CSP
+  R_C10 -->|refines| F_COMPAT_CHECK
+  R_C10 -->|dependsOn| ALG_CSP
+  R_C11 -->|refines| F_COMPAT_CHECK
+  R_C11 -->|dependsOn| ALG_CSP
+  R_C12 -->|refines| F_COMPAT_CHECK
+  R_C12 -->|dependsOn| ALG_CSP
+  R_C13 -->|refines| F_COMPAT_CHECK
+  R_C13 -->|dependsOn| ALG_CSP
+  R_C14 -->|refines| F_COMPAT_CHECK
+  R_C14 -->|dependsOn| ALG_CSP
+  R_C15 -->|refines| F_COMPAT_CHECK
+  R_C15 -->|dependsOn| ALG_CSP
+  R_C15 -->|decidedBy| ADR_014
+  T_AI_GOLDEN -->|verifies| NFR_02
+  T_AI_GOLDEN -->|verifies| NFR_05
+  T_AI_GOLDEN -->|verifies| FR_07
+  T_AI_GOLDEN -->|verifies| F_AI_ADVISOR
+  T_API_HEALTH -->|verifies| API_HEALTH
+  T_API_HEALTH -->|verifies| M_API_CORE
+  T_API_HEALTH -->|verifies| M_DB
+  T_API_HEALTH -->|verifies| M_INFRA
+  T_API_NLU -->|verifies| FR_17
+  T_API_NLU -->|verifies| NFR_04
+  T_API_NLU -->|verifies| ALG_NLU_FALLBACK
+  T_API_NLU -->|verifies| F_FALLBACK_NLU
+  T_API_ORDER_STATE -->|verifies| FR_05
+  T_API_ORDER_STATE -->|verifies| FR_15
+  T_API_ORDER_STATE -->|verifies| F_ORDER
+  T_API_SPECSCHEMA -->|verifies| FR_12
+  T_API_SPECSCHEMA -->|verifies| F_ADMIN_PRODUCTS
+  T_API_SPECSCHEMA -->|verifies| NFR_10
+  T_API_VIETQR -->|verifies| FR_06
+  T_API_VIETQR -->|verifies| F_PAYMENT_VIETQR
+  T_DEPLOY_SMOKE -->|verifies| NFR_07
+  T_DEPLOY_SMOKE -->|verifies| F_DEPLOY
+  T_E2E_A11Y -->|verifies| NFR_06
+  T_E2E_A11Y -->|verifies| F_UI_DESIGN_SYSTEM
+  T_E2E_ADMIN_WEIGHTS -->|verifies| FR_03
+  T_E2E_ADMIN_WEIGHTS -->|verifies| FR_14
+  T_E2E_ADMIN_WEIGHTS -->|verifies| UC_14
+  T_E2E_ADMIN_WEIGHTS -->|verifies| F_ADMIN_WEIGHTS
+  T_E2E_CHAT_CHECKOUT -->|verifies| FR_07
+  T_E2E_CHAT_CHECKOUT -->|verifies| FR_04
+  T_E2E_CHAT_CHECKOUT -->|verifies| FR_05
+  T_E2E_CHAT_CHECKOUT -->|verifies| FR_06
+  T_E2E_CHAT_CHECKOUT -->|verifies| NFR_05
+  T_E2E_CHAT_CHECKOUT -->|verifies| UC_03
+  T_E2E_CHAT_CHECKOUT -->|verifies| UC_09
+  T_E2E_CHAT_CHECKOUT -->|verifies| UC_10
+  T_E2E_CUSTOMIZER -->|verifies| FR_09
+  T_E2E_CUSTOMIZER -->|verifies| UC_05
+  T_E2E_CUSTOMIZER -->|verifies| F_CUSTOMIZER
+  T_E2E_CUSTOMIZER -->|verifies| R_C01
+  T_ENGINE_BENCH -->|verifies| NFR_01
+  T_ENGINE_BENCH -->|verifies| ALG_CSP
+  T_ENGINE_BENCH -->|verifies| ALG_BNB
+  T_ENGINE_RULES -->|verifies| F_COMPAT_CHECK
+  T_ENGINE_RULES -->|verifies| NFR_08
+  T_ENGINE_RULES -->|verifies| R_C01
+  T_ENGINE_RULES -->|verifies| R_C02
+  T_ENGINE_RULES -->|verifies| R_C03
+  T_ENGINE_RULES -->|verifies| R_C04
+  T_ENGINE_RULES -->|verifies| R_C05
+  T_ENGINE_RULES -->|verifies| R_C06
+  T_ENGINE_RULES -->|verifies| R_C07
+  T_ENGINE_RULES -->|verifies| R_C08
+  T_ENGINE_RULES -->|verifies| R_C09
+  T_ENGINE_RULES -->|verifies| R_C10
+  T_ENGINE_RULES -->|verifies| R_C11
+  T_ENGINE_RULES -->|verifies| R_C12
+  T_ENGINE_RULES -->|verifies| R_C13
+  T_ENGINE_RULES -->|verifies| R_C14
+  T_ENGINE_RULES -->|verifies| R_C15
+  T_ENGINE_SCORING -->|verifies| ALG_SCORING
+  T_ENGINE_SCORING -->|verifies| ALG_MCKP
+  T_ENGINE_SCORING -->|verifies| FR_14
+  T_ENGINE_SOLVER -->|verifies| F_ENGINE_CORE
+  T_ENGINE_SOLVER -->|verifies| FR_08
+  T_ENGINE_SOLVER -->|verifies| NFR_08
+  T_ENGINE_SOLVER -->|verifies| ALG_CSP
+  T_ENGINE_SOLVER -->|verifies| ALG_AC3
+  T_ENGINE_SOLVER -->|verifies| ALG_FC
+  T_ENGINE_SOLVER -->|verifies| ALG_BNB
+  T_ENGINE_SOLVER -->|verifies| ALG_TOPK
+  T_GRAPH_CLI -->|verifies| F_SPEC_GRAPH
+  T_GRAPH_CLI -->|verifies| M_GRAPH_CLI
+  T_GRAPH_CLI -->|verifies| NFR_09
+  T_INT_ADMIN -->|verifies| FR_12
+  T_INT_ADMIN -->|verifies| FR_13
+  T_INT_ADMIN -->|verifies| FR_14
+  T_INT_ADMIN -->|verifies| FR_15
+  T_INT_ADMIN -->|verifies| FR_16
+  T_INT_AUTH -->|verifies| FR_03
+  T_INT_AUTH -->|verifies| NFR_03
+  T_INT_AUTH -->|verifies| F_AUTH
+  T_INT_CATALOG -->|verifies| FR_01
+  T_INT_CATALOG -->|verifies| FR_02
+  T_INT_CATALOG -->|verifies| F_CATALOG
+  T_INT_CHAT -->|verifies| FR_07
+  T_INT_CHAT -->|verifies| FR_17
+  T_INT_CHAT -->|verifies| NFR_05
+  T_INT_CHAT -->|verifies| F_AI_ADVISOR
+  T_INT_ORDER_PAYMENT -->|verifies| FR_04
+  T_INT_ORDER_PAYMENT -->|verifies| FR_05
+  T_INT_ORDER_PAYMENT -->|verifies| FR_06
+  T_INT_ORDER_PAYMENT -->|verifies| F_ORDER
+  T_INT_ORDER_PAYMENT -->|verifies| F_PAYMENT_VIETQR
+  T_INT_ORDER_PAYMENT -->|verifies| F_CART
+  T_INT_OVERSELL -->|verifies| FR_18
+  T_INT_OVERSELL -->|verifies| F_INVENTORY_LOCK
+  T_INT_RECO -->|verifies| FR_08
+  T_INT_RECO -->|verifies| F_RECOMMEND
+  T_INT_RECO -->|verifies| NFR_05
+  T_PERF_ENGINE -->|verifies| NFR_01
+  T_PERF_ENGINE -->|verifies| NFR_02
+  T_PERF_ENGINE -->|verifies| F_RECOMMEND
+  T_PERF_ENGINE -->|verifies| F_AI_ADVISOR
+  T_UAT_SUS -->|verifies| NFR_11
+  T_UAT_SUS -->|verifies| F_UAT_SURVEY
+  UC_01 -->|realizes| FR_01
+  UC_01 -->|realizes| FR_02
+  UC_02 -->|realizes| FR_03
+  UC_03 -->|realizes| FR_07
+  UC_03 -->|realizes| FR_17
+  UC_04 -->|realizes| FR_08
+  UC_05 -->|realizes| FR_09
+  UC_06 -->|realizes| FR_10
+  UC_07 -->|realizes| FR_11
+  UC_08 -->|realizes| FR_04
+  UC_09 -->|realizes| FR_05
+  UC_09 -->|realizes| FR_18
+  UC_10 -->|realizes| FR_06
+  UC_11 -->|realizes| FR_05
+  UC_12 -->|realizes| FR_12
+  UC_13 -->|realizes| FR_13
+  UC_14 -->|realizes| FR_14
+  UC_15 -->|realizes| FR_15
+  UC_16 -->|realizes| FR_16
